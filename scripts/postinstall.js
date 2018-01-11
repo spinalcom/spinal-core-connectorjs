@@ -33,8 +33,9 @@ console.log('Postinstall script inititated.');
 if (!fs.existsSync(browserLibPath)) {
   fs.mkdirSync(browserLibPath);
 }
-
-copyRecursiveSync(spinalCoreLib, path.resolve(browserLibPath + '/spinalcore.browser.js'));
+if (!fs.existsSync(path.resolve(browserLibPath + '/spinalcore.browser.js'))) {
+  copyRecursiveSync(spinalCoreLib, path.resolve(browserLibPath + '/spinalcore.browser.js'));
+}
 
 console.log('Postinstall script finished.');
 
