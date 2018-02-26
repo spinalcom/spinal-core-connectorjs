@@ -351,6 +351,8 @@ class root.FileSystem
     @_create_model_by_name: (name) ->
       if (typeof name != "string")
         return name; # for old spinalcore version
+      if (typeof spinalCore._def[name] != 'undefined')
+        return new spinalCore._def[name]()
       if (typeof root[name] == 'undefined')
         root[name] =  new Function("return function #{name} (){#{name}.super(this);}")()
         FileSystem.extend(root[name], Model)

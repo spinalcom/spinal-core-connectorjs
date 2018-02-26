@@ -27,6 +27,8 @@ root = if typeof _root_obj == "undefined" then global else window
 # Define main API
 class root.spinalCore
 
+    @_def = {}
+
     @connect: (options) ->
         if typeof options == 'string'
             options = url.parse(options)
@@ -71,10 +73,10 @@ class root.spinalCore
                 dir.add_file file_name, model, { model_type: "Model" }
                 callback_success()
 
-    @models: (modelList) ->
-      root = if typeof _root_obj == "undefined" then global else window
+    @register_models: (modelList) ->
+    #   root = if typeof _root_obj == "undefined" then global else window
       for m in modelList
-        root[m.constructor.name] = m
+        spinalCore._def[m.name] = m
 
     # loads a model from the file system
     @load: (fs, path, callback_success, callback_error) ->
