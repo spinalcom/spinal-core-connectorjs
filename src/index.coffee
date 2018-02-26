@@ -73,7 +73,7 @@ class root.spinalCore
 
     @models: (modelList) ->
       root = if typeof _root_obj == "undefined" then global else window
-      for m of modelList
+      for m in modelList
         root[m.constructor.name] = m
 
     # loads a model from the file system
