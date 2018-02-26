@@ -71,6 +71,11 @@ class root.spinalCore
                 dir.add_file file_name, model, { model_type: "Model" }
                 callback_success()
 
+    @models: (modelList) ->
+      root = if typeof _root_obj == "undefined" then global else window
+      for m of modelList
+        root[m.constructor.name] = m
+
     # loads a model from the file system
     @load: (fs, path, callback_success, callback_error) ->
         if typeof callback_error == "undefined"
