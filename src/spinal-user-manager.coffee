@@ -137,7 +137,6 @@ class root.SpinalUserManager
         path = "http://" + FileSystem._url + ":" + FileSystem._port + get_cmd
       else
         path = "http://" + FileSystem._url + get_cmd
-    
     else if FileSystem.CONNECTOR_TYPE == "Browser"
       path = get_cmd
 
