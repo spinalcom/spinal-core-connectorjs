@@ -167,8 +167,11 @@ class root.FileSystem
     make_channel: ->
         path = ""
         if FileSystem.CONNECTOR_TYPE == "Node" || FileSystem.is_cordova
-            path = "http://" + FileSystem._url + ":" +
-              FileSystem._port + FileSystem.url_com + "?s=#{@_session_num}"
+            if FileSystem._port
+                path = "http://" + FileSystem._url + ":" +
+                    FileSystem._port + FileSystem.url_com + "?s=#{@_session_num}"
+            else
+                path = "http://" + FileSystem._url + FileSystem.url_com + "?s=#{@_session_num}"
         else if FileSystem.CONNECTOR_TYPE == "Browser"
             path =  FileSystem.url_com + "?s=#{@_session_num}"
 
@@ -327,8 +330,12 @@ class root.FileSystem
 
             path = ""
             if FileSystem.CONNECTOR_TYPE == "Node" || FileSystem.is_cordova
-                path = "http://" + FileSystem._url + ":" + FileSystem._port +
-                  FileSystem.url_com + "?s=#{fs._session_num}&p=#{tmp._server_id}"
+                if FileSystem._port
+                    path = "http://" + FileSystem._url + ":" + FileSystem._port +
+                        FileSystem.url_com + "?s=#{fs._session_num}&p=#{tmp._server_id}"
+                else
+                    path = "http://" + FileSystem._url +
+                        FileSystem.url_com + "?s=#{fs._session_num}&p=#{tmp._server_id}"
             else if FileSystem.CONNECTOR_TYPE == "Browser"
                 path = FileSystem.url_com + "?s=#{fs._session_num}&p=#{tmp._server_id}"
 
@@ -432,7 +439,10 @@ class root.FileSystem
             # request
             path = ""
             if FileSystem.CONNECTOR_TYPE == "Node" || FileSystem.is_cordova
-                path = "http://" + FileSystem._url + ":" + FileSystem._port + FileSystem.url_com
+                if FileSystem._port
+                    path = "http://" + FileSystem._url + ":" + FileSystem._port + FileSystem.url_com
+                else
+                    path = "http://" + FileSystem._url + FileSystem.url_com
             else if FileSystem.CONNECTOR_TYPE == "Browser"
                 path = FileSystem.url_com
 

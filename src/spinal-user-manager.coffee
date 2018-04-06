@@ -141,7 +141,10 @@ class root.SpinalUserManager
     FileSystem._url = options.hostname
     FileSystem._port = options.port
     if FileSystem.CONNECTOR_TYPE == "Node" || FileSystem.is_cordova
-      path = "http://" + FileSystem._url + ":" + FileSystem._port + get_cmd
+      if (FileSystem._port)
+        path = "http://" + FileSystem._url + ":" + FileSystem._port + get_cmd
+      else
+        path = "http://" + FileSystem._url + get_cmd
     else if FileSystem.CONNECTOR_TYPE == "Browser"
       path = get_cmd
 
