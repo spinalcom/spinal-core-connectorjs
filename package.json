@@ -7,8 +7,7 @@
   "scripts": {
     "test": "$(npm bin)/jasmine",
     "build-for-node": "./build.sh",
-    "build-for-browser": "./build.sh --browser",
-    "postinstall": "node ./scripts/postinstall.js"
+    "build-for-browser": "./build.sh --browser"
   },
   "author": "SpinalCom",
   "license": "SpinalCom Free Software License Agreement",
