@@ -73,10 +73,16 @@ class root.spinalCore
                 dir.add_file file_name, model, { model_type: "Model" }
                 callback_success()
 
+    # register models, required when ussing modules require/import
     @register_models: (modelList) ->
-    #   root = if typeof _root_obj == "undefined" then global else window
-      for m in modelList
-        spinalCore._def[m.name] = m
+      if modelList && modelList instanceof Function
+        modelList = [modelList]
+      if modelList instanceof Array
+        for m in modelList
+            spinalCore._def[m.name] = m
+      else
+        for key, value  of modelList
+            spinalCore._def[key] = value
 
     # loads a model from the file system
     @load: (fs, path, callback_success, callback_error) ->
