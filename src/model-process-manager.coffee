@@ -85,6 +85,8 @@ class root.ModelProcessManager
 
     # return the type of obj
     @get_object_class: ( obj ) ->
+        if obj and obj.constructor and obj.constructor.name
+            return obj.constructor.name
         if obj and obj.constructor and obj.constructor.toString
             arr = obj.constructor.toString().match ///function\s*(\w+)///
             if (!arr)
