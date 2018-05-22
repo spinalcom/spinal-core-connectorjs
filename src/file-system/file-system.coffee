@@ -32,6 +32,7 @@ root = if typeof _root_obj == "undefined" then global else window
 class root.FileSystem
     # when object are saved, their _server_id is assigned to a tmp value
     @popup = 0
+    @debug = false
     @_cur_tmp_server_id = 0
     @_sig_server = true # if changes has to be sent
     @_disp = false
@@ -361,6 +362,8 @@ class root.FileSystem
       if (typeof spinalCore._def[name] != 'undefined')
         return new spinalCore._def[name]()
       if (typeof root[name] == 'undefined')
+        if FileSystem.debug == true
+            console.warn "Got Model type \"#{name}\" from hub but no registered."
         root[name] =  new Function("return function #{name} (){#{name}.super(this);}")()
         FileSystem.extend(root[name], Model)
       return new root[name]()
