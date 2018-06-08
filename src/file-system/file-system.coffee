@@ -193,7 +193,8 @@ class root.FileSystem
                         _obj._server_id = sid
                         FileSystem._objects[ sid ] = _obj
                         for c in FileSystem._type_callbacks
-                            if _obj instanceof root[c[0]]
+                            mod_R = root[c[0]] || spinalCore._def[c[0]]
+                            if _obj instanceof mod_R
                                 c[1] _obj
 
                 FileSystem._sig_server = false
@@ -463,7 +464,8 @@ class root.FileSystem
                             _obj._server_id = sid
                             FileSystem._objects[ sid ] = _obj
                             for c in FileSystem._type_callbacks
-                                if _obj instanceof root[c[0]]
+                                mod_R = root[c[0]] || spinalCore._def[c[0]]
+                                if _obj instanceof mod_R
                                     c[1] _obj
 
                     FileSystem._sig_server = false
