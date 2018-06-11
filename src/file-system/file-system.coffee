@@ -202,7 +202,7 @@ class root.FileSystem
                 eval @responseText
                 FileSystem._sig_server = true
             else if @readyState == 4 && @status == 0
-                console.error("Disconnected form the server with request : #{path}.")
+                console.error("Disconnected from the server with request : #{path}.")
                 _fs = FileSystem.get_inst()
                 if (_fs.make_channel_error_timer == 0)
                   #first disconnect
@@ -239,17 +239,17 @@ class root.FileSystem
           console.log("Reconnected to the server.")
       else if (error_code == 1) # 1st disconnection
         if FileSystem.CONNECTOR_TYPE == "Browser" || FileSystem.is_cordova
-          msg = "Disconnected form the server, trying to reconnect..."
+          msg = "Disconnected from the server, trying to reconnect..."
         else
-          console.error("Disconnected form the server, trying to reconnect...")
+          console.error("Disconnected from the server, trying to reconnect...")
       else if error_code == 2 || error_code == 3 ||  error_code == 4
         if FileSystem.CONNECTOR_TYPE == "Browser" || FileSystem.is_cordova
-          msg = "Disconnected form the server, please refresh the window."
+          msg = "Disconnected from the server, please refresh the window."
         else if FileSystem.CONNECTOR_TYPE == "Node"
-          console.error("Disconnected form the server.")
+          console.error("Disconnected from the server.")
           process.exit()
         else
-          console.error("Disconnected form the server.")
+          console.error("Disconnected from the server.")
 
       if msg != ""
         if FileSystem.popup == 0
