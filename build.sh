@@ -27,11 +27,13 @@ LICENSE_TEXT="/*
 #
 #s}
 
+targets="src/index.coffee src/model-process-manager.coffee src/spinal-user-manager.coffee src/models/model.coffee src/models/model.obj.coffee src/models/model.choice.coffee src/models/model.bool.coffee src/models/model.const* src/models/model.lst.coffee src/models/model.v* src/models/model.str.coffee src/models/model.t* src/models/model.User.coffee src/file-system/*.coffee src/file-system/models/*.coffee src/processes/p* src/processes/b* src/Utils/DomHelper.coffee"
+
 # Build SpinalCore node module from CoffeeScript
 buildForNode()
 {
     echo "${LICENSE_TEXT}" > lib/spinalcore.node.js;
-    cat src/index.coffee src/model-process-manager.coffee src/spinal-user-manager.coffee src/models/model.coffee src/models/model.obj.coffee src/models/model.choice.coffee src/models/model.bool.coffee src/models/model.const* src/models/model.lst.coffee src/models/model.v* src/models/model.str.coffee src/models/model.t* src/models/model.User.coffee src/file-system/*.coffee src/file-system/models/*.coffee src/processes/p* src/processes/b* src/Utils/DomHelper.coffee | $(npm bin)/coffee -bc --stdio >> lib/spinalcore.node.js
+    cat $targets | $(npm bin)/coffee -bc --stdio >> lib/spinalcore.node.js
 }
 
 # Build SpinalCore for browser from node module
@@ -41,6 +43,12 @@ buildForBrowser()
     echo "var _root_obj = this;" > lib/spinalcore.browser.js;
     echo "$($(npm bin)/browserify --detect-globals false extras/browser.js)" >> lib/spinalcore.browser.js;
 }
+
+createDocs()
+{
+    coffeedoc --renderer gfm $targets
+}
+
 
 # Build SpinalCore for both browser and node
 build()
@@ -54,6 +62,8 @@ if [[ $1 == "--browser" ]]; then
     buildForBrowser;
 elif [[ $1 == "--node" ]]; then
     buildForNode;
+elif [[ $1 == "--doc" ]]; then
+    createDocs;
 else
     build;
 fi
