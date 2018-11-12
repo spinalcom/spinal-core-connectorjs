@@ -11,7 +11,7 @@ SpinalCore is a library built for Fog computing that synchronizes objects in rea
 ## Installation
 
 ```
-npm install spinalcore
+npm install https://github.com/spinalcom/spinal-core-connectorjs
 ```
 
 ## QuickStart & docs
