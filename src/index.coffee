@@ -23,9 +23,6 @@
 
 url = require('url')
 root = if typeof _root_obj == "undefined" then global else window
-if (typeof root.spinalCore != 'undefined')
-    module.exports = root.spinalCore
-    return;
 
 # Define main API
 class root.spinalCore
@@ -78,24 +75,14 @@ class root.spinalCore
 
     # register models, required when ussing modules require/import
     @register_models: (modelList) ->
-        if modelList
-            if modelList instanceof Function # function
-                spinalCore._register_models_check modelList
-            if modelList instanceof Array # array
-                for m in modelList
-                    if m instanceof Function
-                        spinalCore._register_models_check m
-            else # object
-                for key, value of modelList
-                    if value instanceof Function
-                        spinalCore._register_models_check value
-
-    @_register_models_check: (func) ->
-        if (typeof spinalCore._def[func.name] != 'undefined' && spinalCore._def[func.name] != func)
-            console.warn "trying to register \"#{func.name}\" Model but was already defined"
-            console.warn "old =", spinalCore._def[func.name]
-            console.warn "new =", func
-        spinalCore._def[func.name] = func
+      if modelList && modelList instanceof Function
+        modelList = [modelList]
+      if modelList instanceof Array
+        for m in modelList
+            spinalCore._def[m.name] = m
+      else
+        for key, value  of modelList
+            spinalCore._def[key] = value
 
     # loads a model from the file system
     @load: (fs, path, callback_success, callback_error) ->
@@ -171,13 +158,13 @@ class root.spinalCore
         # using embedded javascript because the word 'super' is reserved
         `child.super = function () {
             var args = [];
-            for (var i=1; i < arguments.length; i++)
+           	for (var i=1; i < arguments.length; i++)
                 args[i-1] = arguments[i];
             child.__super__.constructor.apply(arguments[0], args);
         }`
 
         root = global ? window
-        child_name = /^(function|class)\s+([\w\$]+)\s*\(/.exec( child.toString() )[ 1 ]
+        child_name = /^function\s+([\w\$]+)\s*\(/.exec( child.toString() )[ 1 ]
         root[child_name] = child
 
 module.exports = spinalCore

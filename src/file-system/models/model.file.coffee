@@ -25,7 +25,7 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class File extends spinalCore._def["Model"]
+class root.File extends Model
     constructor: ( name = "", ptr_or_model = 0, info = {} ) ->
         super()
 
@@ -83,5 +83,3 @@ class File extends spinalCore._def["Model"]
 # TreeView.default_types.push ( evt, info ) ->
 #     d = new Directory
 #     d.drop evt, info
-spinalCore.register_models(File)
-root.File = File

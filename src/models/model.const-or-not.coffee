@@ -23,7 +23,7 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class ConstOrNotModel extends spinalCore._def["Model"]
+class root.ConstOrNotModel extends Model
     constructor: ( bool, model, check_disabled = true ) ->
         super()
                 
@@ -41,6 +41,3 @@ class ConstOrNotModel extends spinalCore._def["Model"]
             
     toString: ->
         @model?.toString()
-
-spinalCore.register_models(ConstOrNotModel)
-root.ConstOrNotModel = ConstOrNotModel

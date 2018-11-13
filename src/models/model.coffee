@@ -23,7 +23,7 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class Model
+class root.Model
     constructor: ( attr ) ->
         # registered attribute names (in declaration order)
         @_attribute_names = []
@@ -380,6 +380,3 @@ class Model
             if not map[ obj.model_id ]?
                 if obj._date_last_modification > date
                     obj._get_flat_model_map map, date
-
-spinalCore.register_models(Model)
-root.Model = Model

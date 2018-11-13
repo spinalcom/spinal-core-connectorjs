@@ -26,7 +26,7 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class Str extends spinalCore._def["Obj"]
+class root.Str extends Obj
     constructor: ( data ) ->
         super()
         
@@ -72,6 +72,7 @@ class Str extends spinalCore._def["Obj"]
 
     #
     _set: ( value ) ->
+       
         if not value?
             return @_set ""
         n = value.toString()
@@ -87,6 +88,3 @@ class Str extends spinalCore._def["Obj"]
 
     _set_state: ( str, map ) ->
         @set decodeURIComponent str
-
-spinalCore.register_models(Str)
-root.Str = Str

@@ -24,9 +24,6 @@
 root = if typeof _root_obj == "undefined" then global else window
 
 # Model representing a session.
-class User extends spinalCore._def["Model"]
+class root.User extends Model
     constructor: ( ) ->
         super()
-
-spinalCore.register_models(User)
-root.User = User

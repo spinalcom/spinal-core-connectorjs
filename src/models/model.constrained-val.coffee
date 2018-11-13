@@ -27,7 +27,7 @@
 # scalar
 root = if typeof _root_obj == "undefined" then global else window
 
-class ConstrainedVal extends spinalCore._def["Model"]
+class root.ConstrainedVal extends Model
     constructor: ( value, params = {} ) ->
         super()
 
@@ -77,6 +77,3 @@ class ConstrainedVal extends spinalCore._def["Model"]
             s = ( n - m ) / d
             r = m + Math.round( ( @val.get() - m ) / s ) * s
             @val.set r
-
-spinalCore.register_models(ConstrainedVal)
-root.ConstrainedVal = ConstrainedVal

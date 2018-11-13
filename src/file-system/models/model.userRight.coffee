@@ -23,13 +23,10 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-# Model representing a UserRight.
-class UserRight extends spinalCore._def["Model"]
+# Model representing a session.
+class root.UserRight extends Model
     constructor: ( ) ->
         super()
 
     set: () ->
-        console.log "Set a UserRight is not allowed."
-
-spinalCore.register_models(UserRight)
-root.UserRight = UserRight
+      console.log "Set a UserRight is not allowed."

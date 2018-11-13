@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with SpinalCore. If not, see <http://www.gnu.org/licenses/>.
 
-root = if typeof _root_obj == "undefined" then global else window
 
 
 # create a new dom element
@@ -24,7 +23,7 @@ root = if typeof _root_obj == "undefined" then global else window
 #  style { ... }
 #  txt for a text node as a child
 #  other paramers are used to set directly set attributes
-root.new_dom_element = ( params = {}, nodeName = "div" ) ->
+new_dom_element = ( params = {}, nodeName = "div" ) ->
     n = document.createElement params.nodeName or nodeName
     for name, val of params
         switch name
@@ -45,7 +44,7 @@ root.new_dom_element = ( params = {}, nodeName = "div" ) ->
 
 # obj is a DOM object. src is a string or an array of
 #  string containing one or several classNames separated with spaces
-root.add_class = ( obj, src ) ->
+add_class = ( obj, src ) ->
     if typeof src == "string"
         return add_class obj, src.split " "
     old = ( obj.className or "" ).split " "
@@ -54,21 +53,21 @@ root.add_class = ( obj, src ) ->
 
 # obj is a DOM object. src is a string or an array of string
 #  containing one or several classNames separated with spaces
-root.rem_class = ( obj, src ) ->
+rem_class = ( obj, src ) ->
     if typeof src == "string"
         return rem_class obj, src.split " "
     old = ( obj.className or "" ).split " "
     obj.className = ( old.filter ( x ) -> x not in src ).join( " " )
 
 # real position of an object
-root.get_left = ( l ) ->
+get_left = ( l ) ->
     if l.offsetParent?
         return l.offsetLeft + get_left( l.offsetParent )
     else
         return l.offsetLeft
 
 # real position of an object
-root.get_top = ( l ) ->
+get_top = ( l ) ->
     if l.offsetParent?
         return l.offsetTop + get_top( l.offsetParent )
     else
@@ -80,7 +79,7 @@ root.get_top = ( l ) ->
 #   onclose
 #   title
 #   msg
-class root.new_alert_msg
+class new_alert_msg
   constructor: (@params = {}) ->
     @rotatating = true
     @deg = 40
