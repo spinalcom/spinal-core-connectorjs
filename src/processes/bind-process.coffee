@@ -28,8 +28,11 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.BindProcess extends Process
+class BindProcess extends spinalCore._def["Process"]
     constructor: ( model, onchange_construction, @f ) ->
         super model, onchange_construction
     onchange: ->
         @f()
+
+spinalCore.register_models(BindProcess)
+root.BindProcess = BindProcess

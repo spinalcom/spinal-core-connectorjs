@@ -26,7 +26,7 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.Obj extends Model
+class Obj extends spinalCore._def["Model"]
     constructor: ( data ) ->
         super()
         
@@ -59,3 +59,6 @@ class root.Obj extends Model
 
     _set_state: ( str, map ) ->
         @set str
+
+spinalCore.register_models(Obj)
+root.Obj = Obj

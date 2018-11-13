@@ -25,7 +25,7 @@
 #
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.Bool extends Obj
+class Bool extends spinalCore._def["Obj"]
     constructor: ( data ) ->
         super()
 
@@ -67,3 +67,6 @@ class root.Bool extends Obj
     _get_fs_data: ( out ) ->
         FileSystem.set_server_id_if_necessary out, this
         out.mod += "C #{@_server_id} #{ 1 * Boolean( @_data ) } "
+
+spinalCore.register_models(Bool)
+root.Bool = Bool

@@ -28,7 +28,7 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.Ptr extends Model
+class Ptr extends spinalCore._def["Model"]
     # model may be a number (the pointer)
     constructor: ( model ) ->
         super()
@@ -75,3 +75,6 @@ class root.Ptr extends Model
 
     _set_state: ( str, map ) ->
         @set str
+
+spinalCore.register_models(Ptr)
+root.Ptr = Ptr

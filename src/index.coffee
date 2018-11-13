@@ -23,6 +23,9 @@
 
 url = require('url')
 root = if typeof _root_obj == "undefined" then global else window
+if (typeof root.spinalCore != 'undefined')
+    module.exports = root.spinalCore
+    return;
 
 # Define main API
 class root.spinalCore
@@ -75,14 +78,24 @@ class root.spinalCore
 
     # register models, required when ussing modules require/import
     @register_models: (modelList) ->
-      if modelList && modelList instanceof Function
-        modelList = [modelList]
-      if modelList instanceof Array
-        for m in modelList
-            spinalCore._def[m.name] = m
-      else
-        for key, value  of modelList
-            spinalCore._def[key] = value
+        if modelList
+            if modelList instanceof Function # function
+                spinalCore._register_models_check modelList
+            if modelList instanceof Array # array
+                for m in modelList
+                    if m instanceof Function
+                        spinalCore._register_models_check m
+            else # object
+                for key, value of modelList
+                    if value instanceof Function
+                        spinalCore._register_models_check value
+
+    @_register_models_check: (func) ->
+        if (typeof spinalCore._def[func.name] != 'undefined' && spinalCore._def[func.name] != func)
+            console.warn "trying to register \"#{func.name}\" Model but was already defined"
+            console.warn "old =", spinalCore._def[func.name]
+            console.warn "new =", func
+        spinalCore._def[func.name] = func
 
     # loads a model from the file system
     @load: (fs, path, callback_success, callback_error) ->

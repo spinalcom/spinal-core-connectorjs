@@ -23,7 +23,7 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.TypedArray extends Model
+class TypedArray extends spinalCore._def["Model"]
     # size can be
     #  - a number
     #  - a list of number
@@ -159,3 +159,6 @@ class root.TypedArray extends Model
         @_data = new B n
         for v in [ 0 ... n ]
             @_data[ v ] = parseFloat l[ s + 1 + v ]
+
+spinalCore.register_models(TypedArray)
+root.TypedArray = TypedArray
