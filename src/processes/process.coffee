@@ -28,7 +28,7 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.Process
+class Process
     
     # m can be a model or a list of models
     constructor: ( m, onchange_construction = true ) ->
@@ -68,3 +68,6 @@ root.bind = ( m, f ) ->
     else
         for i in m
             i.bind f
+
+spinalCore.register_models(Process)
+root.Process = Process

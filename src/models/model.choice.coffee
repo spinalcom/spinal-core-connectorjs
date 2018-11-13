@@ -28,7 +28,7 @@
 # lst contains the posible choices
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.Choice extends Model
+class Choice extends spinalCore._def["Model"]
     constructor: ( data, initial_list = [] ) ->
         super()
         
@@ -68,4 +68,6 @@ class root.Choice extends Model
 
     _nlst: ->
         l for l in @lst when @filter l
-        
+
+spinalCore.register_models(Choice)
+root.Choice = Choice

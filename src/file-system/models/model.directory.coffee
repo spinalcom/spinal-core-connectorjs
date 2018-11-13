@@ -27,7 +27,7 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.Directory extends Lst
+class Directory extends spinalCore._def["Lst"]
     constructor: () ->
         super()
 
@@ -87,3 +87,6 @@ class root.Directory extends Lst
 
     get_file_info: ( info ) ->
         info.icon = "folder"
+
+spinalCore.register_models(Directory)
+root.Directory = Directory

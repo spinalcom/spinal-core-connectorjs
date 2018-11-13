@@ -24,7 +24,7 @@
 #
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.TiffFile extends File
+class TiffFile extends spinalCore._def["File"]
     constructor: ( name = "", ptr_or_model = 0, ptr_tiff = 0, info = {} ) ->
         super(name, ptr_or_model, info)
 
@@ -36,3 +36,6 @@ class root.TiffFile extends File
 
     load_tiff: ( callback ) ->
         @_ptr_tiff.load callback
+
+spinalCore.register_models(TiffFile)
+root.TiffFile = TiffFile

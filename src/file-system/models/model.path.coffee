@@ -26,7 +26,7 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.Path extends Model
+class Path extends spinalCore._def["Model"]
     # @file is optionnal. Must be a javascript File object
     constructor: ( @file ) ->
         super()
@@ -49,3 +49,6 @@ class root.Path extends Model
         # permit to send the data after the server's answer
         if @file? and @_server_id & 3
             FileSystem._files_to_upload[ @_server_id ] = this
+
+spinalCore.register_models(Path)
+root.Path = Path

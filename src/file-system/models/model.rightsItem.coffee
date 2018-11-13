@@ -23,7 +23,10 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-# Model representing a session.
-class root.RightsItem extends Lst
+# Model representing a RightsItem.
+class RightsItem extends spinalCore._def["Lst"]
     constructor: ( ) ->
         super()
+
+spinalCore.register_models(RightsItem)
+root.RightsItem = RightsItem
