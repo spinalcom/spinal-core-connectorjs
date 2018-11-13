@@ -384,13 +384,13 @@ class FileSystem
         # using embedded javascript because the word 'super' is reserved
         `child.super = function () {
             var args = [];
-           	for (var i=1; i < arguments.length; i++)
+            for (var i=1; i < arguments.length; i++)
                 args[i-1] = arguments[i];
             child.__super__.constructor.apply(arguments[0], args);
         }`
 
         root = global ? window
-        child_name = /^function\s+([\w\$]+)\s*\(/.exec( child.toString() )[ 1 ]
+        child_name = /^(function|class)\s+([\w\$]+)\s*\(/.exec( child.toString() )[ 1 ]
         root[child_name] = child
 
     @_get_new_tmp_server_id: ->
