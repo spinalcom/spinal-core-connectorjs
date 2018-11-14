@@ -23,7 +23,7 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.TypedArray_Float32 extends TypedArray
+class TypedArray_Float32 extends spinalCore._def["TypedArray"]
     constructor: ( size = [], data ) ->
         super size, data
         
@@ -32,4 +32,6 @@ class root.TypedArray_Float32 extends TypedArray
 
     deep_copy: ->
         new TypedArray_Float32 @_size, @_data
-    
+
+spinalCore.register_models(TypedArray_Float32)
+root.TypedArray_Float32 = TypedArray_Float32

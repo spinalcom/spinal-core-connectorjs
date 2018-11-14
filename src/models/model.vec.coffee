@@ -23,7 +23,7 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.Vec extends Lst
+class Vec extends spinalCore._def["Lst"]
     constructor: ( data ) ->
         super data
 
@@ -32,4 +32,6 @@ class root.Vec extends Lst
 
     _underlying_fs_type: ->
         "Lst"
-        
+
+spinalCore.register_models(Vec)
+root.Vec = Vec

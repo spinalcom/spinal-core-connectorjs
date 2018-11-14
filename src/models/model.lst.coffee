@@ -25,7 +25,7 @@
 # vector of objects inherited from Model
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.Lst extends Model
+class Lst extends spinalCore._def["Model"]
     constructor: ( data ) ->
         super()
         
@@ -133,7 +133,7 @@ class root.Lst extends Model
             element = ModelProcessManager.conv element
         if this not in element._parents
             element._parents.push this
- 
+
         if @length
             for i in [ @length - 1 .. 0 ]
                 @[ i + 1 ] = @[ i ]
@@ -388,3 +388,6 @@ class root.Lst extends Model
              "#{ModelProcessManager.get_object_class this}) is forbidden"
             return true
         return false
+
+spinalCore.register_models(Lst)
+root.Lst = Lst

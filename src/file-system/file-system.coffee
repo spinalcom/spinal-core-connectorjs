@@ -29,7 +29,7 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class root.FileSystem
+class FileSystem
     # when object are saved, their _server_id is assigned to a tmp value
     @popup = 0
     @debug = false
@@ -182,7 +182,7 @@ class root.FileSystem
             if @readyState == 4 and @status == 200
                 _fs = FileSystem.get_inst()
                 if (_fs.make_channel_error_timer != 0)
-                  _fs.onConnectionError(0)
+                    _fs.onConnectionError(0)
                 _fs.make_channel_error_timer = 0
                 if FileSystem._disp
                     console.log "chan ->", @responseText
@@ -205,17 +205,17 @@ class root.FileSystem
                 console.error("Disconnected from the server with request : #{path}.")
                 _fs = FileSystem.get_inst()
                 if (_fs.make_channel_error_timer == 0)
-                  #first disconnect
-                  console.log("Trying to reconnect.")
-                  _fs.make_channel_error_timer = new Date()
-                  setTimeout(_fs.make_channel.bind(_fs), 1000)
-                  _fs.onConnectionError(1)
+                    #first disconnect
+                    console.log("Trying to reconnect.")
+                    _fs.make_channel_error_timer = new Date()
+                    setTimeout(_fs.make_channel.bind(_fs), 1000)
+                    _fs.onConnectionError(1)
                 else if (((new Date()) - _fs.make_channel_error_timer) <
-                 FileSystem._timeout_reconnect)
-                  # under timeout
-                  setTimeout(_fs.make_channel.bind(_fs), 1000)
+                    FileSystem._timeout_reconnect)
+                        # under timeout
+                        setTimeout(_fs.make_channel.bind(_fs), 1000)
                 else # timeout reached
-                  _fs.onConnectionError(2)
+                    _fs.onConnectionError(2)
             else if @readyState == 4 && @status == 500
                 FileSystem.get_inst().onConnectionError(3)
 
@@ -358,16 +358,15 @@ class root.FileSystem
         FileSystem.signal_change(FileSystem._objects[ res ])
 
     @_create_model_by_name: (name) ->
-      if (typeof name != "string")
-        return name; # for old spinalcore version
-      if (typeof spinalCore._def[name] != 'undefined')
-        return new spinalCore._def[name]()
-      if (typeof root[name] == 'undefined')
-        if FileSystem.debug == true
-            console.warn "Got Model type \"#{name}\" from hub but no registered."
-        root[name] =  new Function("return function #{name} (){#{name}.super(this);}")()
-        FileSystem.extend(root[name], Model)
-      return new root[name]()
+        if (typeof name != "string")
+            return name; # for old spinalcore version
+        if (typeof spinalCore._def[name] != 'undefined')
+            return new spinalCore._def[name]()
+        if (typeof root[name] == 'undefined')
+            if FileSystem.debug == true
+                console.warn "Got Model type \"#{name}\" from hub but not registered."
+            root[name] =  new Function("return class #{name} extends spinalCore._def[\"Model\"] {}")()
+        return new root[name]()
 
     @extend: (child, parent) ->
         for key, value of parent
@@ -384,13 +383,13 @@ class root.FileSystem
         # using embedded javascript because the word 'super' is reserved
         `child.super = function () {
             var args = [];
-           	for (var i=1; i < arguments.length; i++)
+            for (var i=1; i < arguments.length; i++)
                 args[i-1] = arguments[i];
             child.__super__.constructor.apply(arguments[0], args);
         }`
 
         root = global ? window
-        child_name = /^function\s+([\w\$]+)\s*\(/.exec( child.toString() )[ 1 ]
+        child_name = /^(function|class)\s+([\w\$]+)\s*\(/.exec( child.toString() )[ 1 ]
         root[child_name] = child
 
     @_get_new_tmp_server_id: ->
@@ -475,7 +474,7 @@ class root.FileSystem
                     for c in _c
                         FileSystem._callbacks[ c[ 0 ] ] FileSystem._objects[ c[ 1 ] ], c[ 2 ]
                 else if @readyState == 4 && (@status == 0 || @status == 500)
-                  FileSystem.get_inst().onConnectionError(4)
+                    FileSystem.get_inst().onConnectionError(4)
 
             if FileSystem._disp
                 console.log "sent ->", f._data_to_send + "E "
@@ -501,3 +500,5 @@ class root.FileSystem
 
         else
             console.log "you must define CONNECTOR_TYPE"
+spinalCore.register_models(FileSystem)
+root.FileSystem = FileSystem

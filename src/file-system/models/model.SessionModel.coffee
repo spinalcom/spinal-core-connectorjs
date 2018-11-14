@@ -24,7 +24,7 @@
 root = if typeof _root_obj == "undefined" then global else window
 
 # Model representing a session.
-class root.SessionModel extends Model
+class SessionModel extends spinalCore._def["Model"]
     constructor: ( ) ->
         super()
 
@@ -34,3 +34,6 @@ class root.SessionModel extends Model
         #   timestamp: 0          # timestamp of the last change or make_channel
         #   type: "Session type"  # type of the session e.g. HTTTP_JavaScript
         #   actif: true           # state of the session true/false
+
+spinalCore.register_models(SessionModel)
+root.SessionModel = SessionModel
