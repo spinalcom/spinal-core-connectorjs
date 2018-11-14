@@ -11,6 +11,8 @@
   "author": "SpinalCom",
   "license": "SpinalCom Free Software License Agreement",
   "devDependencies": {
+    "@babel/core": "^7.1.6",
+    "@babel/preset-env": "^7.1.6",
     "browserify": "^13.0.0",
     "coffeescript": "^2.3.2",
     "jasmine": "^2.4.1",

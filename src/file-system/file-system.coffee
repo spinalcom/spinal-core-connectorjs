@@ -364,9 +364,8 @@ class FileSystem
             return new spinalCore._def[name]()
         if (typeof root[name] == 'undefined')
             if FileSystem.debug == true
-                console.warn "Got Model type \"#{name}\" from hub but no registered."
-            root[name] =  new Function("return function #{name} (){#{name}.super(this);}")()
-            FileSystem.extend(root[name], Model)
+                console.warn "Got Model type \"#{name}\" from hub but not registered."
+            root[name] =  new Function("return class #{name} extends spinalCore._def[\"Model\"] {}")()
         return new root[name]()
 
     @extend: (child, parent) ->
