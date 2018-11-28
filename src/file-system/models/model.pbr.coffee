@@ -28,7 +28,9 @@
 
 root = if typeof _root_obj == "undefined" then global else window
 
-class Pbr extends spinalCore._def["Ptr"] {}
+class Pbr extends spinalCore._def["Ptr"]
+  constructor: ( model ) ->
+    super(model)
 
 spinalCore.register_models(Pbr)
 root.Pbr = Pbr
