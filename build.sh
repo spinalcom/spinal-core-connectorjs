@@ -27,11 +27,44 @@ LICENSE_TEXT="/*
 #
 #s}
 
+FILES="src/index.coffee\
+    src/model-process-manager.coffee\
+    src/spinal-user-manager.coffee\
+    src/models/model.coffee\
+    src/models/model.obj.coffee\
+    src/models/model.choice.coffee\
+    src/models/model.bool.coffee\
+    src/models/model.const-or-not.coffee\
+    src/models/model.constrained-val.coffee\
+    src/models/model.lst.coffee\
+    src/models/model.val.coffee\
+    src/models/model.vec.coffee\
+    src/models/model.str.coffee\
+    src/models/model.typed-array.coffee\
+    src/models/model.typed-array-float32.coffee\
+    src/models/model.typed-array-float64.coffee\
+    src/models/model.typed-array-int32.coffee\
+    src/models/model.User.coffee\
+    src/file-system/file-system.coffee\
+    src/file-system/models/model.directory.coffee\
+    src/file-system/models/model.file.coffee\
+    src/file-system/models/model.path.coffee\
+    src/file-system/models/model.ptr.coffee\
+    src/file-system/models/model.pbr.coffee\
+    src/file-system/models/model.rightsItem.coffee\
+    src/file-system/models/model.SessionModel.coffee\
+    src/file-system/models/model.tiff-file.coffee\
+    src/file-system/models/model.userRight.coffee\
+    src/file-system/models/mode.rightSetList.coffee\
+    src/processes/process.coffee\
+    src/processes/bind-process.coffee\
+    src/Utils/DomHelper.coffee"
+
 # Build SpinalCore node module from CoffeeScript
 buildForNode()
 {
     echo "${LICENSE_TEXT}" > lib/spinalcore.node.js;
-    cat src/index.coffee src/model-process-manager.coffee src/spinal-user-manager.coffee src/models/model.coffee src/models/model.obj.coffee src/models/model.choice.coffee src/models/model.bool.coffee src/models/model.const* src/models/model.lst.coffee src/models/model.v* src/models/model.str.coffee src/models/model.t* src/models/model.User.coffee src/file-system/*.coffee src/file-system/models/*.coffee src/processes/p* src/processes/b* src/Utils/DomHelper.coffee | $(npm bin)/coffee -t -c --stdio >> lib/spinalcore.node.js
+    cat $FILES | $(npm bin)/coffee -t -c --stdio >> lib/spinalcore.node.js
 }
 
 # Build SpinalCore for browser from node module

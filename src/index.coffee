@@ -31,6 +31,7 @@ if (typeof root.spinalCore != 'undefined')
 class root.spinalCore
 
     @_def = {}
+    @version = "2.4.0"
 
     @connect: (options) ->
         if typeof options == 'string'
