@@ -38,9 +38,20 @@ class Ptr extends spinalCore._def["Model"]
     load: ( callback ) ->
         if @data.model?
             callback @data.model, false
+            return Promise.resolve(@data.model, false)
+        else if @data.value and @data.value != 0 and FileSystem._objects[@data.value]
+            callback(FileSystem._objects[@data.value], false)
+            return Promise.resolve(FileSystem._objects[@data.value], false)
         else
-            FileSystem.get_inst()?.load_ptr @data.value, callback
-            
+            return new Promise(
+                (resolve) =>
+                    FileSystem.get_inst()?.load_ptr(@data.value,
+                        (model_load, ischange) ->
+                            if (typeof callback != 'undefined')
+                                callback(model_load, ischange)
+                            resolve(model_load, ischange)
+                    )
+            )            
         
     _get_fs_data: ( out ) ->
         FileSystem.set_server_id_if_necessary out, this

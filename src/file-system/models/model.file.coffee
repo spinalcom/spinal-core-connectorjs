@@ -52,7 +52,7 @@ class File extends spinalCore._def["Model"]
                 # -> to_upload
         }
     load: ( callback ) ->
-        @_ptr.load callback
+        return @_ptr.load callback
     
     
 #     drop: ( evt, info ) ->

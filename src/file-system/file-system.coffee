@@ -26,6 +26,8 @@
 # data from changed object are sent if not activity since 100ms
 #
 #
+axios = require('axios')
+axios.defaults.headers.post['Content-Type'] = 'text/plain'
 
 root = if typeof _root_obj == "undefined" then global else window
 
@@ -169,24 +171,24 @@ class FileSystem
         path = ""
         if FileSystem.CONNECTOR_TYPE == "Node" || FileSystem.is_cordova
             if FileSystem._port
-                path = "http://" + FileSystem._url + ":" +
-                    FileSystem._port + FileSystem.url_com + "?s=#{@_session_num}"
+                path = "http://" + FileSystem._url + ":" + FileSystem._port + FileSystem.url_com
             else
-                path = "http://" + FileSystem._url + FileSystem.url_com + "?s=#{@_session_num}"
+                path = "http://" + FileSystem._url + FileSystem.url_com
         else if FileSystem.CONNECTOR_TYPE == "Browser"
-            path =  FileSystem.url_com + "?s=#{@_session_num}"
+            path =  FileSystem.url_com
 
-        xhr_object = FileSystem._my_xml_http_request()
-        xhr_object.open 'GET', path, true
-        xhr_object.onreadystatechange = ->
-            if @readyState == 4 and @status == 200
+        axios({
+            method: 'get',
+            url: path,
+            responseType: 'text',
+            params: {
+                s: @_session_num
+            }
+        }).then(
+            (response) ->
                 _fs = FileSystem.get_inst()
-                if (_fs.make_channel_error_timer != 0)
-                    _fs.onConnectionError(0)
-                _fs.make_channel_error_timer = 0
                 if FileSystem._disp
-                    console.log "chan ->", @responseText
-
+                    console.log "chan ->", response.data
                 _w = ( sid, obj ) ->
                     _obj = FileSystem._create_model_by_name obj
                     if sid? and _obj?
@@ -198,28 +200,58 @@ class FileSystem
                                 c[1] _obj
 
                 FileSystem._sig_server = false
-
-                eval @responseText
+                eval response.data
                 FileSystem._sig_server = true
-            else if @readyState == 4 && @status == 0
-                console.error("Disconnected from the server with request : #{path}.")
-                _fs = FileSystem.get_inst()
-                if (_fs.make_channel_error_timer == 0)
-                    #first disconnect
-                    console.log("Trying to reconnect.")
-                    _fs.make_channel_error_timer = new Date()
-                    setTimeout(_fs.make_channel.bind(_fs), 1000)
-                    _fs.onConnectionError(1)
-                else if (((new Date()) - _fs.make_channel_error_timer) <
-                    FileSystem._timeout_reconnect)
-                        # under timeout
-                        setTimeout(_fs.make_channel.bind(_fs), 1000)
-                else # timeout reached
-                    _fs.onConnectionError(2)
-            else if @readyState == 4 && @status == 500
+        ).catch(
+            (response) ->
+                console.error("Disconnected from the server with status \"#{
+                    response.status}\" with request : #{path}.")
                 FileSystem.get_inst().onConnectionError(3)
+        )
+        # xhr_object = FileSystem._my_xml_http_request()
+        # xhr_object.open 'GET', path, true
+        # xhr_object.onreadystatechange = ->
+        #     if @readyState == 4 and @status == 200
+        #         _fs = FileSystem.get_inst()
+        #         if (_fs.make_channel_error_timer != 0)
+        #             _fs.onConnectionError(0)
+        #         _fs.make_channel_error_timer = 0
+        #         if FileSystem._disp
+        #             console.log "chan ->", @responseText
 
-        xhr_object.send()
+        #         _w = ( sid, obj ) ->
+        #             _obj = FileSystem._create_model_by_name obj
+        #             if sid? and _obj?
+        #                 _obj._server_id = sid
+        #                 FileSystem._objects[ sid ] = _obj
+        #                 for c in FileSystem._type_callbacks
+        #                     mod_R = root[c[0]] || spinalCore._def[c[0]]
+        #                     if _obj instanceof mod_R
+        #                         c[1] _obj
+
+        #         FileSystem._sig_server = false
+
+        #         eval @responseText
+        #         FileSystem._sig_server = true
+        #     else if @readyState == 4 && @status == 0
+        #         console.error("Disconnected from the server with request : #{path}.")
+        #         _fs = FileSystem.get_inst()
+        #         if (_fs.make_channel_error_timer == 0)
+        #             #first disconnect
+        #             console.log("Trying to reconnect.")
+        #             _fs.make_channel_error_timer = new Date()
+        #             setTimeout(_fs.make_channel.bind(_fs), 1000)
+        #             _fs.onConnectionError(1)
+        #         else if (((new Date()) - _fs.make_channel_error_timer) <
+        #             FileSystem._timeout_reconnect)
+        #                 # under timeout
+        #                 setTimeout(_fs.make_channel.bind(_fs), 1000)
+        #         else # timeout reached
+        #             _fs.onConnectionError(2)
+        #     else if @readyState == 4 && @status == 500
+        #         FileSystem.get_inst().onConnectionError(3)
+
+        # xhr_object.send()
 
 
     # default callback on make_channel error after the timeout disconnected reached
@@ -306,7 +338,7 @@ class FileSystem
             FileSystem._objects_to_send[ m.model_id ] = m
             if FileSystem._timer_chan?
                 clearTimeout FileSystem._timer_chan
-            FileSystem._timer_chan = setTimeout FileSystem._timeout_chan_func, 250
+            FileSystem._timer_chan = setTimeout FileSystem._timeout_chan_func, 100
 
     #
     @_tmp_id_to_real: ( tmp_id, res ) ->
@@ -332,27 +364,33 @@ class FileSystem
 
             path = ""
             if FileSystem.CONNECTOR_TYPE == "Node" || FileSystem.is_cordova
+                path = "http://" + FileSystem._url
                 if FileSystem._port
-                    path = "http://" + FileSystem._url + ":" + FileSystem._port +
-                        FileSystem.url_com + "?s=#{fs._session_num}&p=#{tmp._server_id}"
-                else
-                    path = "http://" + FileSystem._url +
-                        FileSystem.url_com + "?s=#{fs._session_num}&p=#{tmp._server_id}"
-            else if FileSystem.CONNECTOR_TYPE == "Browser"
-                path = FileSystem.url_com + "?s=#{fs._session_num}&p=#{tmp._server_id}"
+                    path += ":" + FileSystem._port
+            path += FileSystem.url_com
 
-            xhr_object = FileSystem._my_xml_http_request()
-            xhr_object.open 'PUT', path, true
-            xhr_object.onreadystatechange = ->
-                if @readyState == 4 and @status == 200
+            axios.put(path, tmp.file, {
+                responseType: 'text',
+                params: {
+                    s: fs._session_num,
+                    p: tmp._server_id
+                }
+            }).then(
+                (response) ->
                     _w = ( sid, obj ) ->
                         _obj = FileSystem._create_model_by_name obj
                         if sid? and _obj?
                             _obj._server_id = sid
                             FileSystem._objects[ sid ] = _obj
 
-                    eval @responseText
-            xhr_object.send tmp.file
+                    eval response.data
+            ).catch(
+                (response) ->
+                    console.error("Disconnected from the server with status \"#{
+                    response.status}\" with request : #{path}.")
+                    _fs = FileSystem.get_inst()
+                    _fs.onConnectionError(3)
+            )
             delete tmp.file
 
         FileSystem.signal_change(FileSystem._objects[ res ])
@@ -442,19 +480,21 @@ class FileSystem
             # request
             path = ""
             if FileSystem.CONNECTOR_TYPE == "Node" || FileSystem.is_cordova
+                path = "http://" + FileSystem._url
                 if FileSystem._port
-                    path = "http://" + FileSystem._url + ":" + FileSystem._port + FileSystem.url_com
-                else
-                    path = "http://" + FileSystem._url + FileSystem.url_com
-            else if FileSystem.CONNECTOR_TYPE == "Browser"
-                path = FileSystem.url_com
+                    path += ":" + FileSystem._port
+            path += FileSystem.url_com
 
-            xhr_object = FileSystem._my_xml_http_request()
-            xhr_object.open 'POST', path, true
-            xhr_object.onreadystatechange = ->
-                if @readyState == 4 and @status == 200
+            axios({
+                method: 'post',
+                url: path,
+                responseType: 'text',
+                headers: { 'content-type': 'text/plain' },
+                data: f._data_to_send + "E "
+            }).then(
+                (response) ->
                     if FileSystem._disp
-                        console.log "resp ->", @responseText
+                        console.log "resp ->", response.data
 
                     _c = [] # callbacks
                     _w = ( sid, obj ) ->
@@ -468,21 +508,20 @@ class FileSystem
                                     c[1] _obj
 
                     FileSystem._sig_server = false
-                    eval @responseText
+                    eval response.data
                     FileSystem._sig_server = true
 
                     for c in _c
                         FileSystem._callbacks[ c[ 0 ] ] FileSystem._objects[ c[ 1 ] ], c[ 2 ]
-                else if @readyState == 4 && (@status == 0 || @status == 500)
+            ).catch(
+                (response) ->
+                    console.error response
                     FileSystem.get_inst().onConnectionError(4)
 
+            )
             if FileSystem._disp
                 console.log "sent ->", f._data_to_send + "E "
-            xhr_object.setRequestHeader('Content-Type', 'text/plain')
-            xhr_object.send f._data_to_send + "E "
-            #console.log "-> ", f._data_to_send
             f._data_to_send = ""
-
         #
         FileSystem._objects_to_send = {}
         delete FileSystem._timer_send

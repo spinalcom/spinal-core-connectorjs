@@ -55,9 +55,18 @@ class root.spinalCore
 
     # stores a model in the file system
     @store: (fs, model, path, callback_success, callback_error) ->
+        func = spinalCore.store
+        if ( callback_success == undefined )
+            return new Promise( (resolve, reject) ->
+                func(fs, model, path, (result) -> 
+                    resolve(result)
+                , (err) ->
+                    reject(err)
+                )
+            )
         if typeof callback_error == "undefined"
-          callback_error = ->
-            console.log("Model could not be stored. You can pass a callback to handle this error.")
+            callback_error = ->
+                console.log("Model could not be stored. You can pass a callback to handle this error.")
 
         # Parse path
         lst = path.split "/"
@@ -99,9 +108,18 @@ class root.spinalCore
 
     # loads a model from the file system
     @load: (fs, path, callback_success, callback_error) ->
+        func = spinalCore.load
+        if ( callback_success == undefined )
+            return new Promise( (resolve, reject) ->
+                func(fs, model, path, (result) -> 
+                    resolve(result)
+                , (err) ->
+                    reject(err)
+                )
+            )
         if typeof callback_error == "undefined"
-          callback_error = ->
-            console.log("Model could not be loaded. You can pass a callback to handle this error.")
+            callback_error = ->
+                console.log("Model could not be loaded. You can pass a callback to handle this error.")
 
         # Parse path
         lst = path.split "/"
@@ -127,9 +145,9 @@ class root.spinalCore
     # loads all the models of a specific type
     @load_type: (fs, type, callback_success, callback_error) ->
         if typeof callback_error == "undefined"
-          callback_error = ->
-            console.log("Model of this type could not be loaded. " +
-             "You can pass a callback to handle this error.")
+            callback_error = ->
+                console.log("Model of this type could not be loaded. " +
+                "You can pass a callback to handle this error.")
 
         fs.load_type type, ( data, err ) ->
             if err
@@ -138,10 +156,20 @@ class root.spinalCore
                 callback_success data, err
 
     @load_right: (fs, ptr, callback_success, callback_error) ->
+        func = spinalCore.load_right
+        if ( callback_success == undefined )
+            return new Promise( (resolve, reject) ->
+                func(fs, model, path, (result) -> 
+                    resolve(result)
+                , (err) ->
+                    reject(err)
+                )
+            )
+
         if typeof callback_error == "undefined"
             callback_error = ->
-                console.log("Model Right could not be loaded."+
-                 " You can pass a callback to handle this error.")
+                console.log("Model Right could not be loaded." +
+                    " You can pass a callback to handle this error.")
 
         fs.load_right ptr, ( data, err ) ->
             if err

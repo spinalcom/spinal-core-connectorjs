@@ -1,6 +1,6 @@
 {
   "name": "spinal-core-connectorjs",
-  "version": "2.3.8",
+  "version": "2.4.0",
   "description": "Fog middleware that enables data virtualization and interoperability for the Internet of Things",
   "main": "lib/spinalcore.node.js",
   "scripts": {
@@ -19,6 +19,7 @@
     "jasmine-ajax": "^3.2.0"
   },
   "dependencies": {
+    "axios": "^0.18.0",
     "xhr2": "^0.1.3"
   }
 }
