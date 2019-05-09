@@ -21,17 +21,22 @@
 # with this file. If not, see
 # <http://resources.spinalcom.com/licenses.pdf>.
 
-# root = if typeof _root_obj == "undefined" then global else window
+# 
+##  TypedArray_Float32 is broken in spinalHub do not use
+# 
 
-# class TypedArray_Float32 extends spinalCore._def["TypedArray"]
-#     constructor: ( size = [], data ) ->
-#         super size, data
+root = if typeof _root_obj == "undefined" then global else window
+
+class TypedArray_Float32 extends spinalCore._def["TypedArray"]
+    constructor: ( size = [], data ) ->
+        super size, data
+        console.error(new Error('TypedArray_Float32 is broken in spinalHub use, TypedArray_Float64 instead.'))
         
-#     base_type: ->
-#         Float32Array
+    base_type: ->
+        Float32Array
 
-#     deep_copy: ->
-#         new TypedArray_Float32 @_size, @_data
+    deep_copy: ->
+        new TypedArray_Float32 @_size, @_data
 
-# spinalCore.register_models(TypedArray_Float32)
-# root.TypedArray_Float32 = TypedArray_Float32
+spinalCore.register_models(TypedArray_Float32)
+root.TypedArray_Float32 = TypedArray_Float32
