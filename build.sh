@@ -41,7 +41,6 @@ FILES="src/index.coffee\
     src/models/model.vec.coffee\
     src/models/model.str.coffee\
     src/models/model.typed-array.coffee\
-    src/models/model.typed-array-float32.coffee\
     src/models/model.typed-array-float64.coffee\
     src/models/model.typed-array-int32.coffee\
     src/models/model.User.coffee\
