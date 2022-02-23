@@ -1,24 +1,59 @@
 {
   "name": "spinal-core-connectorjs",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "description": "Fog middleware that enables data virtualization and interoperability for the Internet of Things",
-  "main": "lib/spinalcore.node.js",
+  "source": "src/index.ts",
+  "types": "declarations/types.d.ts",
+  "main": "dist/main.js",
+  "module": "dist/module.js",
   "scripts": {
-    "test": "$(npm bin)/jasmine",
-    "build-for-node": "./build.sh",
-    "build-for-browser": "./build.sh --browser"
+    "watch": "parcel watch --no-optimize",
+    "build": "rm -rf dist declarations .parcel-cache && parcel build --no-optimize",
+    "buildnoOpti": "rm -rf dist declarations .parcel-cache && parcel build --no-optimize",
+    "buildv": "rm -rf dist declarations && parcel build --no-optimize --log-level verbose"
   },
   "author": "SpinalCom",
   "license": "SpinalCom Free Software License Agreement",
+  "targets": {
+    "browser_modern": {
+      "outputFormat": "global",
+      "context": "browser",
+      "scopeHoist": false,
+      "engines": {
+        "browsers": "Chrome 80"
+      }
+    },
+    "browser_legacy": {
+      "outputFormat": "global",
+      "context": "browser",
+      "engines": {
+        "browsers": "> 0.5%, last 2 versions, not dead"
+      }
+    },
+    "node_modern": {
+      "outputFormat": "commonjs",
+      "engines": {
+        "node": ">= 16"
+      }
+    },
+    "node_legacy": {
+      "outputFormat": "commonjs",
+      "engines": {
+        "node": "5"
+      }
+    }
+  },
   "devDependencies": {
-    "@babel/core": "^7.1.6",
-    "@babel/preset-env": "^7.1.6",
-    "browserify": "^13.0.0",
-    "coffeescript": "^2.3.2",
-    "jasmine": "^2.4.1",
-    "jasmine-ajax": "^3.2.0"
+    "@parcel/packager-ts": "^2.3.2",
+    "@parcel/transformer-typescript-tsc": "^2.3.2",
+    "@parcel/transformer-typescript-types": "^2.3.2",
+    "@types/node": "^17.0.19",
+    "process": "^0.11.10",
+    "typescript": "^4.5.5"
   },
   "dependencies": {
-    "xhr2": "^0.1.3"
+    "axios": "^0.26.0",
+    "parcel": "^2.3.2",
+    "xhr2": "^0.2.1"
   }
 }
