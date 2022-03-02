@@ -122,10 +122,21 @@ var $fVm9W = parcelRequire("fVm9W");
 
 class FileSystem {
     constructor({ url , port , home_dir , userid , password , sessionId , accessToken ,  }){
-        // url and port of the server
-        this._url = '127.0.0.1';
-        this._port = '8888';
-        this._accessToken = null;
+        /**
+         * @private
+         * @type {string}
+         * @memberof FileSystem
+         */ this._url = '127.0.0.1';
+        /**
+         * @private
+         * @type {(string | number)}
+         * @memberof FileSystem
+         */ this._port = '8888';
+        /**
+         * @private
+         * @type {string}
+         * @memberof FileSystem
+         */ this._accessToken = null;
         // default values
         this._data_to_send = '';
         this._session_num = -2;
@@ -152,7 +163,13 @@ class FileSystem {
             FileSystem._insts[this._num_inst].make_channel();
         }
     }
-    static get _userid() {
+    /**
+     * @deprecated
+     * @readonly
+     * @static
+     * @type {(string | number)}
+     * @memberof FileSystem
+     */ static get _userid() {
         console.warn('Using FileSystem._userid is deprecated.');
         return 644;
     }
@@ -438,7 +455,13 @@ class FileSystem {
             FileSystem._timer_chan = setTimeout(FileSystem._timeout_chan_func, 250);
         }
     }
-    static _tmp_id_to_real(tmp_id, res) {
+    /**
+     * @static
+     * @param {number} tmp_id
+     * @param {number} res
+     * @return {*}  {void}
+     * @memberof FileSystem
+     */ static _tmp_id_to_real(tmp_id, res) {
         const tmp = FileSystem._tmp_objects[tmp_id];
         if (tmp == null) console.log(tmp_id);
         FileSystem._objects[res] = tmp;
@@ -522,8 +545,13 @@ class FileSystem {
         FileSystem._send_chan();
         delete FileSystem._timer_chan;
     }
-    // get data of objects to send
-    static _get_chan_data() {
+    /**
+     * get data of objects to send
+     * @private
+     * @static
+     * @return {*}  {string}
+     * @memberof FileSystem
+     */ static _get_chan_data() {
         const out = {
             cre: '',
             mod: ''
@@ -533,7 +561,11 @@ class FileSystem {
         };
         return out.cre + out.mod;
     }
-    static _timeout_send_func() {
+    /**
+     * @private
+     * @static
+     * @memberof FileSystem
+     */ static _timeout_send_func() {
         // if some model have changed, we have to send the changes now
         const out = FileSystem._get_chan_data();
         for(const k in FileSystem._insts)FileSystem._insts[k]._data_to_send += out;
@@ -585,7 +617,12 @@ class FileSystem {
         };
         delete FileSystem._timer_send;
     }
-    static _my_xml_http_request() {
+    /**
+     * @private
+     * @static
+     * @return {*}  {*}
+     * @memberof FileSystem
+     */ static _my_xml_http_request() {
         if (FileSystem.CONNECTOR_TYPE === 'Browser') {
             if (window.XMLHttpRequest) return new XMLHttpRequest();
             if (window.ActiveXObject) return new ActiveXObject('Microsoft.XMLHTTP');
@@ -596,40 +633,138 @@ class FileSystem {
 }
 FileSystem._constructorName = 'FileSystem';
 // when object are saved, their _server_id is assigned to a tmp value
-FileSystem.debug = false;
-FileSystem._disp = false;
-FileSystem.popup = undefined;
-FileSystem._cur_tmp_server_id = 0;
-FileSystem._sig_server = true; // if changes has to be sent
-FileSystem._timeout_reconnect = 30000;
-FileSystem.is_cordova = typeof document !== 'undefined' ? document.URL.indexOf('http://') == -1 && document.URL.indexOf('https://') == -1 : false;
-// data are sent after a timeout (and are concatened before)
-FileSystem._objects_to_send = {
+/**
+ *  set to true to get warning for creating unknown Model type
+ * @static
+ * @type {boolean}
+ * @memberof FileSystem
+ */ FileSystem.debug = false;
+/**
+ * if true, print the IO with the server
+ * @static
+ * @type {boolean}
+ * @memberof FileSystem
+ */ FileSystem._disp = false;
+/**
+ * @private
+ * @static
+ * @type {NewAlertMsg}
+ * @memberof FileSystem
+ */ FileSystem.popup = undefined;
+/**
+ * @private
+ * @static
+ * @type {number}
+ * @memberof FileSystem
+ */ FileSystem._cur_tmp_server_id = 0;
+/**
+ * if true, eval server response.
+ * @static
+ * @type {boolean}
+ * @memberof FileSystem
+ */ FileSystem._sig_server = true; // if changes has to be sent
+/**
+ * @static
+ * @type {number}
+ * @memberof FileSystem
+ */ FileSystem._timeout_reconnect = 30000;
+/**
+ * @static
+ * @type {boolean}
+ * @memberof FileSystem
+ */ FileSystem.is_cordova = typeof document !== 'undefined' ? document.URL.indexOf('http://') == -1 && document.URL.indexOf('https://') == -1 : false;
+/**
+ * data are sent after a timeout (and are concatened before)
+ * @static
+ * @type {{ [serverId: number]: Model }}
+ * @memberof FileSystem
+ */ FileSystem._objects_to_send = {
 };
-FileSystem._timer_send = undefined;
-FileSystem._timer_chan = undefined;
-//  functions to be called after an answer
-FileSystem._nb_callbacks = 0;
-FileSystem._callbacks = {
+/**
+ * @static
+ * @type {ReturnType<typeof setTimeout>}
+ * @memberof FileSystem
+ */ FileSystem._timer_send = undefined;
+/**
+ * @static
+ * @type {ReturnType<typeof setTimeout>}
+ * @memberof FileSystem
+ */ FileSystem._timer_chan = undefined;
+/**
+ * functions to be called after an answer
+ * @static
+ * @type {number}
+ * @memberof FileSystem
+ */ FileSystem._nb_callbacks = 0;
+/**
+ * @static
+ * @type {{ [id: number]: SpinalLoadCallBack<Model> }}
+ * @memberof FileSystem
+ */ FileSystem._callbacks = {
 };
-FileSystem._type_callbacks = []; // list of callbacks associated to a type: [ [ "type", function ], ... ]
-// instances of FileSystem
-FileSystem._nb_insts = 0;
-FileSystem._insts = {
+/**
+ * @static
+ * @type {[string, SpinalLoadCallBack<Model>][]}
+ * @memberof FileSystem
+ */ FileSystem._type_callbacks = []; // list of callbacks associated to a type: [ [ "type", function ], ... ]
+/**
+ * number of instances of FileSystem
+ * @private
+ * @static
+ * @type {number}
+ * @memberof FileSystem
+ */ FileSystem._nb_insts = 0;
+/**
+ * @private
+ * @static
+ * @type {{ [idInstance: number]: FileSystem }}
+ * @memberof FileSystem
+ */ FileSystem._insts = {
 };
-// ..._server_id -> object
-FileSystem._files_to_upload = {
-}; // ref to Path waiting to be registered before sending data
-FileSystem._ptr_to_update = {
-}; // Ptr objects that need an update, associated with @_tmp_objects
-FileSystem._tmp_objects = {
-}; // objects waiting for a real _server_id
-FileSystem._objects = {
-}; //_server_id -> object
-FileSystem.url_com = '/sceen/_';
-FileSystem.url_upload = '/sceen/upload';
-// conector type : Browser or Node
-FileSystem.CONNECTOR_TYPE = typeof globalThis.global != 'undefined' ? 'Node' : 'Browser';
+/**
+ * ref to Path waiting to be registered before sending data
+ * @static
+ * @type {{ [key: number]: Path }}
+ * @memberof FileSystem
+ */ FileSystem._files_to_upload = {
+};
+/**
+ * Ptr objects that need an update, associated with FileSystem_tmp_objects
+ * @static
+ * @type {{ [key: number]: Model }}
+ * @memberof FileSystem
+ */ FileSystem._ptr_to_update = {
+};
+/**
+ * objects waiting for a real _server_id
+ * @static
+ * @type {{ [key: number]: Model }}
+ * @memberof FileSystem
+ */ FileSystem._tmp_objects = {
+};
+/**
+ * _server_id -> object
+ * @static
+ * @type {{ [key: number]: Model }}
+ * @memberof FileSystem
+ */ FileSystem._objects = {
+};
+/**
+ * @static
+ * @type {string}
+ * @memberof FileSystem
+ */ FileSystem.url_com = '/sceen/_';
+/**
+ * @static
+ * @type {string}
+ * @memberof FileSystem
+ */ FileSystem.url_upload = '/sceen/upload';
+/**
+ * conector type : Browser or Node
+ * @static
+ * @type {('Node' | 'Browser')}
+ * @memberof FileSystem
+ */ FileSystem.CONNECTOR_TYPE = typeof globalThis.global != 'undefined' ? 'Node' : 'Browser';
 
 });
 parcelRequire.register("3JI2b", function(module, exports) {
@@ -806,23 +941,44 @@ var $gavvF = parcelRequire("gavvF");
 
 var $jgavw = parcelRequire("jgavw");
 class $e337ab00d77288e8$export$6e6298e1abe0d5b extends $jgavw.Obj {
-    constructor(data = false){
+    /**
+     * Creates an instance of Bool.
+     * @param {(boolean | Bool)} [data=false]
+     * @memberof Bool
+     */ constructor(data = false){
         super();
-        this._constructorName = $e337ab00d77288e8$export$6e6298e1abe0d5b._constructorName;
+        /**
+         * @type {string}
+         * @memberof Bool
+         */ this._constructorName = $e337ab00d77288e8$export$6e6298e1abe0d5b._constructorName;
         this._set(data);
     }
-    // toggle true / false ( 1 / 0 )
-    toggle() {
+    /**
+     * toggle true / false ( 1 / 0 )
+     * @return {*}  {boolean}
+     * @memberof Bool
+     */ toggle() {
         return this.set(!this._data);
     }
-    toBoolean() {
+    /**
+     * @return {*}  {boolean}
+     * @memberof Bool
+     */ toBoolean() {
         return this._data;
     }
-    deep_copy() {
+    /**
+     * @return {*}  {Bool}
+     * @memberof Bool
+     */ deep_copy() {
         return new $e337ab00d77288e8$export$6e6298e1abe0d5b(this._data);
     }
-    // we do not take _set from Obj because we want a conversion if value is not a boolean
-    _set(value) {
+    /**
+     * we do not take _set from Obj because we want a conversion if value is not a boolean
+     * @protected
+     * @param {(string | boolean | Bool)} value
+     * @return {*}  {boolean}
+     * @memberof Bool
+     */ _set(value) {
         let n;
         if (value === 'false') n = false;
         else if (value === 'true') n = true;
@@ -834,12 +990,19 @@ class $e337ab00d77288e8$export$6e6298e1abe0d5b extends $jgavw.Obj {
         }
         return false;
     }
-    _get_fs_data(out) {
+    /**
+     * @param {IFsData} out
+     * @memberof Bool
+     */ _get_fs_data(out) {
         $gavvF.FileSystem.set_server_id_if_necessary(out, this);
         out.mod += `C ${this._server_id} ${this._data ? 1 : 0} `;
     }
 }
-$e337ab00d77288e8$export$6e6298e1abe0d5b._constructorName = 'Bool';
+/**
+ * @static
+ * @type {string}
+ * @memberof Bool
+ */ $e337ab00d77288e8$export$6e6298e1abe0d5b._constructorName = 'Bool';
 
 });
 parcelRequire.register("jgavw", function(module, exports) {
@@ -850,36 +1013,67 @@ var $gavvF = parcelRequire("gavvF");
 
 var $6QX0c = parcelRequire("6QX0c");
 class $e057a98189eac8dd$export$6738a6d9146a0cdc extends $6QX0c.Model {
-    constructor(data){
+    /**
+     * Creates an instance of Obj.
+     * @param {*} [data]
+     * @memberof Obj
+     */ constructor(data){
         super();
         this._constructorName = $e057a98189eac8dd$export$6738a6d9146a0cdc._constructorName;
         if (data != null) this._set(data);
     }
-    toString() {
+    /**
+     * @return {*}  {string}
+     * @memberof Obj
+     */ toString() {
         var _a;
         return (_a = this._data) === null || _a === void 0 ? void 0 : _a.toString();
     }
-    equals(obj) {
+    /**
+     * @param {*} obj
+     * @return {*}  {boolean}
+     * @memberof Obj
+     */ equals(obj) {
         return obj instanceof $e057a98189eac8dd$export$6738a6d9146a0cdc ? this._data === obj._data : this._data === obj;
     }
-    get() {
+    /**
+     * @return {*}  {*}
+     * @memberof Obj
+     */ get() {
         return this._data;
     }
-    _get_fs_data(out) {
+    /**
+     * @param {IFsData} out
+     * @memberof Obj
+     */ _get_fs_data(out) {
         $gavvF.FileSystem.set_server_id_if_necessary(out, this);
         out.mod += `C ${this._server_id} ${this.toString()} `;
     }
-    _set(value) {
+    /**
+     * @protected
+     * @param {T} value
+     * @return {*}  {boolean}
+     * @memberof Obj
+     */ _set(value) {
         if (this._data !== value) {
             this._data = value;
             return true;
         }
         return false;
     }
-    _get_state() {
+    /**
+     * @@protected
+     * @return {*}  {string}
+     * @memberof Obj
+     */ _get_state() {
         return this.toString();
     }
-    _set_state(str, _map) {
+    /**
+     * @param {string} str
+     * @param {unknown} _map
+     * @return {*}  {boolean}
+     * @memberof Obj
+     */ _set_state(str, _map) {
         return this.set(str);
     }
 }
@@ -898,17 +1092,45 @@ var $7O6Yd = parcelRequire("7O6Yd");
 
 var $01Pqy = parcelRequire("01Pqy");
 class $4fd55e0a7b376205$export$a1edc412be3e1841 {
-    constructor(attr){
+    /**
+     * Creates an instance of Model.
+     * @param {*} [attr]
+     * @memberof Model
+     */ constructor(attr){
         this._constructorName = $4fd55e0a7b376205$export$a1edc412be3e1841._constructorName;
-        this._attribute_names = [];
-        this.model_id = $3JI2b.ModelProcessManager._cur_mid;
-        $3JI2b.ModelProcessManager._cur_mid += 1;
-        this._processes = [];
-        this._parents = [];
-        this._date_last_modification = $3JI2b.ModelProcessManager._counter + 2;
+        /**
+         * registered attribute names (in declaration order)
+         * @type {string[]}
+         * @memberof Model
+         */ this._attribute_names = [];
+        /**
+         * id of the model
+         * @type {number}
+         * @memberof Model
+         */ this.model_id = $3JI2b.ModelProcessManager._cur_mid++;
+        /**
+         * synchronized processes
+         * @type {Process[]}
+         * @memberof Model
+         */ this._processes = [];
+        /**
+         * parent models (depending on this)
+         * @type {Model[]}
+         * @memberof Model
+         */ this._parents = [];
+        /**
+         * "date" of previous change. We start at + 2 because
+         * we consider that an initialisation is a modification.
+         * @type {number}
+         * @memberof Model
+         */ this._date_last_modification = $3JI2b.ModelProcessManager._counter + 2;
         if (attr != null) this._set(attr);
     }
-    destructor() {
+    /**
+     * Do nothing here, TBD in child if needed.
+     * Called in rem_attr if have no more parent.
+     * @memberof Model
+     */ destructor() {
     }
     /**
      * return true if this (or a child of this) has changed since the previous synchronisation
@@ -947,8 +1169,10 @@ class $4fd55e0a7b376205$export$a1edc412be3e1841 {
             }
         } else return new $7O6Yd.BindProcess(this, onchange_construction, f);
     }
-    //  ...
-    unbind(f) {
+    /**
+     * @param {(Process | BindProcess | Function)} f recommanded to use Process | BindProcess, using Function can lead to error
+     * @memberof Model
+     */ unbind(f) {
         if (f instanceof $01Pqy.Process) {
             this._processes.splice(this._processes.indexOf(f), 1);
             f._models.splice(f._models.indexOf(this), 1);
@@ -1011,8 +1235,12 @@ class $4fd55e0a7b376205$export$a1edc412be3e1841 {
         map[mid].buff = this;
         this._set_state(map[mid].data, map);
     }
-    // return a string which describes the changes in this and children since date
-    get_state(date = -1) {
+    /**
+     * return a string which describes the changes in this and children since date
+     * @param {number} [date=-1]
+     * @return {*}  {string}
+     * @memberof Model
+     */ get_state(date = -1) {
         // get sub models
         const fmm = {
         };
@@ -1088,7 +1316,7 @@ class $4fd55e0a7b376205$export$a1edc412be3e1841 {
     /**
      * add / mod / rem attr to get the same data than o
      *  (assumed to be something like { key: val, ... })
-     * @param {object} instanceOfModel
+     * @param {{ [key: string]: any }} instanceOfModel
      * @memberof Model
      */ set_attr(instanceOfModel) {
         // new ones / updates
@@ -1108,8 +1336,8 @@ class $4fd55e0a7b376205$export$a1edc412be3e1841 {
     }
     /**
      * dimensionnality of the object -> 0 for a scalar, 1 for a vector, ...
-     * @param {boolean} [_for_display]
-     * @return {*} {number}
+     * @param {number} [_for_display=0]
+     * @return {*}  {number}
      * @memberof Model
      */ dim(_for_display = 0) {
         const size = this.size(_for_display);
@@ -1170,6 +1398,7 @@ class $4fd55e0a7b376205$export$a1edc412be3e1841 {
         return false;
     }
     /**
+     * To be redifined in children if needed
      * @param {string} name
      * @return {*}  {boolean}
      * @memberof Model
@@ -1202,7 +1431,8 @@ class $4fd55e0a7b376205$export$a1edc412be3e1841 {
      * may be redefined.
      * by default, add attributes using keys and values (and remove old unused values)
      * must return true if data is changed
-     * @param {(Model | object)} value
+     * @protected
+     * @param {*} value
      * @return {*}  {boolean}
      * @memberof Model
      */ _set(value) {
@@ -1233,6 +1463,7 @@ class $4fd55e0a7b376205$export$a1edc412be3e1841 {
     /**
      * called by set. change_level should not be defined by the user
      *  (it permits to != change from child of from this)
+     * @protected
      * @param {number} [change_level=2]
      * @return {*}  {ReturnType<typeof setTimeout>}
      * @memberof Model
@@ -1273,6 +1504,7 @@ class $4fd55e0a7b376205$export$a1edc412be3e1841 {
     }
     /**
      * see get_parents_that_check
+     * @private
      * @param {Model[]} res
      * @param {{ [attrName: string]: boolean }} visited
      * @param {(model: Model) => boolean} func_to_check
@@ -1287,13 +1519,13 @@ class $4fd55e0a7b376205$export$a1edc412be3e1841 {
     /**
      * return true if info from map[ mid ] if compatible with this.
      * If it's the case, use this information to update data
+     * @protected
      * @param {string} mid
-     * @param {IStateMap} map
+     * @param {IStateMap<Model>} map
      * @return {*}  {boolean}
      * @memberof Model
      */ _set_state_if_same_type(mid, map) {
-        var dat;
-        dat = map[mid];
+        const dat = map[mid];
         if ($3JI2b.ModelProcessManager.get_object_class(this) === dat.type) {
             dat.buff = this;
             this._set_state(dat.data, map);
@@ -1303,8 +1535,10 @@ class $4fd55e0a7b376205$export$a1edc412be3e1841 {
     }
     /**
      * map[ id ] = obj for each objects starting from this recursively
-     * @param {{ [id: number]: Model }} map
+     * @protected
+     * @param {IFlatModelMap} map
      * @param {number} date
+     * @return {*}  {IFlatModelMap}
      * @memberof Model
      */ _get_flat_model_map(map, date) {
         map[this.model_id] = this;
@@ -1395,10 +1629,20 @@ var $3JI2b = parcelRequire("3JI2b");
 
 var $6QX0c = parcelRequire("6QX0c");
 class $8e9e78668bc86ca0$export$774a0e74f4f3f461 extends $6QX0c.Model {
-    constructor(data){
+    /**
+     * Creates an instance of Lst.
+     * @param {*} [data]
+     * @memberof Lst
+     */ constructor(data){
         super();
-        this._constructorName = $8e9e78668bc86ca0$export$774a0e74f4f3f461._constructorName;
-        this.length = 0;
+        /**
+         * @type {string}
+         * @memberof Lst
+         */ this._constructorName = $8e9e78668bc86ca0$export$774a0e74f4f3f461._constructorName;
+        /**
+         * @type {number}
+         * @memberof Lst
+         */ this.length = 0;
         const s = this.static_length();
         if (s >= 0) {
             const d = this.default_value();
@@ -1407,129 +1651,208 @@ class $8e9e78668bc86ca0$export$774a0e74f4f3f461 extends $6QX0c.Model {
         }
         if (data) this._set(data);
     }
-    static_length() {
+    /**
+     * @return {*}  {number}
+     * @memberof Lst
+     */ static_length() {
         return -1;
     }
-    default_value() {
+    /**
+     * @protected
+     * @return {*}  {number}
+     * @memberof Lst
+     */ default_value() {
         return 0;
     }
-    base_type() {
+    /**
+     * @protected
+     * @return {*}  {*}
+     * @memberof Lst
+     */ base_type() {
         return undefined;
     }
-    get() {
+    /**
+     * @return {*}  {ReturnType<T['get']>[]}
+     * @memberof Lst
+     */ get() {
         const res = [];
         for(let i = 0; i < this.length; i++)if (this[i]) res.push(this[i].get());
         return res;
     }
-    size() {
+    /**
+     * @return {*}  {[number]}
+     * @memberof Lst
+     */ size() {
         return [
             this.length
         ];
     }
-    toString() {
+    /**
+     * @return {*}  {string}
+     * @memberof Lst
+     */ toString() {
         let res = [];
         for(let i = 0; i < this.length; i++)res.push(this[i].toString());
         if (res.length > 0) return res.join();
         return '';
     }
-    equals(lst) {
+    /**
+     * @param {Lst<T>} lst
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */ equals(lst) {
         if (lst.length !== this.length) return false;
         for(let i = 0; i < this.length; i++){
             if (!this[i].equals(lst[i])) return false;
         }
         return true;
     }
-    push(value, force = false) {
+    /**
+     * @param {*} value
+     * @param {boolean} [force=false]
+     * @return {*}  {void}
+     * @memberof Lst
+     */ push(value, force = false) {
         if (this._static_size_check(force)) return;
         let b = this.base_type();
         if (b) {
             if (!(value instanceof b)) value = new b(value);
-        } else // @ts-ignore
-        value = $3JI2b.ModelProcessManager.conv(value);
+        } else value = $3JI2b.ModelProcessManager.conv(value);
         if (value._parents.indexOf(this) === -1) value._parents.push(this);
         this[this.length++] = value;
         this._signal_change();
     }
-    pop() {
+    /**
+     * @return {*}  {T}
+     * @memberof Lst
+     */ pop() {
         if (this._static_size_check(false)) return;
         if (this.length <= 0) return;
         const res = this[--this.length];
         this.rem_attr(this.length.toString(10));
         return res;
     }
-    clear() {
+    /**
+     * @memberof Lst
+     */ clear() {
         while(this.length)this.pop();
     }
-    unshift(value) {
+    /**
+     * @param {*} value
+     * @return {*}  {number}
+     * @memberof Lst
+     */ unshift(value) {
         if (this._static_size_check(false)) return;
         const b = this.base_type();
         if (b != null) {
             if (!(value instanceof b)) value = new b(value);
         } else value = $3JI2b.ModelProcessManager.conv(value);
         if (value._parents.indexOf(this) < 0) value._parents.push(this);
-        if (this.length) {
-            let i, j, ref;
-            for(i = j = ref = this.length - 1; ref <= 0 ? j <= 0 : j >= 0; i = ref <= 0 ? ++j : --j)this[i + 1] = this[i];
-        }
+        if (this.length) for(let i = this.length - 1; i >= 0; i--)this[i + 1] = this[i];
         this[0] = value;
         this.length += 1;
         this._signal_change();
         return this.length;
     }
-    shift() {
+    /**
+     * @return {*}  {T}
+     * @memberof Lst
+     */ shift() {
         const res = this[0];
         this.slice(0, 1);
         return res;
     }
-    remove(item) {
+    /**
+     * @param {T} item
+     * @memberof Lst
+     */ remove(item) {
         const index = this.indexOf(item);
         if (index >= 0) this.slice(index, 1);
     }
-    remove_ref(item) {
+    /**
+     * @param {T} item
+     * @memberof Lst
+     */ remove_ref(item) {
         const index = this.indexOf_ref(item);
         if (index >= 0) this.slice(index, 1);
     }
-    filter(f) {
+    /**
+     * @param {SpinalFilterFunction<T>} f
+     * @return {*}  {T[]}
+     * @memberof Lst
+     */ filter(f) {
         const res = [];
         for(let i = 0; i < this.length; i++)if (f(this[i])) res.push(this[i]);
         return res;
     }
-    detect(f) {
+    /**
+     * @param {SpinalFilterFunction<T>} f
+     * @return {*}  {T}
+     * @memberof Lst
+     */ detect(f) {
         for(let i = 0; i < this.length; i++){
             if (f(this[i])) return this[i];
         }
         return undefined;
     }
-    sorted(sort) {
+    /**
+     * @param {SpinalSortFunction<T>} sort
+     * @return {*}  {Array<T>}
+     * @memberof Lst
+     */ sorted(sort) {
         const res = [];
         for(let i = 0; i < this.length; i++)res.push(this[i]);
         return res.sort(sort);
     }
-    has(f) {
+    /**
+     * @param {SpinalFilterFunction<T>} f
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */ has(f) {
         for(let i = 0; i < this.length; i++){
             if (f(this[i])) return true;
         }
         return false;
     }
-    indexOf(value) {
+    /**
+     * @param {T} value
+     * @return {*}  {(1 | -1)}
+     * @memberof Lst
+     */ indexOf(value) {
         for(let i = 0; i < this.length; i++){
             if (this[i].equals(value)) return 1;
         }
         return -1;
     }
-    indexOf_ref(value) {
+    /**
+     * @param {T} value
+     * @return {*}  {number}
+     * @memberof Lst
+     */ indexOf_ref(value) {
         for(let i = 0; i < this.length; i++){
             if (this[i] == value) return i;
         }
         return -1;
     }
-    contains(value) {
+    /**
+     * @param {T} value
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */ contains(value) {
         return this.indexOf(value) !== -1;
     }
-    contains_ref(value) {
+    /**
+     * @param {T} value
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */ contains_ref(value) {
         return this.indexOf_ref(value) !== -1;
     }
-    toggle(value) {
+    /**
+     * @param {T} value
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */ toggle(value) {
         const index = this.indexOf(value);
         if (index !== -1) {
             this.splice(index);
@@ -1539,7 +1862,11 @@ class $8e9e78668bc86ca0$export$774a0e74f4f3f461 extends $6QX0c.Model {
             return true;
         }
     }
-    toggle_ref(value) {
+    /**
+     * @param {T} value
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */ toggle_ref(value) {
         const index = this.indexOf_ref(value);
         if (index !== -1) {
             this.splice(index);
@@ -1549,18 +1876,33 @@ class $8e9e78668bc86ca0$export$774a0e74f4f3f461 extends $6QX0c.Model {
             return true;
         }
     }
-    slice(begin, end = this.length) {
+    /**
+     * @param {number} begin
+     * @param {number} [end=this.length]
+     * @return {*}  {Lst<T>}
+     * @memberof Lst
+     */ slice(begin, end = this.length) {
         const res = new $8e9e78668bc86ca0$export$774a0e74f4f3f461();
         if (begin < 0) begin = 0;
         if (end > this.length) end = this.length;
         for(let i = begin; i < end; i++)res.push(this[i].get());
         return res;
     }
-    concat(new_tab, force = false) {
+    /**
+     * @param {Lst<T>} new_tab
+     * @param {boolean} [force=false]
+     * @return {*}  {void}
+     * @memberof Lst
+     */ concat(new_tab, force = false) {
         if (this._static_size_check(force)) return;
         if (new_tab.length) for(let i = 0; i < new_tab.length; i++)this.push(new_tab[i]);
     }
-    splice(index, n = 1) {
+    /**
+     * @param {number} index
+     * @param {number} [n=1]
+     * @return {*}  {void}
+     * @memberof Lst
+     */ splice(index, n = 1) {
         if (this._static_size_check(false)) return;
         const end = Math.min(index + n, this.length);
         for(let i = index; i < end; i++)this.rem_attr(i.toString(0));
@@ -1569,7 +1911,11 @@ class $8e9e78668bc86ca0$export$774a0e74f4f3f461 extends $6QX0c.Model {
         this.length -= n;
         this._signal_change();
     }
-    insert(index, lst) {
+    /**
+     * @param {number} index
+     * @param {Lst<T>} lst
+     * @memberof Lst
+     */ insert(index, lst) {
         const end = Math.max(this.length - index, 0);
         const res = [];
         for(let i = 0; i < end; i++)res.push(this.pop());
@@ -1577,33 +1923,59 @@ class $8e9e78668bc86ca0$export$774a0e74f4f3f461 extends $6QX0c.Model {
         for(let i3 = 0; i3 < lst.length; i3++)this.push(lst[i3]);
         for(let i4 = 0; i4 < res.length; i4++)this.push(res[i4]);
     }
-    set_or_push(index, val) {
+    /**
+     * @param {number} index
+     * @param {T} val
+     * @return {*}  {void}
+     * @memberof Lst
+     */ set_or_push(index, val) {
         if (index < this.length) // @ts-ignore
         return this.mod_attr(index, val);
         if (index === this.length) this.push(val);
     }
-    trim(size) {
+    /**
+     * @param {number} size
+     * @memberof Lst
+     */ trim(size) {
         while(this.length > size)this.pop();
     }
-    join(sep) {
+    /**
+     * @param {string} sep
+     * @return {*}  {string}
+     * @memberof Lst
+     */ join(sep) {
         return this.get().join(sep);
     }
-    deep_copy() {
+    /**
+     * @return {*}  {Lst<T>}
+     * @memberof Lst
+     */ deep_copy() {
         const res = new $8e9e78668bc86ca0$export$774a0e74f4f3f461();
         for(let i = 0; i < this.length; i++)res.push(this[i].deep_copy());
         return res;
     }
-    back() {
+    /**
+     * @return {*}  {T}
+     * @memberof Lst
+     */ back() {
         return this[this.length - 1];
     }
-    real_change() {
+    /**
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */ real_change() {
         if (this.has_been_directly_modified()) return true;
         for(let i = 0; i < this.length; i++){
             if (this[i].real_change()) return true;
         }
         return false;
     }
-    _set(value) {
+    /**
+     * @protected
+     * @param {Lst<T>} value
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */ _set(value) {
         let change = Number(this.length != value.length);
         const s = this.static_length();
         if (s >= 0 && change) console.error(`resizing a static array (type ${$3JI2b.ModelProcessManager.get_object_class(this)}) is forbidden`);
@@ -1617,7 +1989,13 @@ class $8e9e78668bc86ca0$export$774a0e74f4f3f461 extends $6QX0c.Model {
         }
         return Boolean(change);
     }
-    _get_flat_model_map(map, date) {
+    /**
+     * @protected
+     * @param {IFlatModelMap} map
+     * @param {number} date
+     * @return {*}  {IFlatModelMap}
+     * @memberof Lst
+     */ _get_flat_model_map(map, date) {
         map[this.model_id] = this;
         for(let i = 0; i < this.length; i++){
             if (!map.hasOwnProperty(this[i])) {
@@ -1626,7 +2004,10 @@ class $8e9e78668bc86ca0$export$774a0e74f4f3f461 extends $6QX0c.Model {
         }
         return map;
     }
-    _get_fs_data(out) {
+    /**
+     * @param {IFsData} out
+     * @memberof Lst
+     */ _get_fs_data(out) {
         $gavvF.FileSystem.set_server_id_if_necessary(out, this);
         const res = [];
         for(let i = 0; i < this.length; i++){
@@ -1636,12 +2017,20 @@ class $8e9e78668bc86ca0$export$774a0e74f4f3f461 extends $6QX0c.Model {
         }
         out.mod += `C ${this._server_id} ${res.join(',')} `;
     }
-    _get_state() {
+    /**
+     * @protected
+     * @return {*}  {string}
+     * @memberof Lst
+     */ _get_state() {
         const res = [];
         for(let i = 0; i < this.length; i++)res.push(this[i].model_id);
         return res.join(',');
     }
-    _set_state(str, map) {
+    /**
+     * @param {string} str
+     * @param {IStateMap<T>} map
+     * @memberof Lst
+     */ _set_state(str, map) {
         const l_id = str.split(',').filter((x)=>{
             return x.length;
         });
@@ -1658,18 +2047,29 @@ class $8e9e78668bc86ca0$export$774a0e74f4f3f461 extends $6QX0c.Model {
             else this.push($3JI2b.ModelProcessManager._new_model_from_state(k_id, map));
         }
     }
-    _static_size_check(force) {
+    /**
+     * @param {boolean} force
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */ _static_size_check(force) {
         if (this.static_length() >= 0 && !force) {
             console.error(`resizing a static array (type ` + `${$3JI2b.ModelProcessManager.get_object_class(this)}) is forbidden`);
             return true;
         }
         return false;
     }
-    *[Symbol.iterator]() {
-        for (const key of this._attribute_names)yield this[key]; // yield [key, value] pair
+    /**
+     * @return {*}  {Generator<T, void, unknown>}
+     * @memberof Lst
+     */ *[Symbol.iterator]() {
+        for(let i = 0; i < this.length; i++)yield this[i];
     }
 }
-$8e9e78668bc86ca0$export$774a0e74f4f3f461._constructorName = 'Lst';
+/**
+ * @static
+ * @type {string}
+ * @memberof Lst
+ */ $8e9e78668bc86ca0$export$774a0e74f4f3f461._constructorName = 'Lst';
 
 });
 
@@ -1768,6 +2168,7 @@ class $99ea262d9051c95f$export$ed61451db706e904 extends $jgavw.Obj {
         return false;
     }
     /**
+     * @protected
      * @return {*}  {string}
      * @memberof Str
      */ _get_state() {
@@ -2074,19 +2475,33 @@ var $4Biiw = parcelRequire("4Biiw");
 class $b97d5e4a2c99b386$export$1dbf9926a0d54d98 extends $cf9Mh.Lst {
     constructor(){
         super();
-        this._constructorName = $b97d5e4a2c99b386$export$1dbf9926a0d54d98._constructorName;
+        /**
+         * @type {string}
+         * @memberof Directory
+         */ this._constructorName = $b97d5e4a2c99b386$export$1dbf9926a0d54d98._constructorName;
     }
-    base_() {
+    /**
+     * @return {*}  {*}
+     * @memberof Directory
+     */ base_type() {
         return $4UPYS.File;
     }
-    find(name) {
+    /**
+     * @param {string} name
+     * @return {*}  {(File | TiffFile)}
+     * @memberof Directory
+     */ find(name) {
         for(let i = 0; i < this.length; i++){
             const file = this[i];
             if (file.hasOwnProperty('name') && file.name.equals(name)) return file;
         }
         return undefined;
     }
-    load(name, callback) {
+    /**
+     * @param {string} name
+     * @param {SpinalLoadCallBack<any>} callback
+     * @memberof Directory
+     */ load(name, callback) {
         let f = this.find(name);
         if (f) f.load(callback);
         else callback(undefined, 'file does not exist');
@@ -2104,7 +2519,13 @@ class $b97d5e4a2c99b386$export$1dbf9926a0d54d98 extends $cf9Mh.Lst {
         }
         return false;
     }
-    add_file(name, obj, params = {
+    /**
+     * @param {string} name
+     * @param {*} obj
+     * @param {IFileInfoOption} [params={}]
+     * @return {*}  {File}
+     * @memberof Directory
+     */ add_file(name, obj, params = {
     }) {
         const f = this.find(name);
         if (f) return f;
@@ -2112,7 +2533,14 @@ class $b97d5e4a2c99b386$export$1dbf9926a0d54d98 extends $cf9Mh.Lst {
         this.push(res);
         return res;
     }
-    add_tiff_file(name, obj, tiff_obj, params = {
+    /**
+     * @param {string} name
+     * @param {*} obj
+     * @param {*} tiff_obj
+     * @param {IFileInfoOption} [params={}]
+     * @return {*}  {TiffFile}
+     * @memberof Directory
+     */ add_tiff_file(name, obj, tiff_obj, params = {
     }) {
         const f = this.find(name);
         if (f) return f;
@@ -2120,7 +2548,13 @@ class $b97d5e4a2c99b386$export$1dbf9926a0d54d98 extends $cf9Mh.Lst {
         this.push(res);
         return res;
     }
-    force_add_file(name, obj, params = {
+    /**
+     * @param {string} name
+     * @param {*} obj
+     * @param {IFileInfoOption} [params={}]
+     * @return {*}  {File}
+     * @memberof Directory
+     */ force_add_file(name, obj, params = {
     }) {
         let num = 0;
         let filename = name;
@@ -2134,11 +2568,19 @@ class $b97d5e4a2c99b386$export$1dbf9926a0d54d98 extends $cf9Mh.Lst {
         this.push(res);
         return res;
     }
-    get_file_info(info) {
+    /**
+     * @param {*} info
+     * @return {*}  {string}
+     * @memberof Directory
+     */ get_file_info(info) {
         return info.icon = 'folder';
     }
 }
-$b97d5e4a2c99b386$export$1dbf9926a0d54d98._constructorName = 'Directory';
+/**
+ * @static
+ * @type {string}
+ * @memberof Directory
+ */ $b97d5e4a2c99b386$export$1dbf9926a0d54d98._constructorName = 'Directory';
 
 });
 parcelRequire.register("4UPYS", function(module, exports) {
@@ -2151,11 +2593,20 @@ var $6QX0c = parcelRequire("6QX0c");
 
 var $4slPs = parcelRequire("4slPs");
 class $3944b6afa5d7b3fc$export$b6afa8811b7e644e extends $6QX0c.Model {
-    constructor(name = '', ptr_or_model = 0, info = {
+    /**
+     * Creates an instance of File.
+     * @param {string} [name='']
+     * @param {(number | T)} [ptr_or_model=0]
+     * @param {*} [info={}]
+     * @memberof File
+     */ constructor(name = '', ptr_or_model = 0, info = {
     }){
         var _a;
         super();
-        this._constructorName = $3944b6afa5d7b3fc$export$b6afa8811b7e644e._constructorName;
+        /**
+         * @type {string}
+         * @memberof File
+         */ this._constructorName = $3944b6afa5d7b3fc$export$b6afa8811b7e644e._constructorName;
         const cp_info = {
         };
         for(const key in info)cp_info[key] = info[key];
@@ -2175,7 +2626,11 @@ class $3944b6afa5d7b3fc$export$b6afa8811b7e644e extends $6QX0c.Model {
         else return this._ptr.load();
     }
 }
-$3944b6afa5d7b3fc$export$b6afa8811b7e644e._constructorName = 'File';
+/**
+ * @static
+ * @type {string}
+ * @memberof File
+ */ $3944b6afa5d7b3fc$export$b6afa8811b7e644e._constructorName = 'File';
 
 });
 parcelRequire.register("4slPs", function(module, exports) {
@@ -2192,8 +2647,14 @@ class $33eab5bbddef97cc$export$96d7e0bc5363b2c6 extends $6QX0c.Model {
      * @memberof Ptr
      */ constructor(model){
         super();
-        this._constructorName = $33eab5bbddef97cc$export$96d7e0bc5363b2c6._constructorName;
-        this.data = {
+        /**
+         * @type {string}
+         * @memberof Ptr
+         */ this._constructorName = $33eab5bbddef97cc$export$96d7e0bc5363b2c6._constructorName;
+        /**
+         * @type {{ model?: T; value?: any }}
+         * @memberof Ptr
+         */ this.data = {
         };
         this._set(model);
     }
@@ -2224,7 +2685,12 @@ class $33eab5bbddef97cc$export$96d7e0bc5363b2c6 extends $6QX0c.Model {
             if (this.data.model._server_id & 3) $gavvF.FileSystem._ptr_to_update[this.data.model._server_id] = this;
         } else out.mod += `C ${this._server_id} ${this.data.value} `;
     }
-    _set(model) {
+    /**
+     * @protected
+     * @param {(number | T)} model
+     * @return {*}  {boolean}
+     * @memberof Ptr
+     */ _set(model) {
         if (typeof model === 'number') {
             const res = this.data.value !== model;
             this.data = {
@@ -2242,14 +2708,27 @@ class $33eab5bbddef97cc$export$96d7e0bc5363b2c6 extends $6QX0c.Model {
         }
         return false;
     }
-    _get_state() {
+    /**
+     * @protected
+     * @return {*}
+     * @memberof Ptr
+     */ _get_state() {
         return this.data.toString();
     }
-    _set_state(str, _map) {
+    /**
+     * @param {string} str
+     * @param {unknown} _map
+     * @return {*}  {boolean}
+     * @memberof Ptr
+     */ _set_state(str, _map) {
         return this.set(str);
     }
 }
-$33eab5bbddef97cc$export$96d7e0bc5363b2c6._constructorName = 'Ptr';
+/**
+ * @static
+ * @type {string}
+ * @memberof Ptr
+ */ $33eab5bbddef97cc$export$96d7e0bc5363b2c6._constructorName = 'Ptr';
 
 });
 
@@ -2262,10 +2741,20 @@ var $4UPYS = parcelRequire("4UPYS");
 
 var $4slPs = parcelRequire("4slPs");
 class $3598cfb07079992a$export$f26600b5cf417d1a extends $4UPYS.File {
-    constructor(name = '', ptr_or_model = 0, ptr_tiff = 0, info = {
+    /**
+     * Creates an instance of TiffFile.
+     * @param {string} [name='']
+     * @param {number} [ptr_or_model=0]
+     * @param {number} [ptr_tiff=0]
+     * @param {*} [info={}]
+     * @memberof TiffFile
+     */ constructor(name = '', ptr_or_model = 0, ptr_tiff = 0, info = {
     }){
         super(name, ptr_or_model, info);
-        this._constructorName = $3598cfb07079992a$export$f26600b5cf417d1a._constructorName;
+        /**
+         * @type {string}
+         * @memberof TiffFile
+         */ this._constructorName = $3598cfb07079992a$export$f26600b5cf417d1a._constructorName;
         this.add_attr({
             _ptr_tiff: new $4slPs.Ptr(ptr_tiff),
             _has_been_converted: 0
@@ -2275,7 +2764,11 @@ class $3598cfb07079992a$export$f26600b5cf417d1a extends $4UPYS.File {
         this._ptr_tiff.load(callback);
     }
 }
-$3598cfb07079992a$export$f26600b5cf417d1a._constructorName = 'TiffFile';
+/**
+ * @static
+ * @type {string}
+ * @memberof TiffFile
+ */ $3598cfb07079992a$export$f26600b5cf417d1a._constructorName = 'TiffFile';
 
 });
 
@@ -2295,10 +2788,16 @@ var $6QX0c = parcelRequire("6QX0c");
 
 var $gavvF = parcelRequire("gavvF");
 class $93f6f76dad5dbc67$export$4b2950bdac9b6ee9 extends $6QX0c.Model {
-    // @file is optionnal. Must be a javascript File object
-    constructor(file){
+    /**
+     * Creates an instance of Path.
+     * @param {(File | Buffer)} [file]
+     * @memberof Path
+     */ constructor(file){
         super();
-        this._constructorName = $93f6f76dad5dbc67$export$4b2950bdac9b6ee9._constructorName;
+        /**
+         * @type {string}
+         * @memberof Path
+         */ this._constructorName = $93f6f76dad5dbc67$export$4b2950bdac9b6ee9._constructorName;
         this.file = file;
         const size = this.file != null ? this.file.fileSize != null ? this.file.fileSize : this.file.size : 0;
         this.add_attr({
@@ -2306,17 +2805,27 @@ class $93f6f76dad5dbc67$export$4b2950bdac9b6ee9 extends $6QX0c.Model {
             to_upload: size
         });
     }
-    get_file_info(info) {
+    /**
+     * @param {{ remaining: Val; to_upload: Val }} info
+     * @memberof Path
+     */ get_file_info(info) {
         info.remaining = this.remaining;
         info.to_upload = this.to_upload;
     }
-    _get_fs_data(out) {
+    /**
+     * @param {IFsData} out
+     * @memberof Path
+     */ _get_fs_data(out) {
         super._get_fs_data(out);
         // permit to send the data after the server's answer
         if (this.file != null && this._server_id & 3) $gavvF.FileSystem._files_to_upload[this._server_id] = this;
     }
 }
-$93f6f76dad5dbc67$export$4b2950bdac9b6ee9._constructorName = 'Path';
+/**
+ * @static
+ * @type {string}
+ * @memberof Path
+ */ $93f6f76dad5dbc67$export$4b2950bdac9b6ee9._constructorName = 'Path';
 
 
 var $5ddc74eda8135f89$exports = {};
@@ -2325,12 +2834,23 @@ $parcel$export($5ddc74eda8135f89$exports, "Pbr", () => $5ddc74eda8135f89$export$
 
 var $4slPs = parcelRequire("4slPs");
 class $5ddc74eda8135f89$export$598ea37cc1e20dfa extends $4slPs.Ptr {
-    constructor(model){
+    /**
+     * Creates an instance of Pbr.
+     * @param {*} model
+     * @memberof Pbr
+     */ constructor(model){
         super(model);
-        this._constructorName = $5ddc74eda8135f89$export$598ea37cc1e20dfa._constructorName;
+        /**
+         * @type {string}
+         * @memberof Pbr
+         */ this._constructorName = $5ddc74eda8135f89$export$598ea37cc1e20dfa._constructorName;
     }
 }
-$5ddc74eda8135f89$export$598ea37cc1e20dfa._constructorName = 'Pbr';
+/**
+ * @static
+ * @type {string}
+ * @memberof Pbr
+ */ $5ddc74eda8135f89$export$598ea37cc1e20dfa._constructorName = 'Pbr';
 
 
 
@@ -2341,12 +2861,22 @@ $parcel$export($b6dd1cfb910cf9e7$exports, "RightSetList", () => $b6dd1cfb910cf9e
 
 var $cf9Mh = parcelRequire("cf9Mh");
 class $b6dd1cfb910cf9e7$export$86422d9fcaac5a78 extends $cf9Mh.Lst {
-    constructor(){
+    /**
+     * Creates an instance of RightSetList.
+     * @memberof RightSetList
+     */ constructor(){
         super();
-        this._constructorName = $b6dd1cfb910cf9e7$export$86422d9fcaac5a78._constructorName;
+        /**
+         * @type {string}
+         * @memberof RightSetList
+         */ this._constructorName = $b6dd1cfb910cf9e7$export$86422d9fcaac5a78._constructorName;
     }
 }
-$b6dd1cfb910cf9e7$export$86422d9fcaac5a78._constructorName = 'RightSetList';
+/**
+ * @static
+ * @type {string}
+ * @memberof RightSetList
+ */ $b6dd1cfb910cf9e7$export$86422d9fcaac5a78._constructorName = 'RightSetList';
 
 
 var $03519d1f15dee83d$exports = {};
@@ -2355,12 +2885,22 @@ $parcel$export($03519d1f15dee83d$exports, "RightsItem", () => $03519d1f15dee83d$
 
 var $cf9Mh = parcelRequire("cf9Mh");
 class $03519d1f15dee83d$export$d4cfb3e939ea5c80 extends $cf9Mh.Lst {
-    constructor(){
+    /**
+     * Creates an instance of RightsItem.
+     * @memberof RightsItem
+     */ constructor(){
         super();
-        this._constructorName = $03519d1f15dee83d$export$d4cfb3e939ea5c80._constructorName;
+        /**
+         * @type {string}
+         * @memberof RightsItem
+         */ this._constructorName = $03519d1f15dee83d$export$d4cfb3e939ea5c80._constructorName;
     }
 }
-$03519d1f15dee83d$export$d4cfb3e939ea5c80._constructorName = 'RightsItem';
+/**
+ * @static
+ * @type {string}
+ * @memberof RightsItem
+ */ $03519d1f15dee83d$export$d4cfb3e939ea5c80._constructorName = 'RightsItem';
 
 
 var $eea429a64ca10631$exports = {};
@@ -2369,12 +2909,22 @@ $parcel$export($eea429a64ca10631$exports, "SessionModel", () => $eea429a64ca1063
 
 var $6QX0c = parcelRequire("6QX0c");
 class $eea429a64ca10631$export$d0f738c06f5e6fee extends $6QX0c.Model {
-    constructor(){
+    /**
+     * Creates an instance of SessionModel.
+     * @memberof SessionModel
+     */ constructor(){
         super();
-        this._constructorName = $eea429a64ca10631$export$d0f738c06f5e6fee._constructorName;
+        /**
+         * @type {string}
+         * @memberof SessionModel
+         */ this._constructorName = $eea429a64ca10631$export$d0f738c06f5e6fee._constructorName;
     }
 }
-$eea429a64ca10631$export$d0f738c06f5e6fee._constructorName = 'SessionModel';
+/**
+ * @static
+ * @type {string}
+ * @memberof SessionModel
+ */ $eea429a64ca10631$export$d0f738c06f5e6fee._constructorName = 'SessionModel';
 
 
 
@@ -2385,12 +2935,22 @@ $parcel$export($dfce4a4de10c079b$exports, "User", () => $dfce4a4de10c079b$export
 
 var $6QX0c = parcelRequire("6QX0c");
 class $dfce4a4de10c079b$export$1f44aaf2ec115b54 extends $6QX0c.Model {
-    constructor(){
+    /**
+     * Creates an instance of User.
+     * @memberof User
+     */ constructor(){
         super();
-        this._constructorName = $dfce4a4de10c079b$export$1f44aaf2ec115b54._constructorName;
+        /**
+         * @type {string}
+         * @memberof User
+         */ this._constructorName = $dfce4a4de10c079b$export$1f44aaf2ec115b54._constructorName;
     }
 }
-$dfce4a4de10c079b$export$1f44aaf2ec115b54._constructorName = 'User';
+/**
+ * @static
+ * @type {string}
+ * @memberof User
+ */ $dfce4a4de10c079b$export$1f44aaf2ec115b54._constructorName = 'User';
 
 
 var $55f2fc367e06512f$exports = {};
@@ -2399,16 +2959,29 @@ $parcel$export($55f2fc367e06512f$exports, "UserRight", () => $55f2fc367e06512f$e
 
 var $6QX0c = parcelRequire("6QX0c");
 class $55f2fc367e06512f$export$56864abfbf86ef48 extends $6QX0c.Model {
-    constructor(){
+    /**
+     * Creates an instance of UserRight.
+     * @memberof UserRight
+     */ constructor(){
         super();
-        this._constructorName = $55f2fc367e06512f$export$56864abfbf86ef48._constructorName;
+        /**
+         * @type {string}
+         * @memberof UserRight
+         */ this._constructorName = $55f2fc367e06512f$export$56864abfbf86ef48._constructorName;
     }
-    set() {
-        console.log('Set a UserRight is not allowed.');
+    /**
+     * @return {*}  {boolean}
+     * @memberof UserRight
+     */ set() {
+        console.error('Set a UserRight is not allowed.');
         return false;
     }
 }
-$55f2fc367e06512f$export$56864abfbf86ef48._constructorName = 'UserRight';
+/**
+ * @static
+ * @type {string}
+ * @memberof UserRight
+ */ $55f2fc367e06512f$export$56864abfbf86ef48._constructorName = 'UserRight';
 
 
 
@@ -2423,9 +2996,17 @@ $parcel$export($5c65d5123fa66ba6$exports, "Choice", () => $5c65d5123fa66ba6$expo
 
 var $6QX0c = parcelRequire("6QX0c");
 class $5c65d5123fa66ba6$export$32a7462f6a06cbd5 extends $6QX0c.Model {
-    constructor(InitIdx, stringChoises){
+    /**
+     * Creates an instance of Choice.
+     * @param {(Val | number)} [InitIdx]
+     * @param {((string | Str)[])} [stringChoises]
+     * @memberof Choice
+     */ constructor(InitIdx, stringChoises){
         super();
-        this._constructorName = $5c65d5123fa66ba6$export$32a7462f6a06cbd5._constructorName;
+        /**
+         * @type {string}
+         * @memberof Choice
+         */ this._constructorName = $5c65d5123fa66ba6$export$32a7462f6a06cbd5._constructorName;
         // default
         this.add_attr({
             num: 0,
@@ -2434,25 +3015,46 @@ class $5c65d5123fa66ba6$export$32a7462f6a06cbd5 extends $6QX0c.Model {
         // init
         if (InitIdx != null) this.num.set(InitIdx);
     }
-    filter() {
+    /**
+     * @return {*}  {boolean}
+     * @memberof Choice
+     */ filter() {
         return true;
     }
-    item() {
+    /**
+     * @return {*}  {Str} the seleected value
+     * @memberof Choice
+     */ item() {
         return this.lst[this.num.get()];
     }
-    get() {
+    /**
+     * @return {*}  {string} the seleected value
+     * @memberof Choice
+     */ get() {
         var _a;
         return (_a = this.item()) === null || _a === void 0 ? void 0 : _a.get();
     }
-    toString() {
+    /**
+     * @return {*}  {string}
+     * @memberof Choice
+     */ toString() {
         var _a;
         return (_a = this.item()) === null || _a === void 0 ? void 0 : _a.toString();
     }
-    equals(a) {
+    /**
+     * @param {(Choice | Str)} a
+     * @return {*}  {boolean}
+     * @memberof Choice
+     */ equals(a) {
         if (a instanceof $5c65d5123fa66ba6$export$32a7462f6a06cbd5) return super.equals(a);
         else return this.item().equals(a);
     }
-    _set(value) {
+    /**
+     * @protected
+     * @param {(string | number)} value
+     * @return {*}  {boolean}
+     * @memberof Choice
+     */ _set(value) {
         for(let idx = 0; idx < this.lst.length; idx++){
             const itm = this.lst[idx];
             if (itm.equals(value)) return this.num.set(idx);
@@ -2460,7 +3062,11 @@ class $5c65d5123fa66ba6$export$32a7462f6a06cbd5 extends $6QX0c.Model {
         return this.num.set(value);
     }
 }
-$5c65d5123fa66ba6$export$32a7462f6a06cbd5._constructorName = 'Choice';
+/**
+ * @static
+ * @type {string}
+ * @memberof Choice
+ */ $5c65d5123fa66ba6$export$32a7462f6a06cbd5._constructorName = 'Choice';
 
 
 
@@ -2644,6 +3250,7 @@ class $12a8e9845cd38347$export$914b3a8889b8a8a9 extends $6QX0c.Model {
         out.mod += `C ${this._server_id} ${this._get_state()} `;
     }
     /**
+     * @protected
      * @return {*}  {string}
      * @memberof TypedArray
      */ _get_state() {
@@ -3081,9 +3688,6 @@ var $80b918d64d89e79e$exports = {};
 
 
 var $f0a3487b7a16e6d2$exports = {};
-
-
-var $f5bd000e2b3ab5a1$exports = {};
 
 
 var $eaea3a56b9e1512a$exports = {};

@@ -1,7 +1,15 @@
+/**
+ * @export
+ * @interface IFsData
+ */
 export interface IFsData {
     cre: string;
     mod: string;
 }
+/**
+ * @export
+ * @interface IOptionFileSystem
+ */
 export interface IOptionFileSystem {
     url: string;
     port?: string | number;
@@ -11,6 +19,10 @@ export interface IOptionFileSystem {
     home_dir: string;
     accessToken?: string;
 }
+/**
+ * @export
+ * @interface IOptionFileSystemWithUser
+ */
 export interface IOptionFileSystemWithUser {
     url: string;
     port?: string | number;
@@ -19,6 +31,10 @@ export interface IOptionFileSystemWithUser {
     home_dir: string;
     accessToken?: string;
 }
+/**
+ * @export
+ * @interface IOptionFileSystemWithSessionId
+ */
 export interface IOptionFileSystemWithSessionId {
     url: string;
     port?: string | number;
@@ -26,9 +42,18 @@ export interface IOptionFileSystemWithSessionId {
     home_dir: string;
     accessToken?: string;
 }
+/**
+ * @export
+ * @interface IFlatModelMap
+ */
 export interface IFlatModelMap {
     [id: number]: Model;
 }
+/**
+ * @export
+ * @interface IStateMap
+ * @template T
+ */
 export interface IStateMap<T extends Model> {
     [key: string]: {
         type: string;
@@ -37,57 +62,283 @@ export interface IStateMap<T extends Model> {
     };
 }
 export type SpinalOnChangeBindModel = () => void;
+/**
+ * @export
+ * @interface IFileInfoOption
+ */
 export interface IFileInfoOption {
     model_type?: string;
     [key: string]: any;
 }
 export type SpinalFilterFunction<T extends Model> = (item: T) => boolean;
 export type SpinalSortFunction<T extends Model> = (item1: T, item2: T) => number;
+/**
+ * Bese representation of an Array
+ * @export
+ * @class Lst
+ * @extends {Model}
+ * @template T
+ */
 export class Lst<T extends Model = any> extends Model {
+    /**
+     * @static
+     * @type {string}
+     * @memberof Lst
+     */
     static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof Lst
+     */
     _constructorName: string;
+    /**
+     * @type {number}
+     * @memberof Lst
+     */
     length: number;
+    /**
+     * Creates an instance of Lst.
+     * @param {*} [data]
+     * @memberof Lst
+     */
     constructor(data?: any);
+    /**
+     * @return {*}  {number}
+     * @memberof Lst
+     */
     static_length(): number;
-    default_value(): number;
-    base_type(): any;
-    get(): Array<T>;
-    size(): any;
+    /**
+     * @protected
+     * @return {*}  {number}
+     * @memberof Lst
+     */
+    protected default_value(): number;
+    /**
+     * @protected
+     * @return {*}  {*}
+     * @memberof Lst
+     */
+    protected base_type(): any;
+    /**
+     * @return {*}  {ReturnType<T['get']>[]}
+     * @memberof Lst
+     */
+    get(): ReturnType<T['get']>[];
+    /**
+     * @return {*}  {[number]}
+     * @memberof Lst
+     */
+    size(): [number];
+    /**
+     * @return {*}  {string}
+     * @memberof Lst
+     */
     toString(): string;
+    /**
+     * @param {Lst<T>} lst
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */
     equals(lst: Lst<T>): boolean;
-    push(value: T, force?: boolean): void;
+    /**
+     * @param {*} value
+     * @param {boolean} [force=false]
+     * @return {*}  {void}
+     * @memberof Lst
+     */
+    push(value: any, force?: boolean): void;
+    /**
+     * @return {*}  {T}
+     * @memberof Lst
+     */
     pop(): T;
+    /**
+     * @memberof Lst
+     */
     clear(): void;
+    /**
+     * @param {*} value
+     * @return {*}  {number}
+     * @memberof Lst
+     */
     unshift(value: any): number;
+    /**
+     * @return {*}  {T}
+     * @memberof Lst
+     */
     shift(): T;
+    /**
+     * @param {T} item
+     * @memberof Lst
+     */
     remove(item: T): void;
+    /**
+     * @param {T} item
+     * @memberof Lst
+     */
     remove_ref(item: T): void;
+    /**
+     * @param {SpinalFilterFunction<T>} f
+     * @return {*}  {T[]}
+     * @memberof Lst
+     */
     filter(f: SpinalFilterFunction<T>): T[];
+    /**
+     * @param {SpinalFilterFunction<T>} f
+     * @return {*}  {T}
+     * @memberof Lst
+     */
     detect(f: SpinalFilterFunction<T>): T;
+    /**
+     * @param {SpinalSortFunction<T>} sort
+     * @return {*}  {Array<T>}
+     * @memberof Lst
+     */
     sorted(sort: SpinalSortFunction<T>): Array<T>;
+    /**
+     * @param {SpinalFilterFunction<T>} f
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */
     has(f: SpinalFilterFunction<T>): boolean;
+    /**
+     * @param {T} value
+     * @return {*}  {(1 | -1)}
+     * @memberof Lst
+     */
     indexOf(value: T): 1 | -1;
+    /**
+     * @param {T} value
+     * @return {*}  {number}
+     * @memberof Lst
+     */
     indexOf_ref(value: T): number;
+    /**
+     * @param {T} value
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */
     contains(value: T): boolean;
+    /**
+     * @param {T} value
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */
     contains_ref(value: T): boolean;
+    /**
+     * @param {T} value
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */
     toggle(value: T): boolean;
+    /**
+     * @param {T} value
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */
     toggle_ref(value: T): boolean;
+    /**
+     * @param {number} begin
+     * @param {number} [end=this.length]
+     * @return {*}  {Lst<T>}
+     * @memberof Lst
+     */
     slice(begin: number, end?: number): Lst<T>;
+    /**
+     * @param {Lst<T>} new_tab
+     * @param {boolean} [force=false]
+     * @return {*}  {void}
+     * @memberof Lst
+     */
     concat(new_tab: Lst<T>, force?: boolean): void;
+    /**
+     * @param {number} index
+     * @param {number} [n=1]
+     * @return {*}  {void}
+     * @memberof Lst
+     */
     splice(index: number, n?: number): void;
+    /**
+     * @param {number} index
+     * @param {Lst<T>} lst
+     * @memberof Lst
+     */
     insert(index: number, lst: Lst<T>): void;
+    /**
+     * @param {number} index
+     * @param {T} val
+     * @return {*}  {void}
+     * @memberof Lst
+     */
     set_or_push(index: number, val: T): void;
+    /**
+     * @param {number} size
+     * @memberof Lst
+     */
     trim(size: number): void;
+    /**
+     * @param {string} sep
+     * @return {*}  {string}
+     * @memberof Lst
+     */
     join(sep: string): string;
-    deep_copy(): any;
-    back(): any;
+    /**
+     * @return {*}  {Lst<T>}
+     * @memberof Lst
+     */
+    deep_copy(): Lst<T>;
+    /**
+     * @return {*}  {T}
+     * @memberof Lst
+     */
+    back(): T;
+    /**
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */
     real_change(): boolean;
+    /**
+     * @protected
+     * @param {Lst<T>} value
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */
     protected _set(value: Lst<T>): boolean;
-    _get_flat_model_map(map: IFlatModelMap, date: number): IFlatModelMap;
+    /**
+     * @protected
+     * @param {IFlatModelMap} map
+     * @param {number} date
+     * @return {*}  {IFlatModelMap}
+     * @memberof Lst
+     */
+    protected _get_flat_model_map(map: IFlatModelMap, date: number): IFlatModelMap;
+    /**
+     * @param {IFsData} out
+     * @memberof Lst
+     */
     _get_fs_data(out: IFsData): void;
-    _get_state(): string;
+    /**
+     * @protected
+     * @return {*}  {string}
+     * @memberof Lst
+     */
+    protected _get_state(): string;
+    /**
+     * @param {string} str
+     * @param {IStateMap<T>} map
+     * @memberof Lst
+     */
     _set_state(str: string, map: IStateMap<T>): void;
+    /**
+     * @param {boolean} force
+     * @return {*}  {boolean}
+     * @memberof Lst
+     */
     _static_size_check(force: boolean): boolean;
+    /**
+     * @return {*}  {Generator<T, void, unknown>}
+     * @memberof Lst
+     */
     [Symbol.iterator](): Generator<T, void, unknown>;
 }
 /**
@@ -100,13 +351,52 @@ export class Obj<T extends string | number | boolean> extends Model {
     static _constructorName: string;
     _constructorName: string;
     _data: T;
+    /**
+     * Creates an instance of Obj.
+     * @param {*} [data]
+     * @memberof Obj
+     */
     constructor(data?: any);
+    /**
+     * @return {*}  {string}
+     * @memberof Obj
+     */
     toString(): string;
+    /**
+     * @param {*} obj
+     * @return {*}  {boolean}
+     * @memberof Obj
+     */
     equals(obj: any): boolean;
-    get(): any;
+    /**
+     * @return {*}  {*}
+     * @memberof Obj
+     */
+    get(): T;
+    /**
+     * @param {IFsData} out
+     * @memberof Obj
+     */
     _get_fs_data(out: IFsData): void;
+    /**
+     * @protected
+     * @param {T} value
+     * @return {*}  {boolean}
+     * @memberof Obj
+     */
     protected _set(value: T): boolean;
-    _get_state(): string;
+    /**
+     * @@protected
+     * @return {*}  {string}
+     * @memberof Obj
+     */
+    protected _get_state(): string;
+    /**
+     * @param {string} str
+     * @param {unknown} _map
+     * @return {*}  {boolean}
+     * @memberof Obj
+     */
     _set_state(str: string, _map: unknown): boolean;
 }
 /**
@@ -181,19 +471,44 @@ export class Str extends Obj<string> {
      */
     protected _set(value?: Str | string): boolean;
     /**
+     * @protected
      * @return {*}  {string}
      * @memberof Str
      */
-    _get_state(): string;
+    protected _get_state(): string;
     _set_state(str: string, _map: unknown): boolean;
 }
+/**
+ * @export
+ * @interface IFileInfo
+ * @extends {Model}
+ */
 export interface IFileInfo extends Model {
     model_type?: Str;
     [key: string]: any;
 }
+/**
+ * @export
+ * @class Ptr
+ * @extends {Model}
+ * @template T
+ */
 export class Ptr<T extends Model = any> extends Model {
+    /**
+     * @static
+     * @type {string}
+     * @memberof Ptr
+     */
     static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof Ptr
+     */
     _constructorName: string;
+    /**
+     * @type {{ model?: T; value?: any }}
+     * @memberof Ptr
+     */
     data: {
         model?: T;
         value?: any;
@@ -219,41 +534,202 @@ export class Ptr<T extends Model = any> extends Model {
      * @memberof Ptr
      */
     _get_fs_data(out: IFsData): void;
+    /**
+     * @protected
+     * @param {(number | T)} model
+     * @return {*}  {boolean}
+     * @memberof Ptr
+     */
     protected _set(model: number | T): boolean;
-    _get_state(): string;
+    /**
+     * @protected
+     * @return {*}
+     * @memberof Ptr
+     */
+    protected _get_state(): string;
+    /**
+     * @param {string} str
+     * @param {unknown} _map
+     * @return {*}  {boolean}
+     * @memberof Ptr
+     */
     _set_state(str: string, _map: unknown): boolean;
 }
+/**
+ * representation of a virtual File
+ * @export
+ * @class File
+ * @extends {Model}
+ * @template T
+ */
 export class File<T extends Model = any> extends Model {
+    /**
+     * @static
+     * @type {string}
+     * @memberof File
+     */
     static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof File
+     */
     _constructorName: string;
+    /**
+     * @type {Str}
+     * @memberof File
+     */
     name: Str;
+    /**
+     * @type {Str}
+     * @memberof File
+     */
     _created_at: Str;
+    /**
+     * @type {Ptr<T>}
+     * @memberof File
+     */
     _ptr: Ptr<T>;
+    /**
+     * @type {IFileInfo}
+     * @memberof File
+     */
     _info: IFileInfo;
+    /**
+     * Creates an instance of File.
+     * @param {string} [name='']
+     * @param {(number | T)} [ptr_or_model=0]
+     * @param {*} [info={}]
+     * @memberof File
+     */
     constructor(name?: string, ptr_or_model?: number | T, info?: any);
+    /**
+     * @return {*}  {Promise<T>}
+     * @memberof File
+     */
     load(): Promise<T>;
+    /**
+     * @param {SpinalLoadCallBack<T>} [callback]
+     * @memberof File
+     */
     load(callback?: SpinalLoadCallBack<T>): void;
 }
+/**
+ * @export
+ * @class TiffFile
+ * @extends {File<T>}
+ * @template T
+ */
 export class TiffFile<T extends Model = any> extends File<T> {
+    /**
+     * @static
+     * @type {string}
+     * @memberof TiffFile
+     */
     static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof TiffFile
+     */
     _constructorName: string;
+    /**
+     * @type {Ptr}
+     * @memberof TiffFile
+     */
     _ptr_tiff: Ptr;
+    /**
+     * @type {number}
+     * @memberof TiffFile
+     */
     _has_been_converted: number;
-    constructor(name?: string, ptr_or_model?: number, ptr_tiff?: number, info?: {});
+    /**
+     * Creates an instance of TiffFile.
+     * @param {string} [name='']
+     * @param {number} [ptr_or_model=0]
+     * @param {number} [ptr_tiff=0]
+     * @param {*} [info={}]
+     * @memberof TiffFile
+     */
+    constructor(name?: string, ptr_or_model?: number, ptr_tiff?: number, info?: any);
     load_tiff(callback: SpinalLoadCallBack<T>): void;
 }
+/**
+ * representation of a virtual Directory
+ * @export
+ * @class Directory
+ * @extends {(Lst<File | TiffFile>)}
+ */
 export class Directory extends Lst<File | TiffFile> {
+    /**
+     * @static
+     * @type {string}
+     * @memberof Directory
+     */
     static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof Directory
+     */
     _constructorName: string;
     constructor();
-    base_(): any;
+    /**
+     * @return {*}  {*}
+     * @memberof Directory
+     */
+    base_type(): typeof File;
+    /**
+     * @param {string} name
+     * @return {*}  {(File | TiffFile)}
+     * @memberof Directory
+     */
     find(name: string): File | TiffFile;
+    /**
+     * @param {string} name
+     * @param {SpinalLoadCallBack<any>} callback
+     * @memberof Directory
+     */
     load(name: string, callback: SpinalLoadCallBack<any>): void;
+    /**
+     * @param {SpinalFilterFunction<File>} f
+     * @return {*}  {boolean}
+     * @memberof Directory
+     */
     has(f: SpinalFilterFunction<File>): boolean;
+    /**
+     * @param {string} name
+     * @return {*}  {boolean}
+     * @memberof Directory
+     */
     has(name: string): boolean;
+    /**
+     * @param {string} name
+     * @param {*} obj
+     * @param {IFileInfoOption} [params={}]
+     * @return {*}  {File}
+     * @memberof Directory
+     */
     add_file(name: string, obj: any, params?: IFileInfoOption): File;
+    /**
+     * @param {string} name
+     * @param {*} obj
+     * @param {*} tiff_obj
+     * @param {IFileInfoOption} [params={}]
+     * @return {*}  {TiffFile}
+     * @memberof Directory
+     */
     add_tiff_file(name: string, obj: any, tiff_obj: any, params?: IFileInfoOption): TiffFile;
+    /**
+     * @param {string} name
+     * @param {*} obj
+     * @param {IFileInfoOption} [params={}]
+     * @return {*}  {File}
+     * @memberof Directory
+     */
     force_add_file(name: string, obj: any, params?: IFileInfoOption): File;
+    /**
+     * @param {*} info
+     * @return {*}  {string}
+     * @memberof Directory
+     */
     get_file_info(info: any): string;
 }
 /**
@@ -301,74 +777,333 @@ export class Val extends Obj<number> {
      */
     protected _set(value: string | boolean | number | Val): boolean;
 }
+/**
+ * representation of a file to upload
+ * @export
+ * @class Path
+ * @extends {Model}
+ */
 export class Path extends Model {
+    /**
+     * @static
+     * @type {string}
+     * @memberof Path
+     */
     static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof Path
+     */
     _constructorName: string;
+    /**
+     * @type {(File | Buffer)}
+     * @memberof Path
+     */
     file?: File | Buffer;
+    /**
+     * @type {Val}
+     * @memberof Path
+     */
     remaining: Val;
+    /**
+     * @type {Val}
+     * @memberof Path
+     */
     to_upload: Val;
+    /**
+     * Creates an instance of Path.
+     * @param {(File | Buffer)} [file]
+     * @memberof Path
+     */
     constructor(file?: File | Buffer);
+    /**
+     * @param {{ remaining: Val; to_upload: Val }} info
+     * @memberof Path
+     */
     get_file_info(info: {
         remaining: Val;
         to_upload: Val;
     }): void;
+    /**
+     * @param {IFsData} out
+     * @memberof Path
+     */
     _get_fs_data(out: IFsData): void;
 }
+/**
+ * @export
+ * @class Pbr
+ * @extends {Ptr<T>}
+ * @template T
+ */
 export class Pbr<T extends Model = any> extends Ptr<T> {
+    /**
+     * @static
+     * @type {string}
+     * @memberof Pbr
+     */
     static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof Pbr
+     */
     _constructorName: string;
+    /**
+     * Creates an instance of Pbr.
+     * @param {*} model
+     * @memberof Pbr
+     */
     constructor(model: any);
 }
-export class RightSetList<T extends Model = any> extends Lst<T> {
-    static _constructorName: string;
-    _constructorName: string;
-    constructor();
-}
+/**
+ * @export
+ * @class RightsItem
+ * @extends {Lst<T>}
+ * @template T
+ */
 export class RightsItem<T extends Model = any> extends Lst<T> {
+    /**
+     * @static
+     * @type {string}
+     * @memberof RightsItem
+     */
     static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof RightsItem
+     */
     _constructorName: string;
+    /**
+     * Creates an instance of RightsItem.
+     * @memberof RightsItem
+     */
     constructor();
 }
+/**
+ * @export
+ * @class RightSetList
+ * @extends {Lst<RightsItem>}
+ */
+export class RightSetList extends Lst<RightsItem> {
+    /**
+     * @static
+     * @type {string}
+     * @memberof RightSetList
+     */
+    static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof RightSetList
+     */
+    _constructorName: string;
+    /**
+     * Creates an instance of RightSetList.
+     * @memberof RightSetList
+     */
+    constructor();
+}
+/**
+ * @export
+ * @class SessionModel
+ * @extends {Model}
+ */
 export class SessionModel extends Model {
+    /**
+     * @static
+     * @type {string}
+     * @memberof SessionModel
+     */
     static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof SessionModel
+     */
     _constructorName: string;
+    /**
+     * Creates an instance of SessionModel.
+     * @memberof SessionModel
+     */
     constructor();
 }
+/**
+ * @export
+ * @class User
+ * @extends {Model}
+ */
 export class User extends Model {
+    /**
+     * @static
+     * @type {string}
+     * @memberof User
+     */
     static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof User
+     */
     _constructorName: string;
+    /**
+     * Creates an instance of User.
+     * @memberof User
+     */
     constructor();
 }
+/**
+ * @export
+ * @class UserRight
+ * @extends {Model}
+ */
 export class UserRight extends Model {
+    /**
+     * @static
+     * @type {string}
+     * @memberof UserRight
+     */
     static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof UserRight
+     */
     _constructorName: string;
+    /**
+     * Creates an instance of UserRight.
+     * @memberof UserRight
+     */
     constructor();
+    /**
+     * @return {*}  {boolean}
+     * @memberof UserRight
+     */
     set(): boolean;
 }
+/**
+ * @export
+ * @interface ISpinalModel
+ */
 export interface ISpinalModel {
     [key: string]: any;
 }
+/**
+ * Bese representation of a Boolean
+ * @export
+ * @class Bool
+ * @extends {Obj<boolean>}
+ */
 export class Bool extends Obj<boolean> {
+    /**
+     * @static
+     * @type {string}
+     * @memberof Bool
+     */
     static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof Bool
+     */
     _constructorName: string;
+    /**
+     * Creates an instance of Bool.
+     * @param {(boolean | Bool)} [data=false]
+     * @memberof Bool
+     */
     constructor(data?: boolean | Bool);
+    /**
+     * toggle true / false ( 1 / 0 )
+     * @return {*}  {boolean}
+     * @memberof Bool
+     */
     toggle(): boolean;
+    /**
+     * @return {*}  {boolean}
+     * @memberof Bool
+     */
     toBoolean(): boolean;
+    /**
+     * @return {*}  {Bool}
+     * @memberof Bool
+     */
     deep_copy(): Bool;
+    /**
+     * we do not take _set from Obj because we want a conversion if value is not a boolean
+     * @protected
+     * @param {(string | boolean | Bool)} value
+     * @return {*}  {boolean}
+     * @memberof Bool
+     */
     protected _set(value: string | boolean | Bool): boolean;
+    /**
+     * @param {IFsData} out
+     * @memberof Bool
+     */
     _get_fs_data(out: IFsData): void;
 }
+/**
+ * @export
+ * @class Choice
+ * @extends {Model}
+ */
 export class Choice extends Model {
+    /**
+     * @static
+     * @type {string}
+     * @memberof Choice
+     */
     static _constructorName: string;
+    /**
+     * @type {string}
+     * @memberof Choice
+     */
     _constructorName: string;
+    /**
+     * @type {Val}
+     * @memberof Choice
+     */
     num: Val;
+    /**
+     *
+     * @type {Lst<Str>}
+     * @memberof Choice
+     */
     lst: Lst<Str>;
+    /**
+     * Creates an instance of Choice.
+     * @param {(Val | number)} [InitIdx]
+     * @param {((string | Str)[])} [stringChoises]
+     * @memberof Choice
+     */
     constructor(InitIdx?: Val | number, stringChoises?: (string | Str)[]);
+    /**
+     * @return {*}  {boolean}
+     * @memberof Choice
+     */
     filter(): boolean;
+    /**
+     * @return {*}  {Str} the seleected value
+     * @memberof Choice
+     */
     item(): Str;
+    /**
+     * @return {*}  {string} the seleected value
+     * @memberof Choice
+     */
     get(): string;
+    /**
+     * @return {*}  {string}
+     * @memberof Choice
+     */
     toString(): string;
+    /**
+     * @param {(Choice | Str)} a
+     * @return {*}  {boolean}
+     * @memberof Choice
+     */
     equals(a: Choice | Str): boolean;
+    /**
+     * @protected
+     * @param {(string | number)} value
+     * @return {*}  {boolean}
+     * @memberof Choice
+     */
     protected _set(value: string | number): boolean;
 }
 export abstract class TypedArray<T extends Int32Array | Float64Array> extends Model {
@@ -446,10 +1181,11 @@ export abstract class TypedArray<T extends Int32Array | Float64Array> extends Mo
      */
     _get_fs_data(out: IFsData): void;
     /**
+     * @protected
      * @return {*}  {string}
      * @memberof TypedArray
      */
-    _get_state(): string;
+    protected _get_state(): string;
     /**
      * @param {string} str
      * @memberof TypedArray
@@ -548,7 +1284,6 @@ export class BindProcess extends Process {
     onchange(): void;
 }
 export type SpinalCallBackError = () => void;
-export type SpinalLoadCallBackSucess<T extends Model = Model> = (model: T) => void;
 export type SpinalStoreCallBackSucess = () => void;
 declare export namespace spinalCore {
     const _def: ISpinalModel;
@@ -786,17 +1521,64 @@ declare export namespace ModelProcessManager {
         [key: string]: any;
     }>;
 }
+/**
+ * Bese representation of a Object
+ * @export
+ * @class Model
+ */
 export class Model {
     static _constructorName: string;
     _constructorName: string;
+    /**
+     * registered attribute names (in declaration order)
+     * @type {string[]}
+     * @memberof Model
+     */
     _attribute_names: string[];
+    /**
+     * id of the model
+     * @type {number}
+     * @memberof Model
+     */
     model_id: number;
+    /**
+     * synchronized processes
+     * @type {Process[]}
+     * @memberof Model
+     */
     _processes: Process[];
+    /**
+     * parent models (depending on this)
+     * @type {Model[]}
+     * @memberof Model
+     */
     _parents: Model[];
+    /**
+     * "date" of previous change. We start at + 2 because
+     * we consider that an initialisation is a modification.
+     * @type {number}
+     * @memberof Model
+     */
     _date_last_modification: number;
-    _server_id: number;
+    /**
+     * id unique from server.
+     * It doesn't exist at creation but added after a sync of the server
+     * @type {number}
+     * @memberof Model
+     */
+    _server_id?: number;
     [nameAttr: string]: any;
+    /**
+     * Creates an instance of Model.
+     * @param {*} [attr]
+     * @memberof Model
+     */
     constructor(attr?: any);
+    /**
+     * Do nothing here, TBD in child if needed.
+     * Called in rem_attr if have no more parent.
+     * @memberof Model
+     */
     destructor(): void;
     /**
      * return true if this (or a child of this) has changed since the previous synchronisation
@@ -824,7 +1606,11 @@ export class Model {
      * @memberof Model
      */
     bind(f: Process | BindProcess | SpinalOnChangeBindModel, onchange_construction?: boolean): Process;
-    unbind(f: Process | BindProcess): void;
+    /**
+     * @param {(Process | BindProcess | Function)} f recommanded to use Process | BindProcess, using Function can lead to error
+     * @memberof Model
+     */
+    unbind(f: Process | BindProcess | Function): void;
     /**
      * return a copy of data in a "standard" representation (e.g. string, number, objects, ...)
      * users are encouraged to use Models as much as possible
@@ -852,8 +1638,15 @@ export class Model {
      * @memberof Model
      */
     set_state(str: string): void;
+    /**
+     * return a string which describes the changes in this and children since date
+     * @param {number} [date=-1]
+     * @return {*}  {string}
+     * @memberof Model
+     */
     get_state(date?: number): string;
     /**
+     * add attribute
      * @param {{ [nameAttr: string]: any }} object
      * @memberof Model
      */
@@ -861,6 +1654,13 @@ export class Model {
         [nameAttr: string]: any;
     }): void;
     /**
+     * @param {string} name
+     * @param {*} [instanceOfModel]
+     * @param {boolean} [signal_change]
+     * @memberof Model
+     */
+    /**
+     * add attribute
      * @param {string} name
      * @param {*} [instanceOfModel]
      * @param {boolean} [signal_change]
@@ -886,7 +1686,7 @@ export class Model {
     /**
      * add / mod / rem attr to get the same data than o
      *  (assumed to be something like { key: val, ... })
-     * @param {object} instanceOfModel
+     * @param {{ [key: string]: any }} instanceOfModel
      * @memberof Model
      */
     set_attr(instanceOfModel: {
@@ -902,8 +1702,8 @@ export class Model {
     size(_for_display?: number): number | number[];
     /**
      * dimensionnality of the object -> 0 for a scalar, 1 for a vector, ...
-     * @param {boolean} [_for_display]
-     * @return {*} {number}
+     * @param {number} [_for_display=0]
+     * @return {*}  {number}
      * @memberof Model
      */
     dim(_for_display?: number): number;
@@ -932,6 +1732,7 @@ export class Model {
      */
     real_change(): boolean;
     /**
+     * To be redifined in children if needed
      * @param {string} name
      * @return {*}  {boolean}
      * @memberof Model
@@ -942,7 +1743,7 @@ export class Model {
      * @return {*}  {string}
      * @memberof Model
      */
-    _get_state(): string;
+    protected _get_state(): string;
     /**
      * send data to server
      * @param {IFsData} out
@@ -954,7 +1755,8 @@ export class Model {
      * may be redefined.
      * by default, add attributes using keys and values (and remove old unused values)
      * must return true if data is changed
-     * @param {(Model | object)} value
+     * @protected
+     * @param {*} value
      * @return {*}  {boolean}
      * @memberof Model
      */
@@ -962,11 +1764,12 @@ export class Model {
     /**
      * called by set. change_level should not be defined by the user
      *  (it permits to != change from child of from this)
+     * @protected
      * @param {number} [change_level=2]
      * @return {*}  {ReturnType<typeof setTimeout>}
      * @memberof Model
      */
-    _signal_change(change_level?: number): ReturnType<typeof setTimeout>;
+    protected _signal_change(change_level?: number): ReturnType<typeof setTimeout>;
     /**
      * generic definition of _set_state. ( called by _use_state )
      * @param {string} str
@@ -975,31 +1778,24 @@ export class Model {
      */
     _set_state(str: string, map: IStateMap<Model>): void;
     /**
-     * see get_parents_that_check
-     * @param {Model[]} res
-     * @param {{ [attrName: string]: boolean }} visited
-     * @param {(model: Model) => boolean} func_to_check
-     * @memberof Model
-     */
-    _get_parents_that_check_rec(res: Model[], visited: {
-        [attrName: string]: boolean;
-    }, func_to_check: (model: Model) => boolean): void;
-    /**
      * return true if info from map[ mid ] if compatible with this.
      * If it's the case, use this information to update data
+     * @protected
      * @param {string} mid
-     * @param {IStateMap} map
+     * @param {IStateMap<Model>} map
      * @return {*}  {boolean}
      * @memberof Model
      */
-    _set_state_if_same_type(mid: string, map: IStateMap<Model>): boolean;
+    protected _set_state_if_same_type(mid: string, map: IStateMap<Model>): boolean;
     /**
      * map[ id ] = obj for each objects starting from this recursively
-     * @param {{ [id: number]: Model }} map
+     * @protected
+     * @param {IFlatModelMap} map
      * @param {number} date
+     * @return {*}  {IFlatModelMap}
      * @memberof Model
      */
-    _get_flat_model_map(map: IFlatModelMap, date: number): IFlatModelMap;
+    protected _get_flat_model_map(map: IFlatModelMap, date: number): IFlatModelMap;
 }
 export type SpinalLoadCallBack<T extends Model> = (model: T, error?: boolean | string) => void;
 declare global {
@@ -1038,40 +1834,155 @@ declare global {
     var new_alert_msg: NewAlertMsgType;
 }
 export function getUrlPath(url: string, port: number | string, searchQuery?: string): string;
+/**
+ * intance of the connection to an server
+ * @export
+ * @class FileSystem
+ */
 export class FileSystem {
     static _constructorName: string;
+    /**
+     *  set to true to get warning for creating unknown Model type
+     * @static
+     * @type {boolean}
+     * @memberof FileSystem
+     */
     static debug: boolean;
+    /**
+     * if true, print the IO with the server
+     * @static
+     * @type {boolean}
+     * @memberof FileSystem
+     */
     static _disp: boolean;
-    static _cur_tmp_server_id: number;
+    /**
+     * if true, eval server response.
+     * @static
+     * @type {boolean}
+     * @memberof FileSystem
+     */
     static _sig_server: boolean;
+    /**
+     * @deprecated
+     * @readonly
+     * @static
+     * @type {(string | number)}
+     * @memberof FileSystem
+     */
     static get _userid(): string | number;
+    /**
+     * @static
+     * @type {number}
+     * @memberof FileSystem
+     */
     static _timeout_reconnect: number;
+    /**
+     * @static
+     * @type {boolean}
+     * @memberof FileSystem
+     */
     static is_cordova: boolean;
+    /**
+     * data are sent after a timeout (and are concatened before)
+     * @static
+     * @type {{ [serverId: number]: Model }}
+     * @memberof FileSystem
+     */
     static _objects_to_send: {
         [serverId: number]: Model;
     };
+    /**
+     * @static
+     * @type {ReturnType<typeof setTimeout>}
+     * @memberof FileSystem
+     */
     static _timer_send: ReturnType<typeof setTimeout>;
+    /**
+     * @static
+     * @type {ReturnType<typeof setTimeout>}
+     * @memberof FileSystem
+     */
     static _timer_chan: ReturnType<typeof setTimeout>;
+    /**
+     * functions to be called after an answer
+     * @static
+     * @type {number}
+     * @memberof FileSystem
+     */
     static _nb_callbacks: number;
+    /**
+     * @static
+     * @type {{ [id: number]: SpinalLoadCallBack<Model> }}
+     * @memberof FileSystem
+     */
     static _callbacks: {
         [id: number]: SpinalLoadCallBack<Model>;
     };
+    /**
+     * @static
+     * @type {[string, SpinalLoadCallBack<Model>][]}
+     * @memberof FileSystem
+     */
     static _type_callbacks: [string, SpinalLoadCallBack<Model>][];
+    /**
+     * ref to Path waiting to be registered before sending data
+     * @static
+     * @type {{ [key: number]: Path }}
+     * @memberof FileSystem
+     */
     static _files_to_upload: {
         [key: number]: Path;
     };
+    /**
+     * Ptr objects that need an update, associated with FileSystem_tmp_objects
+     * @static
+     * @type {{ [key: number]: Model }}
+     * @memberof FileSystem
+     */
     static _ptr_to_update: {
         [key: number]: Model;
     };
+    /**
+     * objects waiting for a real _server_id
+     * @static
+     * @type {{ [key: number]: Model }}
+     * @memberof FileSystem
+     */
     static _tmp_objects: {
         [key: number]: Model;
     };
+    /**
+     * _server_id -> object
+     * @static
+     * @type {{ [key: number]: Model }}
+     * @memberof FileSystem
+     */
     static _objects: {
         [key: number]: Model;
     };
+    /**
+     * @type {string}
+     * @memberof FileSystem
+     */
     _home_dir: string;
+    /**
+     * @static
+     * @type {string}
+     * @memberof FileSystem
+     */
     static url_com: string;
+    /**
+     * @static
+     * @type {string}
+     * @memberof FileSystem
+     */
     static url_upload: string;
+    /**
+     * conector type : Browser or Node
+     * @static
+     * @type {('Node' | 'Browser')}
+     * @memberof FileSystem
+     */
     static CONNECTOR_TYPE: 'Node' | 'Browser';
     _data_to_send: string;
     _session_num: number;
@@ -1190,6 +2101,13 @@ export class FileSystem {
      * @memberof FileSystem
      */
     static signal_change(m: Model): void;
+    /**
+     * @static
+     * @param {number} tmp_id
+     * @param {number} res
+     * @return {*}  {void}
+     * @memberof FileSystem
+     */
     static _tmp_id_to_real(tmp_id: number, res: number): void;
     /**
      * @deprecated
