@@ -29,16 +29,59 @@ import { Model } from '../../Models/Model';
 import type { Str } from '../../Models/Str';
 import { Ptr } from './Ptr';
 
+/**
+ * representation of a virtual File
+ * @export
+ * @class File
+ * @extends {Model}
+ * @template T
+ */
 export class File<T extends Model = any> extends Model {
-  static readonly _constructorName: string = 'File';
-  readonly _constructorName: string = File._constructorName;
+  /**
+   * @static
+   * @type {string}
+   * @memberof File
+   */
+  public static _constructorName: string = 'File';
+  /**
+   * @type {string}
+   * @memberof File
+   */
+  public _constructorName: string = File._constructorName;
 
-  name: Str;
-  _created_at: Str;
-  _ptr: Ptr;
-  _info: IFileInfo;
+  /**
+   * @type {Str}
+   * @memberof File
+   */
+  public name: Str;
+  /**
+   * @type {Str}
+   * @memberof File
+   */
+  public _created_at: Str;
+  /**
+   * @type {Ptr<T>}
+   * @memberof File
+   */
+  public _ptr: Ptr<T>;
+  /**
+   * @type {IFileInfo}
+   * @memberof File
+   */
+  public _info: IFileInfo;
 
-  constructor(name: string = '', ptr_or_model: number | T = 0, info: any = {}) {
+  /**
+   * Creates an instance of File.
+   * @param {string} [name='']
+   * @param {(number | T)} [ptr_or_model=0]
+   * @param {*} [info={}]
+   * @memberof File
+   */
+  public constructor(
+    name: string = '',
+    ptr_or_model: number | T = 0,
+    info: any = {}
+  ) {
     super();
     const cp_info: any = {};
     for (const key in info) {
@@ -58,7 +101,18 @@ export class File<T extends Model = any> extends Model {
     });
   }
 
-  load(callback: SpinalLoadCallBack<T>) {
-    return this._ptr.load(callback);
+  /**
+   * @return {*}  {Promise<T>}
+   * @memberof File
+   */
+  public load(): Promise<T>;
+  /**
+   * @param {SpinalLoadCallBack<T>} [callback]
+   * @memberof File
+   */
+  public load(callback?: SpinalLoadCallBack<T>): void;
+  public load(callback?: SpinalLoadCallBack<T>): Promise<T> {
+    if (typeof callback === 'function') this._ptr.load(callback);
+    else return this._ptr.load();
   }
 }

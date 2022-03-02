@@ -26,35 +26,70 @@ import { FileSystem } from '../FileSystem/FileSystem';
 import type { IFsData } from '../interfaces/IFsData';
 import { Model } from './Model';
 
-export class Obj<T = string | number | boolean> extends Model {
-  static readonly _constructorName: string = 'Obj';
-  readonly _constructorName: string = Obj._constructorName;
-  _data: T;
+/**
+ * @export
+ * @class Obj
+ * @extends {Model}
+ * @template T
+ */
+export class Obj<T extends string | number | boolean> extends Model {
+  public static _constructorName: string = 'Obj';
+  public _constructorName: string = Obj._constructorName;
+  public _data: T;
 
-  constructor(data?: any) {
+  /**
+   * Creates an instance of Obj.
+   * @param {*} [data]
+   * @memberof Obj
+   */
+  public constructor(data?: any) {
     super();
     if (data != null) {
       this._set(data);
     }
   }
 
-  toString(): string {
+  /**
+   * @return {*}  {string}
+   * @memberof Obj
+   */
+  public toString(): string {
     return this._data?.toString();
   }
 
-  equals(obj: any): boolean {
+  /**
+   * @param {*} obj
+   * @return {*}  {boolean}
+   * @memberof Obj
+   */
+  public equals(obj: any): boolean {
     return obj instanceof Obj ? this._data === obj._data : this._data === obj;
   }
 
-  get(): any {
+  /**
+   * @return {*}  {*}
+   * @memberof Obj
+   */
+  public get(): T {
     return this._data;
   }
-  _get_fs_data(out: IFsData): void {
+
+  /**
+   * @param {IFsData} out
+   * @memberof Obj
+   */
+  public _get_fs_data(out: IFsData): void {
     FileSystem.set_server_id_if_necessary(out, this);
     out.mod += `C ${this._server_id} ${this.toString()} `;
   }
 
-  _set(value: T): boolean {
+  /**
+   * @protected
+   * @param {T} value
+   * @return {*}  {boolean}
+   * @memberof Obj
+   */
+  protected _set(value: T): boolean {
     if (this._data !== value) {
       this._data = value;
       return true;
@@ -62,11 +97,22 @@ export class Obj<T = string | number | boolean> extends Model {
     return false;
   }
 
-  _get_state(): string {
+  /**
+   * @@protected
+   * @return {*}  {string}
+   * @memberof Obj
+   */
+  protected _get_state(): string {
     return this.toString();
   }
 
-  _set_state(str: string, _map: unknown): boolean {
+  /**
+   * @param {string} str
+   * @param {unknown} _map
+   * @return {*}  {boolean}
+   * @memberof Obj
+   */
+  public _set_state(str: string, _map: unknown): boolean {
     return this.set(str);
   }
 }

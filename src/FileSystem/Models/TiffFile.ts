@@ -27,13 +27,51 @@ import type { Model } from '../../Models/Model';
 import { File } from './File';
 import { Ptr } from './Ptr';
 
+/**
+ * @export
+ * @class TiffFile
+ * @extends {File<T>}
+ * @template T
+ */
 export class TiffFile<T extends Model = any> extends File<T> {
-  static readonly _constructorName: string = 'TiffFile';
-  readonly _constructorName: string = TiffFile._constructorName;
-  _ptr_tiff: Ptr;
-  _has_been_converted: number;
+  /**
+   * @static
+   * @type {string}
+   * @memberof TiffFile
+   */
+  public static _constructorName: string = 'TiffFile';
+  /**
+   * @type {string}
+   * @memberof TiffFile
+   */
+  public _constructorName: string = TiffFile._constructorName;
 
-  constructor(name = '', ptr_or_model = 0, ptr_tiff = 0, info = {}) {
+  /**
+   * @type {Ptr}
+   * @memberof TiffFile
+   */
+  public _ptr_tiff: Ptr;
+
+  /**
+   * @type {number}
+   * @memberof TiffFile
+   */
+  public _has_been_converted: number;
+
+  /**
+   * Creates an instance of TiffFile.
+   * @param {string} [name='']
+   * @param {number} [ptr_or_model=0]
+   * @param {number} [ptr_tiff=0]
+   * @param {*} [info={}]
+   * @memberof TiffFile
+   */
+  public constructor(
+    name: string = '',
+    ptr_or_model: number = 0,
+    ptr_tiff: number = 0,
+    info: any = {}
+  ) {
     super(name, ptr_or_model, info);
 
     this.add_attr({
@@ -41,7 +79,8 @@ export class TiffFile<T extends Model = any> extends File<T> {
       _has_been_converted: 0,
     });
   }
-  load_tiff(callback: SpinalLoadCallBack<T>) {
+
+  public load_tiff(callback: SpinalLoadCallBack<T>) {
     this._ptr_tiff.load(callback);
   }
 }

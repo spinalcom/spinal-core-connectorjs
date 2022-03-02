@@ -26,24 +26,44 @@ import type { IFsData } from '../interfaces/IFsData';
 import { Model } from './Model';
 import { Obj } from './Obj';
 
+/**
+ * representation of a string
+ * @export
+ * @class Str
+ * @extends {Obj<string>}
+ */
 export class Str extends Obj<string> {
-  static readonly _constructorName: string = 'Str';
-  readonly _constructorName: string = Str._constructorName;
-  _data: string;
+  public static _constructorName: string = 'Str';
+  public _constructorName: string = Str._constructorName;
+  public _data: string;
 
+  /**
+   * @readonly
+   * @type {number}
+   * @memberof Str
+   */
   public get length(): number {
     return this._data.length;
   }
 
-  constructor(data?: string);
-  constructor(data?: Str);
-  constructor(data: string | Str = '') {
+  /**
+   * Creates an instance of Str.
+   * @param {(string | Str)} [data='']
+   * @memberof Str
+   */
+  public constructor(data: string | Str = '') {
     super();
     this._data = data.toString();
   }
 
-  // toggle presence of str in this
-  toggle(str: string, space: string = ' '): boolean {
+  /**
+   * toggle presence of str in this
+   * @param {string} str
+   * @param {string} [space=' ']
+   * @return {*}  {boolean}
+   * @memberof Str
+   */
+  public toggle(str: string, space: string = ' '): boolean {
     var i, l;
     l = this._data.split(space);
     i = l.indexOf(str);
@@ -55,38 +75,68 @@ export class Str extends Obj<string> {
     return this.set(l.join(' '));
   }
 
-  // true if str is contained in this
-  contains(str: string): boolean {
+  /**
+   * true if str is contained in this
+   * @param {string} str
+   * @return {*}  {boolean}
+   * @memberof Str
+   */
+  public contains(str: string): boolean {
     return this._data.indexOf(str) >= 0;
   }
 
-  equals(str: string): boolean;
-  equals(str: Model): boolean;
-  equals(str: string | Model): boolean {
+  /**
+   * @param {(string | Model)} str
+   * @return {*}  {boolean}
+   * @memberof Str
+   */
+  public equals(str: string | Model): boolean {
     return str instanceof Model
       ? this.toString() === str.toString()
       : this._data === str;
   }
 
-  toString(): string {
+  /**
+   * @return {*}  {string}
+   * @memberof Str
+   */
+  public toString(): string {
     return this._data;
   }
-  ends_with(str: string): boolean {
+
+  /**
+   * @param {string} str
+   * @return {*}  {boolean}
+   * @memberof Str
+   */
+  public ends_with(str: string): boolean {
     return this._data.endsWith(str);
   }
 
-  deep_copy(): Str {
+  /**
+   * @return {*}  {Str}
+   * @memberof Str
+   */
+  public deep_copy(): Str {
     return new Str(this._data);
   }
 
-  _get_fs_data(out: IFsData): void {
+  /**
+   * @param {IFsData} out
+   * @memberof Str
+   */
+  public _get_fs_data(out: IFsData): void {
     FileSystem.set_server_id_if_necessary(out, this);
     out.mod += `C ${this._server_id} ${encodeURI(this._data)} `;
   }
 
-  _set(value: Str): boolean;
-  _set(value: string): boolean;
-  _set(value: Str | string = ''): boolean {
+  /**
+   * @protected
+   * @param {(Str | string)} [value='']
+   * @return {*}  {boolean}
+   * @memberof Str
+   */
+  protected _set(value: Str | string = ''): boolean {
     const n: string = value.toString();
     if (this._data !== n) {
       this._data = n;
@@ -95,11 +145,16 @@ export class Str extends Obj<string> {
     return false;
   }
 
-  _get_state() {
+  /**
+   * @protected
+   * @return {*}  {string}
+   * @memberof Str
+   */
+  protected _get_state(): string {
     return encodeURI(this._data);
   }
 
-  _set_state(str: string, _map: unknown): boolean {
+  public _set_state(str: string, _map: unknown): boolean {
     return this.set(decodeURIComponent(str));
   }
 }

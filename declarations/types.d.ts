@@ -2,6 +2,30 @@ export interface IFsData {
     cre: string;
     mod: string;
 }
+export interface IOptionFileSystem {
+    url: string;
+    port?: string | number;
+    userid?: string | number;
+    password?: string;
+    sessionId?: number;
+    home_dir: string;
+    accessToken?: string;
+}
+export interface IOptionFileSystemWithUser {
+    url: string;
+    port?: string | number;
+    userid: string | number;
+    password: string;
+    home_dir: string;
+    accessToken?: string;
+}
+export interface IOptionFileSystemWithSessionId {
+    url: string;
+    port?: string | number;
+    sessionId: number;
+    home_dir: string;
+    accessToken?: string;
+}
 export interface IFlatModelMap {
     [id: number]: Model;
 }
@@ -13,11 +37,15 @@ export interface IStateMap<T extends Model> {
     };
 }
 export type SpinalOnChangeBindModel = () => void;
+export interface IFileInfoOption {
+    model_type?: string;
+    [key: string]: any;
+}
 export type SpinalFilterFunction<T extends Model> = (item: T) => boolean;
 export type SpinalSortFunction<T extends Model> = (item1: T, item2: T) => number;
 export class Lst<T extends Model = any> extends Model {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     length: number;
     constructor(data?: any);
     static_length(): number;
@@ -54,7 +82,7 @@ export class Lst<T extends Model = any> extends Model {
     deep_copy(): any;
     back(): any;
     real_change(): boolean;
-    _set(value: Lst<T>): boolean;
+    protected _set(value: Lst<T>): boolean;
     _get_flat_model_map(map: IFlatModelMap, date: number): IFlatModelMap;
     _get_fs_data(out: IFsData): void;
     _get_state(): string;
@@ -62,36 +90,100 @@ export class Lst<T extends Model = any> extends Model {
     _static_size_check(force: boolean): boolean;
     [Symbol.iterator](): Generator<T, void, unknown>;
 }
-export class Obj<T = string | number | boolean> extends Model {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+/**
+ * @export
+ * @class Obj
+ * @extends {Model}
+ * @template T
+ */
+export class Obj<T extends string | number | boolean> extends Model {
+    static _constructorName: string;
+    _constructorName: string;
     _data: T;
     constructor(data?: any);
     toString(): string;
     equals(obj: any): boolean;
     get(): any;
     _get_fs_data(out: IFsData): void;
-    _set(value: T): boolean;
+    protected _set(value: T): boolean;
     _get_state(): string;
     _set_state(str: string, _map: unknown): boolean;
 }
+/**
+ * representation of a string
+ * @export
+ * @class Str
+ * @extends {Obj<string>}
+ */
 export class Str extends Obj<string> {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     _data: string;
+    /**
+     * @readonly
+     * @type {number}
+     * @memberof Str
+     */
     get length(): number;
-    constructor(data?: string);
-    constructor(data?: Str);
+    /**
+     * Creates an instance of Str.
+     * @param {(string | Str)} [data='']
+     * @memberof Str
+     */
+    constructor(data?: string | Str);
+    /**
+     * toggle presence of str in this
+     * @param {string} str
+     * @param {string} [space=' ']
+     * @return {*}  {boolean}
+     * @memberof Str
+     */
     toggle(str: string, space?: string): boolean;
+    /**
+     * true if str is contained in this
+     * @param {string} str
+     * @return {*}  {boolean}
+     * @memberof Str
+     */
     contains(str: string): boolean;
-    equals(str: string): boolean;
-    equals(str: Model): boolean;
+    /**
+     * @param {(string | Model)} str
+     * @return {*}  {boolean}
+     * @memberof Str
+     */
+    equals(str: string | Model): boolean;
+    /**
+     * @return {*}  {string}
+     * @memberof Str
+     */
     toString(): string;
+    /**
+     * @param {string} str
+     * @return {*}  {boolean}
+     * @memberof Str
+     */
     ends_with(str: string): boolean;
+    /**
+     * @return {*}  {Str}
+     * @memberof Str
+     */
     deep_copy(): Str;
+    /**
+     * @param {IFsData} out
+     * @memberof Str
+     */
     _get_fs_data(out: IFsData): void;
-    _set(value: Str): boolean;
-    _set(value: string): boolean;
+    /**
+     * @protected
+     * @param {(Str | string)} [value='']
+     * @return {*}  {boolean}
+     * @memberof Str
+     */
+    protected _set(value?: Str | string): boolean;
+    /**
+     * @return {*}  {string}
+     * @memberof Str
+     */
     _get_state(): string;
     _set_state(str: string, _map: unknown): boolean;
 }
@@ -100,64 +192,118 @@ export interface IFileInfo extends Model {
     [key: string]: any;
 }
 export class Ptr<T extends Model = any> extends Model {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     data: {
         model?: T;
         value?: any;
     };
+    /**
+     * Creates an instance of Ptr.
+     * @param {*} model
+     * @memberof Ptr
+     */
     constructor(model: any);
+    /**
+     * @return {*}  {Promise<T>}
+     * @memberof Ptr
+     */
+    load(): Promise<T>;
+    /**
+     * @param {SpinalLoadCallBack<T>} callback
+     * @memberof Ptr
+     */
     load(callback: SpinalLoadCallBack<T>): void;
+    /**
+     * @param {IFsData} out
+     * @memberof Ptr
+     */
     _get_fs_data(out: IFsData): void;
-    _set(model: number | T): boolean;
+    protected _set(model: number | T): boolean;
     _get_state(): string;
     _set_state(str: string, _map: unknown): boolean;
 }
 export class File<T extends Model = any> extends Model {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     name: Str;
     _created_at: Str;
-    _ptr: Ptr;
+    _ptr: Ptr<T>;
     _info: IFileInfo;
     constructor(name?: string, ptr_or_model?: number | T, info?: any);
-    load(callback: SpinalLoadCallBack<T>): void;
+    load(): Promise<T>;
+    load(callback?: SpinalLoadCallBack<T>): void;
 }
 export class TiffFile<T extends Model = any> extends File<T> {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     _ptr_tiff: Ptr;
     _has_been_converted: number;
     constructor(name?: string, ptr_or_model?: number, ptr_tiff?: number, info?: {});
     load_tiff(callback: SpinalLoadCallBack<T>): void;
 }
 export class Directory extends Lst<File | TiffFile> {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     constructor();
     base_(): any;
     find(name: string): File | TiffFile;
     load(name: string, callback: SpinalLoadCallBack<any>): void;
     has(f: SpinalFilterFunction<File>): boolean;
     has(name: string): boolean;
-    add_file(name: string, obj: any, params?: {}): File;
-    add_tiff_file(name: string, obj: any, tiff_obj: any, params?: {}): TiffFile;
-    force_add_file(name: string, obj: any, params?: {}): File;
+    add_file(name: string, obj: any, params?: IFileInfoOption): File;
+    add_tiff_file(name: string, obj: any, tiff_obj: any, params?: IFileInfoOption): TiffFile;
+    force_add_file(name: string, obj: any, params?: IFileInfoOption): File;
     get_file_info(info: any): string;
 }
+/**
+ * representation of a number
+ * @export
+ * @class Val
+ * @extends {Obj<number>}
+ */
 export class Val extends Obj<number> {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
+    /**
+     * Creates an instance of Val.
+     * @param {(number | Val)} [data=0]
+     * @memberof Val
+     */
     constructor(data?: number | Val);
+    /**
+     * toggle true / false ( 1 / 0 )
+     * @return {*}  {boolean}
+     * @memberof Val
+     */
     toggle(): boolean;
+    /**
+     * @return {*}  {boolean}
+     * @memberof Val
+     */
     toBoolean(): boolean;
+    /**
+     * @return {*}  {Val}
+     * @memberof Val
+     */
     deep_copy(): Val;
+    /**
+     * @param {number} v
+     * @memberof Val
+     */
     add(v: number): void;
-    _set(value: string | boolean | number | Val): boolean;
+    /**
+     * we do not take _set from Obj because we want a conversion if value is not a number
+     * @protected
+     * @param {(string | boolean | number | Val)} value
+     * @return {*}  {boolean}
+     * @memberof Val
+     */
+    protected _set(value: string | boolean | number | Val): boolean;
 }
 export class Path extends Model {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     file?: File | Buffer;
     remaining: Val;
     to_upload: Val;
@@ -169,33 +315,33 @@ export class Path extends Model {
     _get_fs_data(out: IFsData): void;
 }
 export class Pbr<T extends Model = any> extends Ptr<T> {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     constructor(model: any);
 }
 export class RightSetList<T extends Model = any> extends Lst<T> {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     constructor();
 }
 export class RightsItem<T extends Model = any> extends Lst<T> {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     constructor();
 }
 export class SessionModel extends Model {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     constructor();
 }
 export class User extends Model {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     constructor();
 }
 export class UserRight extends Model {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     constructor();
     set(): boolean;
 }
@@ -203,18 +349,18 @@ export interface ISpinalModel {
     [key: string]: any;
 }
 export class Bool extends Obj<boolean> {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     constructor(data?: boolean | Bool);
     toggle(): boolean;
     toBoolean(): boolean;
     deep_copy(): Bool;
-    _set(value: string | boolean | Bool): boolean;
+    protected _set(value: string | boolean | Bool): boolean;
     _get_fs_data(out: IFsData): void;
 }
 export class Choice extends Model {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     num: Val;
     lst: Lst<Str>;
     constructor(InitIdx?: Val | number, stringChoises?: (string | Str)[]);
@@ -223,48 +369,157 @@ export class Choice extends Model {
     get(): string;
     toString(): string;
     equals(a: Choice | Str): boolean;
-    _set(value: string | number): boolean;
+    protected _set(value: string | number): boolean;
 }
 export abstract class TypedArray<T extends Int32Array | Float64Array> extends Model {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     _size: number[];
     _data: T;
-    constructor(size?: number | number[], data?: T);
-    base_type(): any;
+    /**
+     * Creates an instance of TypedArray.
+     * @param {(number | number[])} [size]
+     * @param {T} [data]
+     * @memberof TypedArray
+     */
+    protected constructor(size?: number | number[], data?: T);
+    /**
+     * @abstract
+     * @return {*}  {*}
+     * @memberof TypedArray
+     */
+    abstract base_type(): any;
+    /**
+     * @return {*}  {number}
+     * @memberof TypedArray
+     */
     dim(): number;
+    /**
+     * @param {number} [d]
+     * @return {*}  {(number | number[])}
+     * @memberof TypedArray
+     */
     size(d?: number): number | number[];
+    /**
+     * @param {(number[] | number)} index
+     * @param {*} value
+     * @memberof TypedArray
+     */
     set_val(index: number[] | number, value: any): void;
+    /**
+     * @return {*}  {number}
+     * @memberof TypedArray
+     */
     nb_items(): number;
+    /**
+     * @return {*}  {string}
+     * @memberof TypedArray
+     */
     toString(): string;
+    /**
+     * @param {(TypedArray<any> | any)} obj
+     * @return {*}  {boolean}
+     * @memberof TypedArray
+     */
     equals(obj: TypedArray<any> | any): boolean;
+    /**
+     * @param {number} [index]
+     * @return {*}  {(number | T)}
+     * @memberof TypedArray
+     */
     get(index?: number): number | T;
+    /**
+     * @param {number[]} new_size
+     * @memberof TypedArray
+     */
     resize(new_size: number[]): void;
-    _set(str: any): boolean;
-    _get_index(index: number[] | number): number;
+    /**
+     * @protected
+     * @param {*} str
+     * @return {*}  {boolean}
+     * @memberof TypedArray
+     */
+    protected _set(str: any): boolean;
+    /**
+     * @param {IFsData} out
+     * @memberof TypedArray
+     */
     _get_fs_data(out: IFsData): void;
+    /**
+     * @return {*}  {string}
+     * @memberof TypedArray
+     */
     _get_state(): string;
+    /**
+     * @param {string} str
+     * @memberof TypedArray
+     */
     _set_state(str: string): void;
 }
+/**
+ * @export
+ * @class TypedArray_Float64
+ * @extends {TypedArray<Float64Array>}
+ */
 export class TypedArray_Float64 extends TypedArray<Float64Array> {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
+    /**
+     * Creates an instance of TypedArray_Float64.
+     * @param {(number | number[])} [size]
+     * @param {Float64Array} [data]
+     * @memberof TypedArray_Float64
+     */
     constructor(size?: number | number[], data?: Float64Array);
+    /**
+     * @return {*}  {typeof TypedArray_Float64}
+     * @memberof TypedArray_Float64
+     */
     base_type(): typeof TypedArray_Float64;
+    /**
+     * @return {*}  {TypedArray_Float64}
+     * @memberof TypedArray_Float64
+     */
     deep_copy(): TypedArray_Float64;
 }
 export class TypedArray_Int32 extends TypedArray<Int32Array> {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
+    /**
+     * Creates an instance of TypedArray_Int32.
+     * @param {(number | number[])} [size]
+     * @param {Int32Array} [data]
+     * @memberof TypedArray_Int32
+     */
     constructor(size?: number | number[], data?: Int32Array);
+    /**
+     * @return {*}  {typeof TypedArray_Int32}
+     * @memberof TypedArray_Int32
+     */
     base_type(): typeof TypedArray_Int32;
+    /**
+     * @return {*}  {TypedArray_Int32}
+     * @memberof TypedArray_Int32
+     */
     deep_copy(): TypedArray_Int32;
 }
 export class Vec extends Lst<Val> {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
+    /**
+     * Creates an instance of Vec.
+     * @memberof Vec
+     */
     constructor();
+    /**
+     * @return {*}  {typeof Val}
+     * @memberof Vec
+     */
     base_type(): typeof Val;
+    /**
+     * @return {*}  {string}
+     * @memberof Vec
+     */
     _underlying_fs_type(): string;
 }
 /**
@@ -274,7 +529,7 @@ export class Vec extends Lst<Val> {
  */
 export function isIterable(obj: any): boolean;
 export class Process {
-    static readonly _constructorName: string;
+    static _constructorName: string;
     process_id: number;
     _models: Model[];
     constructor(m: Model | Model[], onchange_construction?: boolean);
@@ -287,29 +542,137 @@ export class Process {
     onchange(): void;
 }
 export class BindProcess extends Process {
-    static readonly _constructorName: string;
+    static _constructorName: string;
     f: () => void;
     constructor(model: Model | Model[], onchange_construction: boolean, f: () => void);
     onchange(): void;
 }
 export type SpinalCallBackError = () => void;
-export type SpinalLoadCallBackSucess = (model: Model) => void;
+export type SpinalLoadCallBackSucess<T extends Model = Model> = (model: T) => void;
 export type SpinalStoreCallBackSucess = () => void;
 declare export namespace spinalCore {
     const _def: ISpinalModel;
-    const version = "2.5.0";
-    function connect(options: URL | string): FileSystem;
-    function store(fs: FileSystem, model: Model, path: string, callback_success: SpinalStoreCallBackSucess, callback_error?: SpinalCallBackError): void;
-    const register_models: typeof ModelProcessManager.register_models;
-    function load(fs: FileSystem, path: string, callback_success: SpinalLoadCallBackSucess, callback_error?: SpinalCallBackError): void;
+    const version: string;
+    /**
+     * @export
+     * @param {(URL | string)} options
+     * @param {string} [accessToken]
+     * @return {*}  {FileSystem}
+     */
+    function connect(options: URL | string, accessToken?: string): FileSystem;
+    /**
+     * @export
+     * @param {(URL | string)} options
+     * @param {number} sessionId
+     * @param {string} [accessToken]
+     * @return {*}  {FileSystem}
+     */
+    function connectWithSessionId(options: URL | string, sessionId: number, accessToken?: string): FileSystem;
+    function connectAndLoadWithApi(options: URL | string, username: string, password: string, organAccessToken?: string): FileSystem;
+    /**
+     * stores a model in the file system
+     * @export
+     * @param {FileSystem} fs
+     * @param {Model} model
+     * @param {string} path
+     * @return {*}  {Promise<void>}
+     */
+    function store(fs: FileSystem, model: Model, path: string, fileOption: IFileInfoOption): Promise<void>;
+    /**
+     * stores a model in the file system
+     * @export
+     * @param {FileSystem} fs
+     * @param {Model} model
+     * @param {string} path
+     * @param {SpinalStoreCallBackSucess} callback_success
+     * @param {SpinalCallBackError} [callback_error]
+     * @return {*}  {void}
+     */
+    function store(fs: FileSystem, model: Model, path: string, callback_success: SpinalStoreCallBackSucess, callback_error?: SpinalCallBackError, fileOption?: IFileInfoOption): void;
+    /**
+     * @export
+     * @param {typeof Model} model
+     * @param {string} [name]
+     */
+    function register_models(model: typeof Model, name?: string): void;
+    /**
+     * @export
+     * @param {(typeof Model[]
+     *       | {
+     *           [key: string]: typeof Model;
+     *         })} modelList
+     */
+    function register_models(modelList: typeof Model[] | {
+        [key: string]: typeof Model;
+    }): void;
+    /**
+     * loads a model from the file system
+     * @export
+     * @template T
+     * @param {FileSystem} fs
+     * @param {string} path
+     * @return {*}  {Promise<T>}
+     */
+    function load<T extends Model>(fs: FileSystem, path: string): Promise<T>;
+    /**
+     * loads a model from the file system
+     * @export
+     * @template T
+     * @param {FileSystem} fs
+     * @param {string} path
+     * @param {SpinalLoadCallBack<T>} callback_success
+     * @param {SpinalCallBackError} [callback_error]
+     */
+    function load<T extends Model>(fs: FileSystem, path: string, callback_success: SpinalLoadCallBack<T>, callback_error?: SpinalCallBackError): void;
+    /**
+     * loads all the models of a specific type
+     * @export
+     * @template T
+     * @param {FileSystem} fs
+     * @param {string} type
+     * @param {SpinalLoadCallBack<T>} callback_success
+     * @param {SpinalCallBackError} [callback_error]
+     * @return {*}
+     */
     function load_type<T extends Model>(fs: FileSystem, type: string, callback_success: SpinalLoadCallBack<T>, callback_error?: SpinalCallBackError): void;
-    function load_right<T extends Model>(fs: FileSystem, ptr: number, callback_success: SpinalLoadCallBack<T>, callback_error?: SpinalCallBackError): void;
+    /**
+     * @export
+     * @param {FileSystem} fs
+     * @param {number} ptr
+     * @return {*}  {Promise<RightsItem>}
+     */
+    function load_right(fs: FileSystem, ptr: number): Promise<RightsItem>;
+    /**
+     * @export
+     * @param {FileSystem} fs
+     * @param {number} ptr
+     * @param {SpinalLoadCallBack<RightsItem>} callback_success
+     * @param {SpinalCallBackError} [callback_error]
+     */
+    function load_right(fs: FileSystem, ptr: number, callback_success: SpinalLoadCallBack<RightsItem>, callback_error?: SpinalCallBackError): void;
+    /**
+     * @export
+     * @param {FileSystem} fs
+     * @param {number} ptr
+     * @param {string} file_name
+     * @param {number} right_flag
+     * @param {string} targetName
+     * @return {*}  {void}
+     */
     function share_model(fs: FileSystem, ptr: number, file_name: string, right_flag: number, targetName: string): void;
     const right_flag: {
         AD: number;
         WR: number;
         RD: number;
     };
+    /**
+     * "export function" method: extend one object as a class, using the same 'class' concept as coffeescript
+     * @deprecated
+     * @export
+     * @param {*} child
+     * @param {*} parent
+     * @return {*}  {*}
+     */
     function extend(child: any, parent: any): any;
 }
 declare export namespace ModelProcessManager {
@@ -335,10 +698,20 @@ declare export namespace ModelProcessManager {
     function conv(v: number): Val;
     function conv(v: boolean): Bool;
     function conv(v: any): Model;
+    /**
+     * @export
+     * @param {Model} obj
+     * @return {*}  {string}
+     */
     function get_object_class(obj: Model): string;
+    /**
+     * @export
+     * @param {(Model | object)} m
+     * @return {*}  {string[]}
+     */
     function _get_attribute_names(m: Model | object): string[];
     /**
-     *  create a Model using a line of get_state(using.type, .data, ...)
+     * create a Model using a line of get_state(using.type, .data, ...)
      * @export
      * @template T
      * @param {string} mid
@@ -353,11 +726,27 @@ declare export namespace ModelProcessManager {
      * @return {*}  {ReturnType<typeof setTimeout>}
      */
     function _need_sync_processes(): ReturnType<typeof setTimeout>;
+    /**
+     * @export
+     * @param {typeof Model} model
+     * @param {string} [name]
+     */
     function register_models(model: typeof Model, name?: string): void;
-    function register_models(modelList: typeof Model[]): void;
-    function register_models(modelObj: {
+    /**
+     * @export
+     * @param {(typeof Model[]
+     *       | {
+     *           [key: string]: typeof Model;
+     *         })} modelList
+     */
+    function register_models(modelList: typeof Model[] | {
         [key: string]: typeof Model;
     }): void;
+    /**
+     * @export
+     * @param {typeof Model} func
+     * @param {string} [name]
+     */
     function _register_models_check(func: typeof Model, name?: string): void;
     /**
      * the function that is called after a very short timeout,
@@ -366,6 +755,7 @@ declare export namespace ModelProcessManager {
      */
     function _sync_processes(): void;
     const spinal: Partial<{
+        version: string;
         spinalCore: typeof spinalCore;
         FileSystem: typeof FileSystem;
         ModelProcessManager: typeof ModelProcessManager;
@@ -397,8 +787,8 @@ declare export namespace ModelProcessManager {
     }>;
 }
 export class Model {
-    static readonly _constructorName: string;
-    readonly _constructorName: string;
+    static _constructorName: string;
+    _constructorName: string;
     _attribute_names: string[];
     model_id: number;
     _processes: Process[];
@@ -568,7 +958,7 @@ export class Model {
      * @return {*}  {boolean}
      * @memberof Model
      */
-    _set(value: any): boolean;
+    protected _set(value: any): boolean;
     /**
      * called by set. change_level should not be defined by the user
      *  (it permits to != change from child of from this)
@@ -633,7 +1023,7 @@ export interface INewAlertMsgParam {
  * @class NewAlertMsg
  */
 export class NewAlertMsg {
-    static readonly _constructorName: string;
+    static _constructorName: string;
     constructor(params?: INewAlertMsgParam);
     hideBtn: () => void;
     hide_btn(): void;
@@ -647,15 +1037,14 @@ declare global {
     var NewAlertMsg: NewAlertMsgType;
     var new_alert_msg: NewAlertMsgType;
 }
-export function getUrlPath(searchQuery?: string): string;
+export function getUrlPath(url: string, port: number | string, searchQuery?: string): string;
 export class FileSystem {
-    static readonly _constructorName: string;
+    static _constructorName: string;
     static debug: boolean;
     static _disp: boolean;
-    static popup: NewAlertMsg;
     static _cur_tmp_server_id: number;
     static _sig_server: boolean;
-    static _userid: string | number;
+    static get _userid(): string | number;
     static _timeout_reconnect: number;
     static is_cordova: boolean;
     static _objects_to_send: {
@@ -668,10 +1057,6 @@ export class FileSystem {
         [id: number]: SpinalLoadCallBack<Model>;
     };
     static _type_callbacks: [string, SpinalLoadCallBack<Model>][];
-    static _nb_insts: number;
-    static _insts: {
-        [idInstance: number]: FileSystem;
-    };
     static _files_to_upload: {
         [key: number]: Path;
     };
@@ -684,8 +1069,7 @@ export class FileSystem {
     static _objects: {
         [key: number]: Model;
     };
-    static _url: string;
-    static _port: string | number;
+    _home_dir: string;
     static url_com: string;
     static url_upload: string;
     static CONNECTOR_TYPE: 'Node' | 'Browser';
@@ -693,38 +1077,129 @@ export class FileSystem {
     _session_num: number;
     _num_inst: number;
     make_channel_error_timer: number;
-    static _password: string;
     static _XMLHttpRequest: any;
-    static _home_dir: string;
-    constructor(sessionId?: number);
+    /**
+     * Creates an instance of FileSystem.
+     * @param {IOptionFileSystemWithSessionId} {
+     *     url,
+     *     port,
+     *     home_dir,
+     *     sessionId,
+     *     accessToken,
+     *   }
+     * @memberof FileSystem
+     */
+    constructor({ url, port, home_dir, sessionId, accessToken, }: IOptionFileSystemWithSessionId);
+    /**
+     * Creates an instance of FileSystem.
+     * @param {IOptionFileSystemWithUser} {
+     *     url,
+     *     port,
+     *     userid,
+     *     password,
+     *     home_dir,
+     *     accessToken,
+     *   }
+     * @memberof FileSystem
+     */
+    constructor({ url, port, userid, password, home_dir, accessToken, }: IOptionFileSystemWithUser);
     /**
      * load object in $path and call $callback with the corresponding model ref
-     *
-     * @param {*} path
-     * @param {*} callback
+     * @template T
+     * @param {string} path
+     * @return {*}  {Promise<T>}
+     * @memberof FileSystem
+     */
+    load<T extends Model>(path: string): Promise<T>;
+    /**
+     * load object in $path and call $callback with the corresponding model ref
+     * @template T
+     * @param {string} path
+     * @param {SpinalLoadCallBack<T>} callback
      * @memberof FileSystem
      */
     load<T extends Model>(path: string, callback: SpinalLoadCallBack<T>): void;
+    /**
+     * load all the objects of $type
+     * @template T
+     * @param {string} type
+     * @param {SpinalLoadCallBack<T>} callback
+     * @memberof FileSystem
+     */
     load_type<T extends Model>(type: string, callback: SpinalLoadCallBack<T>): void;
+    /**
+     * make dir if not already present in the server. Call callback
+     * as in the @load proc -- when done (i.e. when loaded or created)
+     * @param {string} dir
+     * @return {*}  {Promise<Directory>}
+     * @memberof FileSystem
+     */
+    load_or_make_dir(dir: string): Promise<Directory>;
+    /**
+     * make dir if not already present in the server. Call callback
+     * as in the @load proc -- when done (i.e. when loaded or created)
+     * @param {string} dir
+     * @param {SpinalLoadCallBack<Directory>} callback
+     * @memberof FileSystem
+     */
     load_or_make_dir(dir: string, callback: SpinalLoadCallBack<Directory>): void;
+    /**
+     * load an object using is pointer and call $callback with the corresponding ref
+     * @template T
+     * @param {number} ptr
+     * @return {*}  {Promise<T>}
+     * @memberof FileSystem
+     */
+    load_ptr<T extends Model>(ptr: number): Promise<T>;
+    /**
+     * load an object using is pointer and call $callback with the corresponding ref
+     * @template T
+     * @param {number} ptr
+     * @param {SpinalLoadCallBack<T>} callback
+     * @memberof FileSystem
+     */
     load_ptr<T extends Model>(ptr: number, callback: SpinalLoadCallBack<T>): void;
-    load_right<T extends Model>(ptr: number, callback: SpinalLoadCallBack<T>): void;
-    share_model(ptr: Model, file_name: string, share_type: number, targetName: string): void;
-    share_model(ptr: number, file_name: string, share_type: number, targetName: string): void;
-    make_channel(): void;
-    onConnectionError(error_code: number): void;
+    load_right(ptr: number): Promise<RightsItem>;
+    load_right(ptr: number, callback: SpinalLoadCallBack<RightsItem>): void;
+    /**
+     * @param {(Model | number)} ptr
+     * @param {string} file_name
+     * @param {number} share_type
+     * @param {string} targetName
+     * @memberof FileSystem
+     */
+    share_model(ptr: Model | number, file_name: string, share_type: number, targetName: string): void;
+    /**
+     * get the first running inst
+     * @static
+     * @return {*}  {FileSystem}
+     * @memberof FileSystem
+     */
     static get_inst(): FileSystem;
+    /**
+     * @static
+     * @param {IFsData} out
+     * @param {Model} obj
+     * @memberof FileSystem
+     */
     static set_server_id_if_necessary(out: IFsData, obj: Model): void;
+    /**
+     * send changes of m to instances.
+     * @static
+     * @param {Model} m
+     * @memberof FileSystem
+     */
     static signal_change(m: Model): void;
     static _tmp_id_to_real(tmp_id: number, res: number): void;
-    static _create_model_by_name(name: string): any;
-    static extend(child: any, parent: any): any;
-    static _get_new_tmp_server_id(): number;
-    static _send_chan(): void;
-    static _timeout_chan_func(): void;
-    static _get_chan_data(): string;
-    static _timeout_send_func(): boolean;
-    static _my_xml_http_request(): any;
+    /**
+     * @deprecated
+     * @static
+     * @param {*} _child
+     * @param {*} _parent
+     * @return {*}  {*}
+     * @memberof FileSystem
+     */
+    static extend(_child: any, _parent: any): any;
 }
 declare global {
     var spinal: spinalType;

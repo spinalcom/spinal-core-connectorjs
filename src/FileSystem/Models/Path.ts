@@ -27,16 +27,47 @@ import { Model } from '../../Models/Model';
 import type { Val } from '../../Models/Val';
 import { FileSystem } from '../FileSystem';
 
+/**
+ * representation of a file to upload
+ * @export
+ * @class Path
+ * @extends {Model}
+ */
 export class Path extends Model {
-  static readonly _constructorName: string = 'Path';
-  readonly _constructorName: string = Path._constructorName;
+  /**
+   * @static
+   * @type {string}
+   * @memberof Path
+   */
+  public static _constructorName: string = 'Path';
+  /**
+   * @type {string}
+   * @memberof Path
+   */
+  public _constructorName: string = Path._constructorName;
 
-  file?: File | Buffer;
-  remaining: Val;
-  to_upload: Val;
+  /**
+   * @type {(File | Buffer)}
+   * @memberof Path
+   */
+  public file?: File | Buffer;
+  /**
+   * @type {Val}
+   * @memberof Path
+   */
+  public remaining: Val;
+  /**
+   * @type {Val}
+   * @memberof Path
+   */
+  public to_upload: Val;
 
-  // @file is optionnal. Must be a javascript File object
-  constructor(file?: File | Buffer) {
+  /**
+   * Creates an instance of Path.
+   * @param {(File | Buffer)} [file]
+   * @memberof Path
+   */
+  public constructor(file?: File | Buffer) {
     super();
     this.file = file;
     const size: number =
@@ -54,12 +85,20 @@ export class Path extends Model {
     });
   }
 
-  get_file_info(info: { remaining: Val; to_upload: Val }): void {
+  /**
+   * @param {{ remaining: Val; to_upload: Val }} info
+   * @memberof Path
+   */
+  public get_file_info(info: { remaining: Val; to_upload: Val }): void {
     info.remaining = this.remaining;
     info.to_upload = this.to_upload;
   }
 
-  _get_fs_data(out: IFsData): void {
+  /**
+   * @param {IFsData} out
+   * @memberof Path
+   */
+  public _get_fs_data(out: IFsData): void {
     super._get_fs_data(out);
     // permit to send the data after the server's answer
     if (this.file != null && this._server_id & 3) {

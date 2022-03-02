@@ -25,101 +25,265 @@
 import { FileSystem } from './FileSystem/FileSystem';
 import type { Directory } from './FileSystem/Models/Directory';
 import type { File } from './FileSystem/Models/File';
+import { RightsItem } from './FileSystem/Models/RightsItem';
+import type { IFileInfoOption } from './interfaces/IFileInfoOption';
+import {
+  IOptionFileSystemWithSessionId,
+  IOptionFileSystemWithUser,
+} from './interfaces/IOptionFilesystem';
 import type { ISpinalModel } from './interfaces/ISpinalModels';
 import type { SpinalCallBackError } from './interfaces/SpinalCallBackError';
 import type { SpinalLoadCallBack } from './interfaces/SpinalLoadCallBack';
-import type { SpinalLoadCallBackSucess } from './interfaces/SpinalLoadCallBackSucess';
 import type { SpinalStoreCallBackSucess } from './interfaces/SpinalStoreCallBackSucess';
 import { ModelProcessManager } from './ModelProcessManager';
 import type { Model } from './Models/Model';
 
 export namespace spinalCore {
   export const _def: ISpinalModel = ModelProcessManager._def;
-  export const version = '2.5.0';
+  export const version: string = /*#__PURE__*/ process.env.PACKAGE_VERSION;
 
-  export function connect(options: URL | string): FileSystem {
+  /**
+   * @export
+   * @param {(URL | string)} options
+   * @param {string} [accessToken]
+   * @return {*}  {FileSystem}
+   */
+  export function connect(
+    options: URL | string,
+    accessToken?: string
+  ): FileSystem {
     const parsedOpt = typeof options === 'string' ? new URL(options) : options;
     if (parsedOpt.pathname.slice(-1)[0] !== '/') {
       parsedOpt.pathname += '/';
     }
-    FileSystem._home_dir = parsedOpt.pathname;
-    FileSystem._url = parsedOpt.hostname;
-    FileSystem._port = parsedOpt.port;
-    if (parsedOpt.username) {
-      FileSystem._userid = parsedOpt.username;
-      if (parsedOpt.password) {
-        FileSystem._password = parsedOpt.password;
-      }
-    } else {
-      // set default user id
-      FileSystem._userid = 644;
-      FileSystem._password = '';
-    }
-    return new FileSystem();
+    const opt: IOptionFileSystemWithUser = {
+      home_dir: parsedOpt.pathname,
+      url: parsedOpt.hostname,
+      port: parsedOpt.port,
+      userid: parsedOpt.username,
+      password: parsedOpt.password,
+      accessToken,
+    };
+    return new FileSystem(opt);
   }
 
-  // stores a model in the file system
+  /**
+   * @export
+   * @param {(URL | string)} options
+   * @param {number} sessionId
+   * @param {string} [accessToken]
+   * @return {*}  {FileSystem}
+   */
+  export function connectWithSessionId(
+    options: URL | string,
+    sessionId: number,
+    accessToken?: string
+  ): FileSystem {
+    const parsedOpt = typeof options === 'string' ? new URL(options) : options;
+    if (parsedOpt.pathname.slice(-1)[0] !== '/') {
+      parsedOpt.pathname += '/';
+    }
+    const opt: IOptionFileSystemWithSessionId = {
+      home_dir: parsedOpt.pathname,
+      url: parsedOpt.hostname,
+      port: parsedOpt.port,
+      sessionId,
+      accessToken,
+    };
+    return new FileSystem(opt);
+  }
+
+  export function connectAndLoadWithApi(
+    options: URL | string,
+    username: string,
+    password: string,
+    organAccessToken?: string
+  ): FileSystem {
+    const parsedOpt = typeof options === 'string' ? new URL(options) : options;
+    if (parsedOpt.pathname.slice(-1)[0] !== '/') {
+      parsedOpt.pathname += '/';
+    }
+    // do axios get
+    // username,
+    // password: string,
+
+    const opt: IOptionFileSystemWithUser = {
+      home_dir: parsedOpt.pathname,
+      url: parsedOpt.hostname,
+      port: parsedOpt.port,
+      userid: username,
+      password: password,
+      // accessToken,
+    };
+    return new FileSystem(opt);
+  }
+
+  /**
+   * stores a model in the file system
+   * @export
+   * @param {FileSystem} fs
+   * @param {Model} model
+   * @param {string} path
+   * @return {*}  {Promise<void>}
+   */
+  export async function store(
+    fs: FileSystem,
+    model: Model,
+    path: string,
+    fileOption: IFileInfoOption
+  ): Promise<void>;
+  /**
+   * stores a model in the file system
+   * @export
+   * @param {FileSystem} fs
+   * @param {Model} model
+   * @param {string} path
+   * @param {SpinalStoreCallBackSucess} callback_success
+   * @param {SpinalCallBackError} [callback_error]
+   * @return {*}  {void}
+   */
   export function store(
     fs: FileSystem,
     model: Model,
     path: string,
     callback_success: SpinalStoreCallBackSucess,
-    callback_error?: SpinalCallBackError
-  ): void {
-    if (typeof callback_error === 'undefined') {
-      callback_error = function () {
-        return console.log(
-          'Model could not be stored. You can pass a callback to handle this error.'
-        );
-      };
+    callback_error?: SpinalCallBackError,
+    fileOption?: IFileInfoOption
+  ): void;
+  export async function store(
+    fs: FileSystem,
+    model: Model,
+    path: string,
+    optionOrCb?: SpinalStoreCallBackSucess | IFileInfoOption,
+    callback_error?: SpinalCallBackError,
+    fileOption: IFileInfoOption = {
+      model_type: 'Model',
     }
+  ): Promise<void> {
     // Parse path
     const lst = path.split('/');
     const file_name = lst.pop();
     if (lst[0] === '') lst.splice(0, 1);
     path = lst.join('/'); // Absolute paths are not allowed
-    return fs.load_or_make_dir(
-      FileSystem._home_dir + path,
-      function (dir: Directory, err: boolean): void {
-        if (err) {
-          callback_error();
-        } else {
-          const file = dir.detect(
-            (x: File): boolean => x.name.get() === file_name
-          );
-          if (file != null) dir.remove(file);
-          dir.add_file(file_name, model, {
-            model_type: 'Model',
-          });
-          callback_success();
-        }
+    const home_dir = FileSystem.get_inst()._home_dir;
+    try {
+      const dir = await fs.load_or_make_dir(home_dir + path);
+      const file = dir.detect((x: File): boolean => x.name.get() === file_name);
+      if (file != null) dir.remove(file);
+      if (typeof optionOrCb === 'function') {
+        dir.add_file(file_name, model, fileOption);
+        optionOrCb();
+      } else {
+        dir.add_file(file_name, model, optionOrCb ? optionOrCb : fileOption);
       }
+      return;
+    } catch (error) {
+      if (typeof optionOrCb === 'undefined') throw error;
+      if (typeof callback_error === 'undefined') {
+        defaultCallbackError();
+      } else callback_error();
+    }
+  }
+
+  /**
+   * @export
+   * @param {typeof Model} model
+   * @param {string} [name]
+   */
+  export function register_models(model: typeof Model, name?: string): void;
+  /**
+   * @export
+   * @param {(typeof Model[]
+   *       | {
+   *           [key: string]: typeof Model;
+   *         })} modelList
+   */
+  export function register_models(
+    modelList:
+      | typeof Model[]
+      | {
+          [key: string]: typeof Model;
+        }
+  ): void;
+  export function register_models(
+    modelList: typeof Model | typeof Model[] | { [key: string]: typeof Model },
+    name?: string
+  ): void {
+    if (name)
+      return ModelProcessManager.register_models(<typeof Model>modelList, name);
+    return ModelProcessManager.register_models(
+      <typeof Model[] | { [key: string]: typeof Model }>modelList
     );
   }
 
-  export const register_models = ModelProcessManager.register_models;
-
-  // loads a model from the file system
-  export function load(
+  /**
+   * @template T
+   * @param {FileSystem} fs
+   * @param {string} path
+   * @return {*}  {Promise<T>}
+   */
+  async function loadPromise<T extends Model>(
     fs: FileSystem,
-    path: string,
-    callback_success: SpinalLoadCallBackSucess,
-    callback_error?: SpinalCallBackError
-  ): void {
-    if (typeof callback_error === 'undefined') {
-      callback_error = function () {
-        return console.log(
-          'Model could not be loaded. You can pass a callback to handle this error.'
-        );
-      };
-    }
+    path: string
+  ): Promise<T> {
     // Parse path
     const lst = path.split('/');
     const file_name = lst.pop();
     if (lst[0] === '') lst.splice(0, 1);
     path = lst.join('/'); // Absolute paths are not allowed
-    return fs.load_or_make_dir(
-      `${FileSystem._home_dir}${path}`,
+    const home_dir = FileSystem.get_inst()._home_dir;
+    const current_dir = await fs.load_or_make_dir(`${home_dir}${path}`);
+    const file = current_dir.detect(
+      (x: File): boolean => x.name.get() === file_name
+    );
+    if (file) return file.load();
+    throw new Error('File not Found');
+  }
+
+  /**
+   * loads a model from the file system
+   * @export
+   * @template T
+   * @param {FileSystem} fs
+   * @param {string} path
+   * @return {*}  {Promise<T>}
+   */
+  export function load<T extends Model>(
+    fs: FileSystem,
+    path: string
+  ): Promise<T>;
+  /**
+   * loads a model from the file system
+   * @export
+   * @template T
+   * @param {FileSystem} fs
+   * @param {string} path
+   * @param {SpinalLoadCallBack<T>} callback_success
+   * @param {SpinalCallBackError} [callback_error]
+   */
+  export function load<T extends Model>(
+    fs: FileSystem,
+    path: string,
+    callback_success: SpinalLoadCallBack<T>,
+    callback_error?: SpinalCallBackError
+  ): void;
+  export function load<T extends Model>(
+    fs: FileSystem,
+    path: string,
+    callback_success?: SpinalLoadCallBack<T>,
+    callback_error?: SpinalCallBackError
+  ): Promise<T> {
+    if (typeof callback_success === 'undefined') return loadPromise(fs, path);
+    if (typeof callback_error === 'undefined')
+      callback_error = defaultCallbackError;
+    // Parse path
+    const lst = path.split('/');
+    const file_name = lst.pop();
+    if (lst[0] === '') lst.splice(0, 1);
+    path = lst.join('/'); // Absolute paths are not allowed
+    const home_dir = FileSystem.get_inst()._home_dir;
+    fs.load_or_make_dir(
+      `${home_dir}${path}`,
       (current_dir: Directory, err: boolean): void => {
         if (err) {
           return callback_error();
@@ -128,7 +292,7 @@ export namespace spinalCore {
             (x: File): boolean => x.name.get() === file_name
           );
           if (file != null) {
-            return file.load((data: Model, err: boolean): void => {
+            return file.load((data: T, err: boolean): void => {
               if (err) {
                 return callback_error();
               } else {
@@ -143,7 +307,16 @@ export namespace spinalCore {
     );
   }
 
-  // loads all the models of a specific type
+  /**
+   * loads all the models of a specific type
+   * @export
+   * @template T
+   * @param {FileSystem} fs
+   * @param {string} type
+   * @param {SpinalLoadCallBack<T>} callback_success
+   * @param {SpinalCallBackError} [callback_error]
+   * @return {*}
+   */
   export function load_type<T extends Model>(
     fs: FileSystem,
     type: string,
@@ -151,12 +324,7 @@ export namespace spinalCore {
     callback_error?: SpinalCallBackError
   ) {
     if (typeof callback_error === 'undefined') {
-      callback_error = function () {
-        return console.log(
-          'Model of this type could not be loaded. ' +
-            'You can pass a callback to handle this error.'
-        );
-      };
+      callback_error = defaultCallbackError;
     }
     return fs.load_type(type, (data: T, error: boolean): void => {
       if (!data || error) callback_error();
@@ -164,26 +332,54 @@ export namespace spinalCore {
     });
   }
 
-  export function load_right<T extends Model>(
+  /**
+   * @export
+   * @param {FileSystem} fs
+   * @param {number} ptr
+   * @return {*}  {Promise<RightsItem>}
+   */
+  export function load_right(fs: FileSystem, ptr: number): Promise<RightsItem>;
+  /**
+   * @export
+   * @param {FileSystem} fs
+   * @param {number} ptr
+   * @param {SpinalLoadCallBack<RightsItem>} callback_success
+   * @param {SpinalCallBackError} [callback_error]
+   */
+  export function load_right(
     fs: FileSystem,
     ptr: number,
-    callback_success: SpinalLoadCallBack<T>,
+    callback_success: SpinalLoadCallBack<RightsItem>,
     callback_error?: SpinalCallBackError
-  ): void {
-    if (typeof callback_error === 'undefined') {
-      callback_error = function () {
-        return console.log(
-          'Model Right could not be loaded.' +
-            ' You can pass a callback to handle this error.'
-        );
-      };
+  ): void;
+  export function load_right(
+    fs: FileSystem,
+    ptr: number,
+    callback_success?: SpinalLoadCallBack<RightsItem>,
+    callback_error?: SpinalCallBackError
+  ): Promise<RightsItem> {
+    if (typeof callback_success === 'function') {
+      if (typeof callback_error === 'undefined') {
+        callback_error = defaultCallbackError;
+      }
+      fs.load_right(ptr, (data: RightsItem, err: boolean): void => {
+        if (err) return callback_error();
+        else return callback_success(data, err);
+      });
+    } else {
+      return fs.load_right(ptr);
     }
-    return fs.load_right(ptr, (data: T, err: boolean): void => {
-      if (err) return callback_error();
-      else return callback_success(data, err);
-    });
   }
 
+  /**
+   * @export
+   * @param {FileSystem} fs
+   * @param {number} ptr
+   * @param {string} file_name
+   * @param {number} right_flag
+   * @param {string} targetName
+   * @return {*}  {void}
+   */
   export function share_model(
     fs: FileSystem,
     ptr: number,
@@ -193,10 +389,28 @@ export namespace spinalCore {
   ): void {
     return fs.share_model(ptr, file_name, right_flag, targetName);
   }
+
   export const right_flag = { AD: 1, WR: 2, RD: 4 };
 
-  // "export function" method: extend one object as a class, using the same 'class' concept as coffeescript
+  /**
+   * "export function" method: extend one object as a class, using the same 'class' concept as coffeescript
+   * @deprecated
+   * @export
+   * @param {*} child
+   * @param {*} parent
+   * @return {*}  {*}
+   */
   export function extend(child: any, parent: any): any {
     return FileSystem.extend(child, parent);
+  }
+
+  /**
+   * default callback function
+   * @return {*}  {void}
+   */
+  function defaultCallbackError(): void {
+    return console.log(
+      'Model could not be loaded. You can pass a callback to handle this error.'
+    );
   }
 }

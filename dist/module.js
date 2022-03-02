@@ -60,7 +60,7 @@ if (parcelRequire == null) {
 }
 parcelRequire.register("gavvF", function(module, exports) {
 
-$parcel$export(module.exports, "FileSystem", () => FileSystem);
+$parcel$export(module.exports, "FileSystem", () => FileSystem, (v) => FileSystem = v);
 
 var $3JI2b = parcelRequire("3JI2b");
 
@@ -70,15 +70,71 @@ var $1gINV = parcelRequire("1gINV");
 
 var $fVm9W = parcelRequire("fVm9W");
 
+/*
+ * Copyright 2022 SpinalCom - www.spinalcom.com
+ *
+ * This file is part of SpinalCore.
+ *
+ * Please read all of the following terms and conditions
+ * of the Free Software license Agreement ("Agreement")
+ * carefully.
+ *
+ * This Agreement is a legally binding contract between
+ * the Licensee (as defined below) and SpinalCom that
+ * sets forth the terms and conditions that govern your
+ * use of the Program. By installing and/or using the
+ * Program, you agree to abide by all the terms and
+ * conditions stated or referenced herein.
+ *
+ * If you do not agree to abide by these terms and
+ * conditions, do not demonstrate your acceptance and do
+ * not install or use the Program.
+ * You should have received a copy of the license along
+ * with this file. If not, see
+ * <http://resources.spinalcom.com/licenses.pdf>.
+ */ var __awaiter = undefined && undefined.__awaiter || function(thisArg, _arguments, P, generator) {
+    function adopt(value) {
+        return value instanceof P ? value : new P(function(resolve) {
+            resolve(value);
+        });
+    }
+    return new (P || (P = Promise))(function(resolve, reject) {
+        function fulfilled(value) {
+            try {
+                step(generator.next(value));
+            } catch (e) {
+                reject(e);
+            }
+        }
+        function rejected(value) {
+            try {
+                step(generator["throw"](value));
+            } catch (e) {
+                reject(e);
+            }
+        }
+        function step(result) {
+            result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+        }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 
 class FileSystem {
-    constructor(sessionId){
-        // public static _def: { [constructorName: string]: typeof Model } = {};
+    constructor({ url , port , home_dir , userid , password , sessionId , accessToken ,  }){
+        // url and port of the server
+        this._url = '127.0.0.1';
+        this._port = '8888';
+        this._accessToken = null;
         // default values
         this._data_to_send = '';
         this._session_num = -2;
         this._num_inst = FileSystem._nb_insts++;
         this.make_channel_error_timer = 0;
+        this._url = url;
+        this._port = port;
+        this._home_dir = home_dir;
+        this._accessToken = accessToken;
         if (typeof $parcel$global !== 'undefined') {
             const XMLHttpRequest_node = $hgUW1$xhr2;
             FileSystem._XMLHttpRequest = XMLHttpRequest_node;
@@ -89,27 +145,39 @@ class FileSystem {
         FileSystem._insts[this._num_inst] = this;
         // first, we need a session id fom the server
         if (!sessionId) {
-            if (FileSystem._userid != null) this.send(`U ${FileSystem._userid} ${FileSystem._password} `);
+            if (userid != null) this.send(`U ${userid} ${password} `);
             this.send(`S ${this._num_inst} `);
         } else {
             FileSystem._insts[this._num_inst]._session_num = sessionId;
             FileSystem._insts[this._num_inst].make_channel();
         }
     }
-    /**
-     * load object in $path and call $callback with the corresponding model ref
-     *
-     * @param {*} path
-     * @param {*} callback
-     * @memberof FileSystem
-     */ load(path, callback) {
+    static get _userid() {
+        console.warn('Using FileSystem._userid is deprecated.');
+        return 644;
+    }
+    load(path, callback) {
+        if (typeof callback === 'undefined') return new Promise((resolve, reject)=>{
+            FileSystem._send_chan();
+            this.send(`L ${FileSystem._nb_callbacks} ${encodeURI(path)} `);
+            FileSystem._callbacks[FileSystem._nb_callbacks] = (model, isError)=>{
+                if (!model || isError) reject(new Error('Error Load'));
+                resolve(model);
+            };
+            FileSystem._nb_callbacks++;
+        });
         FileSystem._send_chan();
         this.send(`L ${FileSystem._nb_callbacks} ${encodeURI(path)} `);
         FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
         FileSystem._nb_callbacks++;
     }
-    // load all the objects of $type
-    load_type(type, callback) {
+    /**
+     * load all the objects of $type
+     * @template T
+     * @param {string} type
+     * @param {SpinalLoadCallBack<T>} callback
+     * @memberof FileSystem
+     */ load_type(type, callback) {
         FileSystem._send_chan();
         this.send(`R 0 ${type} `);
         FileSystem._type_callbacks.push([
@@ -117,9 +185,32 @@ class FileSystem {
             callback
         ]);
     }
-    // make dir if not already present in the server. Call callback
-    // as in the @load proc -- when done (i.e. when loaded or created)
+    load_or_make_dirProm(dir) {
+        return __awaiter(this, void 0, void 0, function*() {
+            try {
+                const res = yield this.load(dir);
+                return res;
+            } catch (error) {
+                if (dir === '/') throw error;
+                const lst = dir.split('/').reduce((acc, v)=>{
+                    if (v.length) acc.push(v);
+                    return acc;
+                }, []);
+                const nir = lst.pop();
+                const oir = '/' + lst.join('/');
+                try {
+                    const n_res = yield this.load_or_make_dirProm(oir);
+                    const n_dir = new $fVm9W.Directory();
+                    n_res.add_file(nir, n_dir);
+                    return n_dir;
+                } catch (error) {
+                    throw error;
+                }
+            }
+        });
+    }
     load_or_make_dir(dir, callback) {
+        if (typeof callback === 'undefined') return this.load_or_make_dirProm(dir);
         this.load(dir, (res, err)=>{
             if (err) {
                 if (dir === '/') return callback(null, err);
@@ -142,38 +233,79 @@ class FileSystem {
             } else return callback(res, err);
         });
     }
-    // load an object using is pointer and call $callback with the corresponding ref
     load_ptr(ptr, callback) {
-        FileSystem._send_chan();
-        this.send(`l ${FileSystem._nb_callbacks} ${ptr} `);
-        FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
-        FileSystem._nb_callbacks++;
+        if (typeof callback === 'undefined') {
+            if (!ptr) return Promise.reject('Error Load ptr');
+            if (typeof FileSystem._objects[ptr] !== 'undefined') return Promise.resolve(FileSystem._objects[ptr]);
+            return new Promise((resolve, reject)=>{
+                FileSystem._send_chan();
+                this.send(`l ${FileSystem._nb_callbacks} ${ptr} `);
+                FileSystem._callbacks[FileSystem._nb_callbacks] = (model, isError)=>{
+                    if (!model || isError) reject(new Error('Error Load ptr'));
+                    resolve(model);
+                };
+                FileSystem._nb_callbacks++;
+            });
+        }
+        if (!ptr) setImmediate(()=>callback(undefined)
+        );
+        else if (typeof FileSystem._objects[ptr] !== 'undefined') setImmediate(()=>callback(FileSystem._objects[ptr])
+        );
+        else {
+            FileSystem._send_chan();
+            this.send(`l ${FileSystem._nb_callbacks} ${ptr} `);
+            FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
+            FileSystem._nb_callbacks++;
+        }
     }
     load_right(ptr, callback) {
+        if (typeof callback === 'undefined') return new Promise((resolve, reject)=>{
+            FileSystem._send_chan();
+            this.send(`r ${ptr} ${FileSystem._nb_callbacks} `);
+            FileSystem._callbacks[FileSystem._nb_callbacks] = (model)=>{
+                if (!model) reject(new Error('Error load_right'));
+                resolve(model);
+            };
+            FileSystem._nb_callbacks++;
+        });
         FileSystem._send_chan();
         this.send(`r ${ptr} ${FileSystem._nb_callbacks} `);
         FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
         FileSystem._nb_callbacks++;
     }
-    share_model(ptr, file_name, share_type, targetName) {
+    /**
+     * @param {(Model | number)} ptr
+     * @param {string} file_name
+     * @param {number} share_type
+     * @param {string} targetName
+     * @memberof FileSystem
+     */ share_model(ptr, file_name, share_type, targetName) {
         FileSystem._send_chan();
         this.send(`h ${typeof ptr === 'number' ? ptr : ptr._server_id} ${share_type} ${encodeURI(targetName)} ${encodeURI(file_name)} `);
     }
-    // explicitly send a command
-    send(data) {
+    /**
+     * explicitly send a command
+     * @private
+     * @param {string} data
+     * @memberof FileSystem
+     */ send(data) {
         this._data_to_send += data;
         if (FileSystem._timer_send == null) FileSystem._timer_send = setTimeout(FileSystem._timeout_send_func, 1);
     }
-    // send a request for a "push" channel
-    make_channel() {
-        let path = $1gINV.getUrlPath(`?s=${this._session_num}`);
+    /**
+     * send a request for a "push" channel
+     * @private
+     * @memberof FileSystem
+     */ make_channel() {
+        const fs = FileSystem.get_inst();
+        let path = $1gINV.getUrlPath(fs._url, fs._port, `?s=${this._session_num}`);
         const xhr_object = FileSystem._my_xml_http_request();
+        if (fs._accessToken) xhr_object.setRequestHeader('x-access-token', fs._accessToken);
         xhr_object.open('GET', path, true);
         xhr_object.onreadystatechange = function() {
             if (this.readyState === 4 && this.status === 200) {
-                const _fs = FileSystem.get_inst();
-                if (_fs.make_channel_error_timer !== 0) _fs.onConnectionError(0);
-                _fs.make_channel_error_timer = 0;
+                if (fs.make_channel_error_timer !== 0) FileSystem.onConnectionError(0);
+                fs.make_channel_error_timer = 0;
                 if (FileSystem._disp) console.log('chan ->', this.responseText);
                 const created = [];
                 function _w(sid, obj) {
@@ -197,29 +329,33 @@ class FileSystem {
                 for (const { cb: cb1 , _obj: _obj1  } of created)cb1(_obj1);
             } else if (this.readyState === 4 && this.status === 0) {
                 console.error(`Disconnected from the server with request : ${path}.`);
-                const _fs = FileSystem.get_inst();
-                if (_fs.make_channel_error_timer === 0) {
+                if (fs.make_channel_error_timer === 0) {
                     //first disconnect
                     console.log('Trying to reconnect.');
-                    _fs.make_channel_error_timer = Date.now();
-                    setTimeout(_fs.make_channel.bind(_fs), 1000);
-                    return _fs.onConnectionError(1);
-                } else if (Date.now() - _fs.make_channel_error_timer < FileSystem._timeout_reconnect) // under timeout
-                setTimeout(_fs.make_channel.bind(_fs), 1000); // timeout reached
-                else return _fs.onConnectionError(2);
-            } else if (this.readyState === 4 && this.status === 500) FileSystem.get_inst().onConnectionError(3);
+                    fs.make_channel_error_timer = Date.now();
+                    setTimeout(fs.make_channel.bind(fs), 1000);
+                    return FileSystem.onConnectionError(1);
+                } else if (Date.now() - fs.make_channel_error_timer < FileSystem._timeout_reconnect) // under timeout
+                setTimeout(fs.make_channel.bind(fs), 1000); // timeout reached
+                else return FileSystem.onConnectionError(2);
+            } else if (this.readyState === 4 && this.status === 500) FileSystem.onConnectionError(3);
         };
         xhr_object.send();
     }
-    // default callback on make_channel error after the timeout disconnected reached
-    // This method can be surcharged.
-    // error_code :
-    // 0 = Error resolved
-    // 1 = 1st disconnection
-    // 2 = disconnection timeout
-    // 3 = Server went down Reinit everything
-    // 4 = Server down on connection
-    onConnectionError(error_code) {
+    /**
+     * default callback on make_channel error after the timeout disconnected reached
+     * This method can be surcharged.
+     * error_code :
+     * - 0 = Error resolved
+     * - 1 = 1st disconnection
+     * - 2 = disconnection timeout
+     * - 3 = Server went down Reinit everything
+     * - 4 = Server down on connection
+     * @private
+     * @static
+     * @param {number} error_code
+     * @memberof FileSystem
+     */ static onConnectionError(error_code) {
         let msg = '';
         if (error_code === 0) {
             // Error resolved
@@ -261,12 +397,20 @@ class FileSystem {
             FileSystem.popup.setMsg(msg);
         }
     }
-    // get the first running inst
-    static get_inst() {
+    /**
+     * get the first running inst
+     * @static
+     * @return {*}  {FileSystem}
+     * @memberof FileSystem
+     */ static get_inst() {
         for(const k in FileSystem._insts)return FileSystem._insts[k];
-        return new FileSystem();
     }
-    static set_server_id_if_necessary(out, obj) {
+    /**
+     * @static
+     * @param {IFsData} out
+     * @param {Model} obj
+     * @memberof FileSystem
+     */ static set_server_id_if_necessary(out, obj) {
         if (obj._server_id == null) {
             // registering
             obj._server_id = FileSystem._get_new_tmp_server_id();
@@ -282,8 +426,12 @@ class FileSystem {
             obj._get_fs_data(out);
         }
     }
-    // send changes of m to instances.
-    static signal_change(m) {
+    /**
+     * send changes of m to instances.
+     * @static
+     * @param {Model} m
+     * @memberof FileSystem
+     */ static signal_change(m) {
         if (FileSystem._sig_server) {
             FileSystem._objects_to_send[m.model_id] = m;
             if (FileSystem._timer_chan != null) clearTimeout(FileSystem._timer_chan);
@@ -305,8 +453,9 @@ class FileSystem {
             delete FileSystem._files_to_upload[tmp_id];
             // send the file
             const fs = FileSystem.get_inst();
-            let path = $1gINV.getUrlPath(`?s=${fs._session_num}&p=${tmp._server_id}`);
+            let path = $1gINV.getUrlPath(fs._url, fs._port, `?s=${fs._session_num}&p=${tmp._server_id}`);
             const xhr_object = FileSystem._my_xml_http_request();
+            if (fs._accessToken) xhr_object.setRequestHeader('x-access-token', fs._accessToken);
             xhr_object.open('PUT', path, true);
             xhr_object.onreadystatechange = function() {
                 let _w;
@@ -335,21 +484,41 @@ class FileSystem {
             return new $3JI2b.ModelProcessManager._def[name]();
         }
     }
-    static extend(child, parent) {
-        throw 'FileSystem.extend is a legacy function, do ont use';
+    /**
+     * @deprecated
+     * @static
+     * @param {*} _child
+     * @param {*} _parent
+     * @return {*}  {*}
+     * @memberof FileSystem
+     */ static extend(_child, _parent) {
+        throw 'FileSystem.extend is a legacy function, do not use';
     }
-    static _get_new_tmp_server_id() {
+    /**
+     * @private
+     * @static
+     * @return {*}  {number}
+     * @memberof FileSystem
+     */ static _get_new_tmp_server_id() {
         FileSystem._cur_tmp_server_id++;
         if (FileSystem._cur_tmp_server_id % 4 === 0) FileSystem._cur_tmp_server_id++;
         return FileSystem._cur_tmp_server_id;
     }
-    // send changes
-    static _send_chan() {
+    /**
+     * send changes
+     * @private
+     * @static
+     * @memberof FileSystem
+     */ static _send_chan() {
         const out = FileSystem._get_chan_data();
         for(const f in FileSystem._insts)FileSystem._insts[f].send(out);
     }
-    // timeout for at least one changed object
-    static _timeout_chan_func() {
+    /**
+     * timeout for at least one changed object
+     * @private
+     * @static
+     * @memberof FileSystem
+     */ static _timeout_chan_func() {
         FileSystem._send_chan();
         delete FileSystem._timer_chan;
     }
@@ -370,17 +539,16 @@ class FileSystem {
         for(const k in FileSystem._insts)FileSystem._insts[k]._data_to_send += out;
         // send data
         for(const k1 in FileSystem._insts){
-            const f = FileSystem._insts[k1];
-            if (!f._data_to_send.length) continue;
-            // if we are waiting for a session id, do not send the data
+            const fs = FileSystem._insts[k1];
+            if (!fs._data_to_send.length || fs._session_num === -1) continue;
             // (@responseText will contain another call to @_timeout_send with the session id)
-            if (f._session_num === -1) continue;
             // for first call, do not add the session id (but say that we are waiting for one)
-            if (f._session_num === -2) f._session_num = -1;
-            else f._data_to_send = `s ${f._session_num} ` + f._data_to_send;
+            if (fs._session_num === -2) fs._session_num = -1;
+            else fs._data_to_send = `s ${fs._session_num} ${fs._data_to_send}`;
             // request
-            let path = $1gINV.getUrlPath();
+            let path = $1gINV.getUrlPath(fs._url, fs._port);
             const xhr_object = FileSystem._my_xml_http_request();
+            if (fs._accessToken) xhr_object.setRequestHeader('x-access-token', fs._accessToken);
             xhr_object.open('POST', path, true);
             xhr_object.onreadystatechange = function() {
                 if (this.readyState === 4 && this.status === 200) {
@@ -406,16 +574,16 @@ class FileSystem {
                     FileSystem._sig_server = true;
                     for (const { cb: cb3 , _obj: _obj3  } of created)cb3(_obj3);
                     for (const [nbCb, servId, error] of _c)FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
-                } else if (this.readyState === 4 && (this.status === 0 || this.status === 500)) return FileSystem.get_inst().onConnectionError(4);
+                } else if (this.readyState === 4 && (this.status === 0 || this.status === 500)) return FileSystem.onConnectionError(4);
             };
-            if (FileSystem._disp) console.log('sent ->', f._data_to_send + 'E ');
+            if (FileSystem._disp) console.log('sent ->', fs._data_to_send + 'E ');
             xhr_object.setRequestHeader('Content-Type', 'text/plain');
-            xhr_object.send(f._data_to_send + 'E ');
-            f._data_to_send = '';
+            xhr_object.send(fs._data_to_send + 'E ');
+            fs._data_to_send = '';
         }
         FileSystem._objects_to_send = {
         };
-        return delete FileSystem._timer_send;
+        delete FileSystem._timer_send;
     }
     static _my_xml_http_request() {
         if (FileSystem.CONNECTOR_TYPE === 'Browser') {
@@ -433,7 +601,6 @@ FileSystem._disp = false;
 FileSystem.popup = undefined;
 FileSystem._cur_tmp_server_id = 0;
 FileSystem._sig_server = true; // if changes has to be sent
-FileSystem._userid = '644';
 FileSystem._timeout_reconnect = 30000;
 FileSystem.is_cordova = typeof document !== 'undefined' ? document.URL.indexOf('http://') == -1 && document.URL.indexOf('https://') == -1 : false;
 // data are sent after a timeout (and are concatened before)
@@ -459,9 +626,6 @@ FileSystem._tmp_objects = {
 }; // objects waiting for a real _server_id
 FileSystem._objects = {
 }; //_server_id -> object
-// url and port of the server
-FileSystem._url = '127.0.0.1';
-FileSystem._port = '8888';
 FileSystem.url_com = '/sceen/_';
 FileSystem.url_upload = '/sceen/upload';
 // conector type : Browser or Node
@@ -518,7 +682,11 @@ var $2b87bb530c041ae3$export$30855ecba71b29fd;
         return new $6QX0c.Model(v);
     }
     $2b87bb530c041ae3$export$30855ecba71b29fd.conv = conv;
-    function get_object_class(obj) {
+    /**
+     * @export
+     * @param {Model} obj
+     * @return {*}  {string}
+     */ function get_object_class(obj) {
         if (obj === null || obj === void 0 ? void 0 : obj.constructor) {
             if ('_constructorName' in obj) return obj._constructorName;
             if ('name' in obj.constructor) return obj.constructor.name;
@@ -530,7 +698,11 @@ var $2b87bb530c041ae3$export$30855ecba71b29fd;
         }
     }
     $2b87bb530c041ae3$export$30855ecba71b29fd.get_object_class = get_object_class;
-    function _get_attribute_names(m) {
+    /**
+     * @export
+     * @param {(Model | object)} m
+     * @return {*}  {string[]}
+     */ function _get_attribute_names(m) {
         if (m instanceof $6QX0c.Model) return m._attribute_names;
         const res = [];
         for(const key in m)if (Object.prototype.hasOwnProperty.call(m, key)) res.push(key);
@@ -538,7 +710,7 @@ var $2b87bb530c041ae3$export$30855ecba71b29fd;
     }
     $2b87bb530c041ae3$export$30855ecba71b29fd._get_attribute_names = _get_attribute_names;
     /**
-     *  create a Model using a line of get_state(using.type, .data, ...)
+     * create a Model using a line of get_state(using.type, .data, ...)
      * @export
      * @template T
      * @param {string} mid
@@ -579,7 +751,12 @@ var $2b87bb530c041ae3$export$30855ecba71b29fd;
         }
     }
     $2b87bb530c041ae3$export$30855ecba71b29fd.register_models = register_models;
-    function _register_models_check(func, name = func.name) {
+    /**
+     * @export
+     * @param {typeof Model} func
+     * @param {string} [name]
+     */ function _register_models_check(func, name) {
+        if (!name) name = func._constructorName ? func._constructorName : func.name;
         if (typeof $2b87bb530c041ae3$export$30855ecba71b29fd._def[name] !== 'undefined' && $2b87bb530c041ae3$export$30855ecba71b29fd._def[name] !== func) {
             console.error(`trying to register \"${name}\" Model but was already defined`);
             console.error('old =', $2b87bb530c041ae3$export$30855ecba71b29fd._def[name]);
@@ -615,6 +792,7 @@ var $2b87bb530c041ae3$export$30855ecba71b29fd;
     }
     $2b87bb530c041ae3$export$30855ecba71b29fd._sync_processes = _sync_processes;
     $2b87bb530c041ae3$export$30855ecba71b29fd.spinal = {
+        version: "2.5.0"
     };
 })($2b87bb530c041ae3$export$30855ecba71b29fd || ($2b87bb530c041ae3$export$30855ecba71b29fd = {
 }));
@@ -1505,16 +1683,29 @@ var $6QX0c = parcelRequire("6QX0c");
 
 var $jgavw = parcelRequire("jgavw");
 class $99ea262d9051c95f$export$ed61451db706e904 extends $jgavw.Obj {
-    constructor(data = ''){
+    /**
+     * Creates an instance of Str.
+     * @param {(string | Str)} [data='']
+     * @memberof Str
+     */ constructor(data = ''){
         super();
         this._constructorName = $99ea262d9051c95f$export$ed61451db706e904._constructorName;
         this._data = data.toString();
     }
-    get length() {
+    /**
+     * @readonly
+     * @type {number}
+     * @memberof Str
+     */ get length() {
         return this._data.length;
     }
-    // toggle presence of str in this
-    toggle(str, space = ' ') {
+    /**
+     * toggle presence of str in this
+     * @param {string} str
+     * @param {string} [space=' ']
+     * @return {*}  {boolean}
+     * @memberof Str
+     */ toggle(str, space = ' ') {
         var i, l;
         l = this._data.split(space);
         i = l.indexOf(str);
@@ -1522,27 +1713,53 @@ class $99ea262d9051c95f$export$ed61451db706e904 extends $jgavw.Obj {
         else l.splice(i, 1);
         return this.set(l.join(' '));
     }
-    // true if str is contained in this
-    contains(str) {
+    /**
+     * true if str is contained in this
+     * @param {string} str
+     * @return {*}  {boolean}
+     * @memberof Str
+     */ contains(str) {
         return this._data.indexOf(str) >= 0;
     }
-    equals(str) {
+    /**
+     * @param {(string | Model)} str
+     * @return {*}  {boolean}
+     * @memberof Str
+     */ equals(str) {
         return str instanceof $6QX0c.Model ? this.toString() === str.toString() : this._data === str;
     }
-    toString() {
+    /**
+     * @return {*}  {string}
+     * @memberof Str
+     */ toString() {
         return this._data;
     }
-    ends_with(str) {
+    /**
+     * @param {string} str
+     * @return {*}  {boolean}
+     * @memberof Str
+     */ ends_with(str) {
         return this._data.endsWith(str);
     }
-    deep_copy() {
+    /**
+     * @return {*}  {Str}
+     * @memberof Str
+     */ deep_copy() {
         return new $99ea262d9051c95f$export$ed61451db706e904(this._data);
     }
-    _get_fs_data(out) {
+    /**
+     * @param {IFsData} out
+     * @memberof Str
+     */ _get_fs_data(out) {
         $gavvF.FileSystem.set_server_id_if_necessary(out, this);
         out.mod += `C ${this._server_id} ${encodeURI(this._data)} `;
     }
-    _set(value = '') {
+    /**
+     * @protected
+     * @param {(Str | string)} [value='']
+     * @return {*}  {boolean}
+     * @memberof Str
+     */ _set(value = '') {
         const n = value.toString();
         if (this._data !== n) {
             this._data = n;
@@ -1550,7 +1767,10 @@ class $99ea262d9051c95f$export$ed61451db706e904 extends $jgavw.Obj {
         }
         return false;
     }
-    _get_state() {
+    /**
+     * @return {*}  {string}
+     * @memberof Str
+     */ _get_state() {
         return encodeURI(this._data);
     }
     _set_state(str, _map) {
@@ -1567,29 +1787,50 @@ $parcel$export(module.exports, "Val", () => $7a682b302f2f8a48$export$38dfac6a73b
 
 var $jgavw = parcelRequire("jgavw");
 class $7a682b302f2f8a48$export$38dfac6a73b2b45e extends $jgavw.Obj {
-    constructor(data = 0){
+    /**
+     * Creates an instance of Val.
+     * @param {(number | Val)} [data=0]
+     * @memberof Val
+     */ constructor(data = 0){
         super();
         this._constructorName = $7a682b302f2f8a48$export$38dfac6a73b2b45e._constructorName;
         this._set(data);
     }
-    // toggle true / false ( 1 / 0 )
-    toggle() {
+    /**
+     * toggle true / false ( 1 / 0 )
+     * @return {*}  {boolean}
+     * @memberof Val
+     */ toggle() {
         return this.set(!this._data);
     }
-    toBoolean() {
+    /**
+     * @return {*}  {boolean}
+     * @memberof Val
+     */ toBoolean() {
         return Boolean(this._data);
     }
-    deep_copy() {
+    /**
+     * @return {*}  {Val}
+     * @memberof Val
+     */ deep_copy() {
         return new $7a682b302f2f8a48$export$38dfac6a73b2b45e(this._data);
     }
-    add(v) {
+    /**
+     * @param {number} v
+     * @memberof Val
+     */ add(v) {
         if (v) {
             this._data += v;
             this._signal_change();
         }
     }
-    // we do not take _set from Obj because we want a conversion if value is not a number
-    _set(value) {
+    /**
+     * we do not take _set from Obj because we want a conversion if value is not a number
+     * @protected
+     * @param {(string | boolean | number | Val)} value
+     * @return {*}  {boolean}
+     * @memberof Val
+     */ _set(value) {
         let n;
         if (typeof value === 'string' || typeof value === 'boolean') {
             n = Number(value);
@@ -1809,11 +2050,11 @@ parcelRequire.register("1gINV", function(module, exports) {
 $parcel$export(module.exports, "getUrlPath", () => $0eca0a3d4cae8e8f$export$e947614430708c91);
 
 var $gavvF = parcelRequire("gavvF");
-function $0eca0a3d4cae8e8f$export$e947614430708c91(searchQuery = '') {
+function $0eca0a3d4cae8e8f$export$e947614430708c91(url, port, searchQuery = '') {
     let path = '';
     if ($gavvF.FileSystem.CONNECTOR_TYPE === 'Node' || $gavvF.FileSystem.is_cordova) {
-        path = `http://${$gavvF.FileSystem._url}`;
-        if ($gavvF.FileSystem._port) path += `:${$gavvF.FileSystem._port}`;
+        path = `http://${url}`;
+        if (port) path += `:${port}`;
         path += `${$gavvF.FileSystem.url_com}${searchQuery}`;
     } else if ($gavvF.FileSystem.CONNECTOR_TYPE === 'Browser') path = `${$gavvF.FileSystem.url_com}${searchQuery}`;
     return path;
@@ -1930,7 +2171,8 @@ class $3944b6afa5d7b3fc$export$b6afa8811b7e644e extends $6QX0c.Model {
         });
     }
     load(callback) {
-        return this._ptr.load(callback);
+        if (typeof callback === 'function') this._ptr.load(callback);
+        else return this._ptr.load();
     }
 }
 $3944b6afa5d7b3fc$export$b6afa8811b7e644e._constructorName = 'File';
@@ -1944,21 +2186,36 @@ var $6QX0c = parcelRequire("6QX0c");
 
 var $gavvF = parcelRequire("gavvF");
 class $33eab5bbddef97cc$export$96d7e0bc5363b2c6 extends $6QX0c.Model {
-    // model may be a number (the pointer)
-    constructor(model){
+    /**
+     * Creates an instance of Ptr.
+     * @param {*} model
+     * @memberof Ptr
+     */ constructor(model){
         super();
         this._constructorName = $33eab5bbddef97cc$export$96d7e0bc5363b2c6._constructorName;
         this.data = {
         };
         this._set(model);
     }
-    load(callback) {
-        var _a;
-        var ref;
-        if (this.data.model != null) callback(this.data.model, false);
-        else (_a = $gavvF.FileSystem.get_inst()) === null || _a === void 0 || _a.load_ptr(this.data.value, callback);
+    /**
+     * @param {SpinalLoadCallBack<T>} [callback]
+     * @return {*}  {Promise<T>}
+     * @memberof Ptr
+     */ load(callback) {
+        var _a, _b;
+        if (this.data.model != null) {
+            if (typeof callback === 'function') callback(this.data.model, false);
+            else return Promise.resolve(this.data.model);
+        } else {
+            if (this.data.value === 0) console.error(`Ptr ${this._server_id} load with value 0.`);
+            if (typeof callback === 'function') (_a = $gavvF.FileSystem.get_inst()) === null || _a === void 0 || _a.load_ptr(this.data.value, callback);
+            else return (_b = $gavvF.FileSystem.get_inst()) === null || _b === void 0 ? void 0 : _b.load_ptr(this.data.value);
+        }
     }
-    _get_fs_data(out) {
+    /**
+     * @param {IFsData} out
+     * @memberof Ptr
+     */ _get_fs_data(out) {
         $gavvF.FileSystem.set_server_id_if_necessary(out, this);
         if (this.data.model != null) {
             $gavvF.FileSystem.set_server_id_if_necessary(out, this.data.model);
@@ -1968,16 +2225,15 @@ class $33eab5bbddef97cc$export$96d7e0bc5363b2c6 extends $6QX0c.Model {
         } else out.mod += `C ${this._server_id} ${this.data.value} `;
     }
     _set(model) {
-        var res;
         if (typeof model === 'number') {
-            res = this.data.value !== model;
+            const res = this.data.value !== model;
             this.data = {
                 value: model
             };
             return res;
         }
         if (model instanceof $6QX0c.Model) {
-            res = this.data.value !== model._server_id;
+            const res = this.data.value !== model._server_id;
             this.data = {
                 model: model,
                 value: model._server_id
@@ -2226,10 +2482,12 @@ var $gavvF = parcelRequire("gavvF");
 
 var $6QX0c = parcelRequire("6QX0c");
 class $12a8e9845cd38347$export$914b3a8889b8a8a9 extends $6QX0c.Model {
-    // size can be
-    //  - a number
-    //  - a list of number
-    constructor(size, data){
+    /**
+     * Creates an instance of TypedArray.
+     * @param {(number | number[])} [size]
+     * @param {T} [data]
+     * @memberof TypedArray
+     */ constructor(size, data){
         super();
         this._constructorName = $12a8e9845cd38347$export$914b3a8889b8a8a9._constructorName;
         // size
@@ -2242,36 +2500,47 @@ class $12a8e9845cd38347$export$914b3a8889b8a8a9 extends $6QX0c.Model {
         // data
         if (data == null) {
             const B = this.base_type();
-            // @ts-ignore
             if (B) data = B.from(this.nb_items());
         }
-        // @ts-ignore
         this._data = data;
     }
-    base_type() {
-        return;
-    }
-    // -> to be defined by children
-    dim() {
+    /**
+     * @return {*}  {number}
+     * @memberof TypedArray
+     */ dim() {
         return this._size.length;
     }
-    size(d) {
+    /**
+     * @param {number} [d]
+     * @return {*}  {(number | number[])}
+     * @memberof TypedArray
+     */ size(d) {
         if (d != null) return this._size[d];
         else return this._size;
     }
-    set_val(index, value) {
+    /**
+     * @param {(number[] | number)} index
+     * @param {*} value
+     * @memberof TypedArray
+     */ set_val(index, value) {
         const idx = this._get_index(index);
         if (this._data[idx] !== value) {
             this._data[idx] = value;
             this._signal_change();
         }
     }
-    nb_items() {
+    /**
+     * @return {*}  {number}
+     * @memberof TypedArray
+     */ nb_items() {
         let total = this._size[0] || 0;
         for(let j = 1; j < this._size.length; j++)total *= this._size[j];
         return total;
     }
-    toString() {
+    /**
+     * @return {*}  {string}
+     * @memberof TypedArray
+     */ toString() {
         let m = 1;
         let res = '';
         let l = this._size.map((s)=>{
@@ -2293,7 +2562,11 @@ class $12a8e9845cd38347$export$914b3a8889b8a8a9 extends $6QX0c.Model {
         }
         return res;
     }
-    equals(obj) {
+    /**
+     * @param {(TypedArray<any> | any)} obj
+     * @return {*}  {boolean}
+     * @memberof TypedArray
+     */ equals(obj) {
         if (!(obj instanceof $12a8e9845cd38347$export$914b3a8889b8a8a9)) return this._data === obj;
         if (this._size.length !== obj._size.length) return false;
         let i = 0;
@@ -2303,22 +2576,33 @@ class $12a8e9845cd38347$export$914b3a8889b8a8a9 extends $6QX0c.Model {
         }
         return this._data === obj._data;
     }
-    get(index) {
+    /**
+     * @param {number} [index]
+     * @return {*}  {(number | T)}
+     * @memberof TypedArray
+     */ get(index) {
         if (typeof index !== 'undefined') return this._data[this._get_index(index)];
         return this._data;
     }
-    resize(new_size) {
+    /**
+     * @param {number[]} new_size
+     * @memberof TypedArray
+     */ resize(new_size) {
         let total = 1;
         for(let i = 0; i < new_size.length; i++)total *= new_size[i];
         const BaseType = this.base_type();
-        // @ts-ignore
         const instance = BaseType.from(total);
         instance.set(this._data);
         this._data = instance;
         this._size = new_size;
         this._signal_change();
     }
-    _set(str) {
+    /**
+     * @protected
+     * @param {*} str
+     * @return {*}  {boolean}
+     * @memberof TypedArray
+     */ _set(str) {
         if (typeof str === 'string') {
             // TODO optimize
             this._set_state(str);
@@ -2335,7 +2619,12 @@ class $12a8e9845cd38347$export$914b3a8889b8a8a9 extends $6QX0c.Model {
         }
         return false;
     }
-    _get_index(index) {
+    /**
+     * @private
+     * @param {(number[] | number)} index
+     * @return {*}  {number}
+     * @memberof TypedArray
+     */ _get_index(index) {
         if (Array.isArray(index)) {
             let o = 0;
             let m = 1;
@@ -2347,17 +2636,26 @@ class $12a8e9845cd38347$export$914b3a8889b8a8a9 extends $6QX0c.Model {
         }
         return index;
     }
-    _get_fs_data(out) {
+    /**
+     * @param {IFsData} out
+     * @memberof TypedArray
+     */ _get_fs_data(out) {
         $gavvF.FileSystem.set_server_id_if_necessary(out, this);
         out.mod += `C ${this._server_id} ${this._get_state()} `;
     }
-    _get_state() {
+    /**
+     * @return {*}  {string}
+     * @memberof TypedArray
+     */ _get_state() {
         let res = this._size.length.toString(10);
         for(let i = 0; i < this._size.length; i++)res += `, ${this._size[i]}`;
         for(let i1 = 0; i1 < this._data.length; i1++)res += `, ${this._data[i1]}`;
         return res;
     }
-    _set_state(str) {
+    /**
+     * @param {string} str
+     * @memberof TypedArray
+     */ _set_state(str) {
         const l = str.split(',');
         let s = parseInt(l[0]);
         const size = [];
@@ -2374,14 +2672,25 @@ $12a8e9845cd38347$export$914b3a8889b8a8a9._constructorName = 'TypedArray';
 
 
 class $679f7f26f7c26e4f$export$83502047e761f50b extends $12a8e9845cd38347$export$914b3a8889b8a8a9 {
-    constructor(size, data){
+    /**
+     * Creates an instance of TypedArray_Float64.
+     * @param {(number | number[])} [size]
+     * @param {Float64Array} [data]
+     * @memberof TypedArray_Float64
+     */ constructor(size, data){
         super(size, data);
         this._constructorName = $679f7f26f7c26e4f$export$83502047e761f50b._constructorName;
     }
-    base_type() {
+    /**
+     * @return {*}  {typeof TypedArray_Float64}
+     * @memberof TypedArray_Float64
+     */ base_type() {
         return $679f7f26f7c26e4f$export$83502047e761f50b;
     }
-    deep_copy() {
+    /**
+     * @return {*}  {TypedArray_Float64}
+     * @memberof TypedArray_Float64
+     */ deep_copy() {
         return new $679f7f26f7c26e4f$export$83502047e761f50b(this._size, this._data);
     }
 }
@@ -2393,14 +2702,25 @@ var $b39888fbde163a8b$exports = {};
 $parcel$export($b39888fbde163a8b$exports, "TypedArray_Int32", () => $b39888fbde163a8b$export$95edd4638367a48f);
 
 class $b39888fbde163a8b$export$95edd4638367a48f extends $12a8e9845cd38347$export$914b3a8889b8a8a9 {
-    constructor(size, data){
+    /**
+     * Creates an instance of TypedArray_Int32.
+     * @param {(number | number[])} [size]
+     * @param {Int32Array} [data]
+     * @memberof TypedArray_Int32
+     */ constructor(size, data){
         super(size, data);
         this._constructorName = $b39888fbde163a8b$export$95edd4638367a48f._constructorName;
     }
-    base_type() {
+    /**
+     * @return {*}  {typeof TypedArray_Int32}
+     * @memberof TypedArray_Int32
+     */ base_type() {
         return $b39888fbde163a8b$export$95edd4638367a48f;
     }
-    deep_copy() {
+    /**
+     * @return {*}  {TypedArray_Int32}
+     * @memberof TypedArray_Int32
+     */ deep_copy() {
         return new $b39888fbde163a8b$export$95edd4638367a48f(this._size, this._data);
     }
 }
@@ -2417,14 +2737,23 @@ var $cf9Mh = parcelRequire("cf9Mh");
 
 var $avzhD = parcelRequire("avzhD");
 class $b1b0838feaa6067f$export$e947a0f742cf021e extends $cf9Mh.Lst {
-    constructor(){
+    /**
+     * Creates an instance of Vec.
+     * @memberof Vec
+     */ constructor(){
         super();
         this._constructorName = $b1b0838feaa6067f$export$e947a0f742cf021e._constructorName;
     }
-    base_type() {
+    /**
+     * @return {*}  {typeof Val}
+     * @memberof Vec
+     */ base_type() {
         return $avzhD.Val;
     }
-    _underlying_fs_type() {
+    /**
+     * @return {*}  {string}
+     * @memberof Vec
+     */ _underlying_fs_type() {
         return 'Lst';
     }
 }
@@ -2437,68 +2766,181 @@ var $7O6Yd = parcelRequire("7O6Yd");
 var $01Pqy = parcelRequire("01Pqy");
 var $628a8c82907e34e7$exports = {};
 
-$parcel$export($628a8c82907e34e7$exports, "spinalCore", () => $628a8c82907e34e7$export$a34888876ba95657);
+$parcel$export($628a8c82907e34e7$exports, "spinalCore", () => $628a8c82907e34e7$export$a34888876ba95657, (v) => $628a8c82907e34e7$export$a34888876ba95657 = v);
 
 var $gavvF = parcelRequire("gavvF");
 
 var $3JI2b = parcelRequire("3JI2b");
+/*
+ * Copyright 2022 SpinalCom - www.spinalcom.com
+ *
+ * This file is part of SpinalCore.
+ *
+ * Please read all of the following terms and conditions
+ * of the Free Software license Agreement ("Agreement")
+ * carefully.
+ *
+ * This Agreement is a legally binding contract between
+ * the Licensee (as defined below) and SpinalCom that
+ * sets forth the terms and conditions that govern your
+ * use of the Program. By installing and/or using the
+ * Program, you agree to abide by all the terms and
+ * conditions stated or referenced herein.
+ *
+ * If you do not agree to abide by these terms and
+ * conditions, do not demonstrate your acceptance and do
+ * not install or use the Program.
+ * You should have received a copy of the license along
+ * with this file. If not, see
+ * <http://resources.spinalcom.com/licenses.pdf>.
+ */ var $628a8c82907e34e7$var$__awaiter = undefined && undefined.__awaiter || function(thisArg, _arguments, P, generator) {
+    function adopt(value) {
+        return value instanceof P ? value : new P(function(resolve) {
+            resolve(value);
+        });
+    }
+    return new (P || (P = Promise))(function(resolve, reject) {
+        function fulfilled(value) {
+            try {
+                step(generator.next(value));
+            } catch (e) {
+                reject(e);
+            }
+        }
+        function rejected(value) {
+            try {
+                step(generator["throw"](value));
+            } catch (e) {
+                reject(e);
+            }
+        }
+        function step(result) {
+            result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+        }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var $628a8c82907e34e7$export$a34888876ba95657;
 (function($628a8c82907e34e7$export$a34888876ba95657) {
     $628a8c82907e34e7$export$a34888876ba95657._def = $3JI2b.ModelProcessManager._def;
-    $628a8c82907e34e7$export$a34888876ba95657.version = '2.5.0';
-    function connect(options) {
+    $628a8c82907e34e7$export$a34888876ba95657.version = "2.5.0";
+    /**
+     * @export
+     * @param {(URL | string)} options
+     * @param {string} [accessToken]
+     * @return {*}  {FileSystem}
+     */ function connect(options, accessToken) {
         const parsedOpt = typeof options === 'string' ? new URL(options) : options;
         if (parsedOpt.pathname.slice(-1)[0] !== '/') parsedOpt.pathname += '/';
-        $gavvF.FileSystem._home_dir = parsedOpt.pathname;
-        $gavvF.FileSystem._url = parsedOpt.hostname;
-        $gavvF.FileSystem._port = parsedOpt.port;
-        if (parsedOpt.username) {
-            $gavvF.FileSystem._userid = parsedOpt.username;
-            if (parsedOpt.password) $gavvF.FileSystem._password = parsedOpt.password;
-        } else {
-            // set default user id
-            $gavvF.FileSystem._userid = 644;
-            $gavvF.FileSystem._password = '';
-        }
-        return new $gavvF.FileSystem();
+        const opt = {
+            home_dir: parsedOpt.pathname,
+            url: parsedOpt.hostname,
+            port: parsedOpt.port,
+            userid: parsedOpt.username,
+            password: parsedOpt.password,
+            accessToken: accessToken
+        };
+        return new $gavvF.FileSystem(opt);
     }
     $628a8c82907e34e7$export$a34888876ba95657.connect = connect;
-    // stores a model in the file system
-    function store(fs, model, path, callback_success, callback_error) {
-        if (typeof callback_error === 'undefined') callback_error = function() {
-            return console.log('Model could not be stored. You can pass a callback to handle this error.');
+    /**
+     * @export
+     * @param {(URL | string)} options
+     * @param {number} sessionId
+     * @param {string} [accessToken]
+     * @return {*}  {FileSystem}
+     */ function connectWithSessionId(options, sessionId, accessToken) {
+        const parsedOpt = typeof options === 'string' ? new URL(options) : options;
+        if (parsedOpt.pathname.slice(-1)[0] !== '/') parsedOpt.pathname += '/';
+        const opt = {
+            home_dir: parsedOpt.pathname,
+            url: parsedOpt.hostname,
+            port: parsedOpt.port,
+            sessionId: sessionId,
+            accessToken: accessToken
         };
-        // Parse path
-        const lst = path.split('/');
-        const file_name = lst.pop();
-        if (lst[0] === '') lst.splice(0, 1);
-        path = lst.join('/'); // Absolute paths are not allowed
-        return fs.load_or_make_dir($gavvF.FileSystem._home_dir + path, function(dir, err) {
-            if (err) callback_error();
-            else {
+        return new $gavvF.FileSystem(opt);
+    }
+    $628a8c82907e34e7$export$a34888876ba95657.connectWithSessionId = connectWithSessionId;
+    function connectAndLoadWithApi(options, username, password, organAccessToken) {
+        const parsedOpt = typeof options === 'string' ? new URL(options) : options;
+        if (parsedOpt.pathname.slice(-1)[0] !== '/') parsedOpt.pathname += '/';
+        // do axios get
+        // username,
+        // password: string,
+        const opt = {
+            home_dir: parsedOpt.pathname,
+            url: parsedOpt.hostname,
+            port: parsedOpt.port,
+            userid: username,
+            password: password
+        };
+        return new $gavvF.FileSystem(opt);
+    }
+    $628a8c82907e34e7$export$a34888876ba95657.connectAndLoadWithApi = connectAndLoadWithApi;
+    function store(fs, model, path, optionOrCb, callback_error, fileOption = {
+        model_type: 'Model'
+    }) {
+        return $628a8c82907e34e7$var$__awaiter(this, void 0, void 0, function*() {
+            // Parse path
+            const lst = path.split('/');
+            const file_name = lst.pop();
+            if (lst[0] === '') lst.splice(0, 1);
+            path = lst.join('/'); // Absolute paths are not allowed
+            const home_dir = $gavvF.FileSystem.get_inst()._home_dir;
+            try {
+                const dir = yield fs.load_or_make_dir(home_dir + path);
                 const file = dir.detect((x)=>x.name.get() === file_name
                 );
                 if (file != null) dir.remove(file);
-                dir.add_file(file_name, model, {
-                    model_type: 'Model'
-                });
-                callback_success();
+                if (typeof optionOrCb === 'function') {
+                    dir.add_file(file_name, model, fileOption);
+                    optionOrCb();
+                } else dir.add_file(file_name, model, optionOrCb ? optionOrCb : fileOption);
+                return;
+            } catch (error) {
+                if (typeof optionOrCb === 'undefined') throw error;
+                if (typeof callback_error === 'undefined') defaultCallbackError();
+                else callback_error();
             }
         });
     }
     $628a8c82907e34e7$export$a34888876ba95657.store = store;
-    $628a8c82907e34e7$export$a34888876ba95657.register_models = $3JI2b.ModelProcessManager.register_models;
-    // loads a model from the file system
+    function register_models(modelList, name) {
+        if (name) return $3JI2b.ModelProcessManager.register_models(modelList, name);
+        return $3JI2b.ModelProcessManager.register_models(modelList);
+    }
+    $628a8c82907e34e7$export$a34888876ba95657.register_models = register_models;
+    /**
+     * @template T
+     * @param {FileSystem} fs
+     * @param {string} path
+     * @return {*}  {Promise<T>}
+     */ function loadPromise(fs, path) {
+        return $628a8c82907e34e7$var$__awaiter(this, void 0, void 0, function*() {
+            // Parse path
+            const lst = path.split('/');
+            const file_name = lst.pop();
+            if (lst[0] === '') lst.splice(0, 1);
+            path = lst.join('/'); // Absolute paths are not allowed
+            const home_dir = $gavvF.FileSystem.get_inst()._home_dir;
+            const current_dir = yield fs.load_or_make_dir(`${home_dir}${path}`);
+            const file = current_dir.detect((x)=>x.name.get() === file_name
+            );
+            if (file) return file.load();
+            throw new Error('File not Found');
+        });
+    }
     function load(fs, path, callback_success, callback_error) {
-        if (typeof callback_error === 'undefined') callback_error = function() {
-            return console.log('Model could not be loaded. You can pass a callback to handle this error.');
-        };
+        if (typeof callback_success === 'undefined') return loadPromise(fs, path);
+        if (typeof callback_error === 'undefined') callback_error = defaultCallbackError;
         // Parse path
         const lst = path.split('/');
         const file_name = lst.pop();
         if (lst[0] === '') lst.splice(0, 1);
         path = lst.join('/'); // Absolute paths are not allowed
-        return fs.load_or_make_dir(`${$gavvF.FileSystem._home_dir}${path}`, (current_dir, err1)=>{
+        const home_dir = $gavvF.FileSystem.get_inst()._home_dir;
+        fs.load_or_make_dir(`${home_dir}${path}`, (current_dir, err1)=>{
             if (err1) return callback_error();
             else {
                 const file = current_dir.detect((x)=>x.name.get() === file_name
@@ -2512,11 +2954,17 @@ var $628a8c82907e34e7$export$a34888876ba95657;
         });
     }
     $628a8c82907e34e7$export$a34888876ba95657.load = load;
-    // loads all the models of a specific type
-    function load_type(fs, type, callback_success, callback_error) {
-        if (typeof callback_error === 'undefined') callback_error = function() {
-            return console.log("Model of this type could not be loaded. You can pass a callback to handle this error.");
-        };
+    /**
+     * loads all the models of a specific type
+     * @export
+     * @template T
+     * @param {FileSystem} fs
+     * @param {string} type
+     * @param {SpinalLoadCallBack<T>} callback_success
+     * @param {SpinalCallBackError} [callback_error]
+     * @return {*}
+     */ function load_type(fs, type, callback_success, callback_error) {
+        if (typeof callback_error === 'undefined') callback_error = defaultCallbackError;
         return fs.load_type(type, (data, error)=>{
             if (!data || error) callback_error();
             else callback_success(data, error);
@@ -2524,16 +2972,24 @@ var $628a8c82907e34e7$export$a34888876ba95657;
     }
     $628a8c82907e34e7$export$a34888876ba95657.load_type = load_type;
     function load_right(fs, ptr, callback_success, callback_error) {
-        if (typeof callback_error === 'undefined') callback_error = function() {
-            return console.log("Model Right could not be loaded. You can pass a callback to handle this error.");
-        };
-        return fs.load_right(ptr, (data, err)=>{
-            if (err) return callback_error();
-            else return callback_success(data, err);
-        });
+        if (typeof callback_success === 'function') {
+            if (typeof callback_error === 'undefined') callback_error = defaultCallbackError;
+            fs.load_right(ptr, (data, err)=>{
+                if (err) return callback_error();
+                else return callback_success(data, err);
+            });
+        } else return fs.load_right(ptr);
     }
     $628a8c82907e34e7$export$a34888876ba95657.load_right = load_right;
-    function share_model(fs, ptr, file_name, right_flag, targetName) {
+    /**
+     * @export
+     * @param {FileSystem} fs
+     * @param {number} ptr
+     * @param {string} file_name
+     * @param {number} right_flag
+     * @param {string} targetName
+     * @return {*}  {void}
+     */ function share_model(fs, ptr, file_name, right_flag, targetName) {
         return fs.share_model(ptr, file_name, right_flag, targetName);
     }
     $628a8c82907e34e7$export$a34888876ba95657.share_model = share_model;
@@ -2542,11 +2998,23 @@ var $628a8c82907e34e7$export$a34888876ba95657;
         WR: 2,
         RD: 4
     };
-    // "export function" method: extend one object as a class, using the same 'class' concept as coffeescript
-    function extend(child, parent) {
+    /**
+     * "export function" method: extend one object as a class, using the same 'class' concept as coffeescript
+     * @deprecated
+     * @export
+     * @param {*} child
+     * @param {*} parent
+     * @return {*}  {*}
+     */ function extend(child, parent) {
         return $gavvF.FileSystem.extend(child, parent);
     }
     $628a8c82907e34e7$export$a34888876ba95657.extend = extend;
+    /**
+     * default callback function
+     * @return {*}  {void}
+     */ function defaultCallbackError() {
+        return console.log('Model could not be loaded. You can pass a callback to handle this error.');
+    }
 })($628a8c82907e34e7$export$a34888876ba95657 || ($628a8c82907e34e7$export$a34888876ba95657 = {
 }));
 
@@ -2588,10 +3056,16 @@ var $4Biiw = parcelRequire("4Biiw");
 var $6ef81293b2ac1c62$exports = {};
 
 
+var $d962547f5931f33a$exports = {};
+
+
 var $68404f5c8eabd566$exports = {};
 
 
 var $973b14d59abd5c29$exports = {};
+
+
+var $0a0b5bacd553f8eb$exports = {};
 
 
 var $d56bc8348d7c7047$exports = {};
@@ -2876,7 +3350,7 @@ parcelRequire("1gINV");
 parcelRequire("9wokq");
 
 if (!('spinal' in globalThis)) globalThis.spinal = $3JI2b.ModelProcessManager.spinal;
-$589ebaa3cc7527d9$export$a4e9f07232169aad($628a8c82907e34e7$export$a34888876ba95657, 'spinalCore');
+$589ebaa3cc7527d9$export$a4e9f07232169aad($628a8c82907e34e7$exports.spinalCore, 'spinalCore');
 $589ebaa3cc7527d9$export$a4e9f07232169aad($gavvF.FileSystem, 'FileSystem');
 $589ebaa3cc7527d9$export$a4e9f07232169aad($3JI2b.ModelProcessManager, 'ModelProcessManager');
 $589ebaa3cc7527d9$export$a4e9f07232169aad($01Pqy.Process, 'Process');
@@ -2922,5 +3396,5 @@ var $0057fc83374542cb$export$ddab65ae98aaa487 = parcelRequire("01Pqy").Process;
 var $fc9e73763bdb50c9$export$e6de3ff0fa45a019 = parcelRequire("lGGs8").NewAlertMsg;
 var $0eca0a3d4cae8e8f$export$e947614430708c91 = parcelRequire("1gINV").getUrlPath;
 var $6ee9f94fde05cca5$export$9652023d9040757 = parcelRequire("9wokq").isIterable;
-export {FileSystem as FileSystem, $bc5605b5c95143d4$exports as default, $b97d5e4a2c99b386$export$1dbf9926a0d54d98 as Directory, $3944b6afa5d7b3fc$export$b6afa8811b7e644e as File, $93f6f76dad5dbc67$export$4b2950bdac9b6ee9 as Path, $5ddc74eda8135f89$export$598ea37cc1e20dfa as Pbr, $33eab5bbddef97cc$export$96d7e0bc5363b2c6 as Ptr, $b6dd1cfb910cf9e7$export$86422d9fcaac5a78 as RightSetList, $03519d1f15dee83d$export$d4cfb3e939ea5c80 as RightsItem, $eea429a64ca10631$export$d0f738c06f5e6fee as SessionModel, $3598cfb07079992a$export$f26600b5cf417d1a as TiffFile, $dfce4a4de10c079b$export$1f44aaf2ec115b54 as User, $55f2fc367e06512f$export$56864abfbf86ef48 as UserRight, $2b87bb530c041ae3$export$30855ecba71b29fd as ModelProcessManager, $e337ab00d77288e8$export$6e6298e1abe0d5b as Bool, $5c65d5123fa66ba6$export$32a7462f6a06cbd5 as Choice, $8e9e78668bc86ca0$export$774a0e74f4f3f461 as Lst, $4fd55e0a7b376205$export$a1edc412be3e1841 as Model, $e057a98189eac8dd$export$6738a6d9146a0cdc as Obj, $99ea262d9051c95f$export$ed61451db706e904 as Str, $679f7f26f7c26e4f$export$83502047e761f50b as TypedArray_Float64, $b39888fbde163a8b$export$95edd4638367a48f as TypedArray_Int32, $7a682b302f2f8a48$export$38dfac6a73b2b45e as Val, $b1b0838feaa6067f$export$e947a0f742cf021e as Vec, $017786a5667b466a$export$3f2ba963eed9fec6 as BindProcess, $0057fc83374542cb$export$ddab65ae98aaa487 as Process, $628a8c82907e34e7$export$a34888876ba95657 as spinalCore, $589ebaa3cc7527d9$export$322c967aeb5c06d6 as spinalRegisterModel, $589ebaa3cc7527d9$export$a4e9f07232169aad as spinalRegister, $12a8e9845cd38347$export$914b3a8889b8a8a9 as TypedArray, $accbf9e3b1280427$export$2385a24977818dd0 as bind, $2a31c265435af559$export$d2cf6cd1dc7067d3 as addClass, $7898c3c4430faba3$export$da405662c16fca8e as getLeft, $87290287db6ba45f$export$449115d164fc37c3 as getTop, $fc9e73763bdb50c9$export$e6de3ff0fa45a019 as NewAlertMsg, $53d3eaf9257f5b36$export$bf01a0cff267368f as remClass, $e8ce62e2c96864f5$export$4401ffb216812b56 as spinalNewPopup, $0eca0a3d4cae8e8f$export$e947614430708c91 as getUrlPath, $6ee9f94fde05cca5$export$9652023d9040757 as isIterable};
+export {FileSystem as FileSystem, $bc5605b5c95143d4$exports as default, $b97d5e4a2c99b386$export$1dbf9926a0d54d98 as Directory, $3944b6afa5d7b3fc$export$b6afa8811b7e644e as File, $93f6f76dad5dbc67$export$4b2950bdac9b6ee9 as Path, $5ddc74eda8135f89$export$598ea37cc1e20dfa as Pbr, $33eab5bbddef97cc$export$96d7e0bc5363b2c6 as Ptr, $b6dd1cfb910cf9e7$export$86422d9fcaac5a78 as RightSetList, $03519d1f15dee83d$export$d4cfb3e939ea5c80 as RightsItem, $eea429a64ca10631$export$d0f738c06f5e6fee as SessionModel, $3598cfb07079992a$export$f26600b5cf417d1a as TiffFile, $dfce4a4de10c079b$export$1f44aaf2ec115b54 as User, $55f2fc367e06512f$export$56864abfbf86ef48 as UserRight, $2b87bb530c041ae3$export$30855ecba71b29fd as ModelProcessManager, $e337ab00d77288e8$export$6e6298e1abe0d5b as Bool, $5c65d5123fa66ba6$export$32a7462f6a06cbd5 as Choice, $8e9e78668bc86ca0$export$774a0e74f4f3f461 as Lst, $4fd55e0a7b376205$export$a1edc412be3e1841 as Model, $e057a98189eac8dd$export$6738a6d9146a0cdc as Obj, $99ea262d9051c95f$export$ed61451db706e904 as Str, $679f7f26f7c26e4f$export$83502047e761f50b as TypedArray_Float64, $b39888fbde163a8b$export$95edd4638367a48f as TypedArray_Int32, $7a682b302f2f8a48$export$38dfac6a73b2b45e as Val, $b1b0838feaa6067f$export$e947a0f742cf021e as Vec, $017786a5667b466a$export$3f2ba963eed9fec6 as BindProcess, $0057fc83374542cb$export$ddab65ae98aaa487 as Process, $628a8c82907e34e7$export$a34888876ba95657 as spinalCore, $628a8c82907e34e7$exports as default, $589ebaa3cc7527d9$export$322c967aeb5c06d6 as spinalRegisterModel, $589ebaa3cc7527d9$export$a4e9f07232169aad as spinalRegister, $12a8e9845cd38347$export$914b3a8889b8a8a9 as TypedArray, $accbf9e3b1280427$export$2385a24977818dd0 as bind, $2a31c265435af559$export$d2cf6cd1dc7067d3 as addClass, $7898c3c4430faba3$export$da405662c16fca8e as getLeft, $87290287db6ba45f$export$449115d164fc37c3 as getTop, $fc9e73763bdb50c9$export$e6de3ff0fa45a019 as NewAlertMsg, $53d3eaf9257f5b36$export$bf01a0cff267368f as remClass, $e8ce62e2c96864f5$export$4401ffb216812b56 as spinalNewPopup, $0eca0a3d4cae8e8f$export$e947614430708c91 as getUrlPath, $6ee9f94fde05cca5$export$9652023d9040757 as isIterable};
 //# sourceMappingURL=module.js.map

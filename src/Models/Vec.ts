@@ -26,18 +26,30 @@ import { Lst } from './Lst';
 import { Val } from './Val';
 
 export class Vec extends Lst<Val> {
-  static readonly _constructorName: string = 'Vec';
-  readonly _constructorName: string = Vec._constructorName;
+  public static _constructorName: string = 'Vec';
+  public _constructorName: string = Vec._constructorName;
 
-  constructor() {
+  /**
+   * Creates an instance of Vec.
+   * @memberof Vec
+   */
+  public constructor() {
     super();
   }
 
-  base_type(): typeof Val {
+  /**
+   * @return {*}  {typeof Val}
+   * @memberof Vec
+   */
+  public base_type(): typeof Val {
     return Val;
   }
 
-  _underlying_fs_type(): string {
+  /**
+   * @return {*}  {string}
+   * @memberof Vec
+   */
+  public _underlying_fs_type(): string {
     return 'Lst';
   }
 }

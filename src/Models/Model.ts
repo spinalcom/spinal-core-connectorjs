@@ -31,41 +31,78 @@ import { ModelProcessManager } from '../ModelProcessManager';
 import { BindProcess } from '../Processes/BindProcess';
 import { Process } from '../Processes/Process';
 
+/**
+ * Bese representation of a Object
+ * @export
+ * @class Model
+ */
 export class Model {
-  static readonly _constructorName: string = 'Model';
-  readonly _constructorName: string = Model._constructorName;
-  // registered attribute names (in declaration order)
-  _attribute_names: string[];
-  model_id: number; // id of the model
-  _processes: Process[]; // synchronized processes
-  _parents: Model[]; // parent models (depending on this)
-  // "date" of previous change. We start at + 2 because
-  // we consider that an initialisation is a modification.
-  _date_last_modification: number;
-  _server_id: number;
+  static _constructorName: string = 'Model';
+  _constructorName: string = Model._constructorName;
+  /**
+   * registered attribute names (in declaration order)
+   * @type {string[]}
+   * @memberof Model
+   */
+  _attribute_names: string[] = [];
+  /**
+   * id of the model
+   * @type {number}
+   * @memberof Model
+   */
+  model_id: number = ModelProcessManager._cur_mid++;
+  /**
+   * synchronized processes
+   * @type {Process[]}
+   * @memberof Model
+   */
+  _processes: Process[] = [];
+  /**
+   * parent models (depending on this)
+   * @type {Model[]}
+   * @memberof Model
+   */
+  _parents: Model[] = [];
+  /**
+   * "date" of previous change. We start at + 2 because
+   * we consider that an initialisation is a modification.
+   * @type {number}
+   * @memberof Model
+   */
+  _date_last_modification: number = ModelProcessManager._counter + 2;
+  /**
+   * id unique from server.
+   * It doesn't exist at creation but added after a sync of the server
+   * @type {number}
+   * @memberof Model
+   */
+  _server_id?: number;
   [nameAttr: string]: any;
 
-  constructor(attr?: any) {
-    this._attribute_names = [];
-    this.model_id = ModelProcessManager._cur_mid;
-    ModelProcessManager._cur_mid += 1;
-    this._processes = [];
-    this._parents = [];
-
-    this._date_last_modification = ModelProcessManager._counter + 2;
+  /**
+   * Creates an instance of Model.
+   * @param {*} [attr]
+   * @memberof Model
+   */
+  public constructor(attr?: any) {
     if (attr != null) {
       this._set(attr);
     }
   }
 
-  destructor(): void {}
+  /**
+   * Do nothing here, TBD in child if needed.
+   * Called in rem_attr if have no more parent.
+   * @memberof Model
+   */
+  public destructor(): void {}
 
   /**
    * return true if this (or a child of this) has changed since the previous synchronisation
    * @return {*}  {boolean}
    * @memberof Model
    */
-  has_been_modified(): boolean {
+  public has_been_modified(): boolean {
     return (
       this._date_last_modification > ModelProcessManager._counter - 2 ||
       ModelProcessManager._force_m
@@ -78,7 +115,7 @@ export class Model {
    * @return {*}  {boolean}
    * @memberof Model
    */
-  has_been_directly_modified(): boolean {
+  public has_been_directly_modified(): boolean {
     return (
       this._date_last_modification > ModelProcessManager._counter - 1 ||
       ModelProcessManager._force_m
@@ -97,7 +134,7 @@ export class Model {
    * @return {*}  {Process}
    * @memberof Model
    */
-  bind(
+  public bind(
     f: Process | BindProcess | SpinalOnChangeBindModel,
     onchange_construction?: boolean
   ): Process {
@@ -114,8 +151,11 @@ export class Model {
     }
   }
 
-  //  ...
-  unbind(f: Process | BindProcess): void {
+  /**
+   * @param {(Process | BindProcess | Function)} f recommanded to use Process | BindProcess, using Function can lead to error
+   * @memberof Model
+   */
+  public unbind(f: Process | BindProcess | Function): void {
     if (f instanceof Process) {
       this._processes.splice(this._processes.indexOf(f), 1);
       f._models.splice(f._models.indexOf(this), 1);
@@ -137,7 +177,7 @@ export class Model {
    * @return {*}  {*}
    * @memberof Model
    */
-  get(): any {
+  public get(): any {
     const res: { [key: string]: any } = {};
     for (const name of this._attribute_names) {
       Object.assign(res, { [name]: (<Model>this[name]).get() });
@@ -154,7 +194,7 @@ export class Model {
    * @return {*}  {boolean}
    * @memberof Model
    */
-  set(value: any): boolean {
+  public set(value: any): boolean {
     if (this._set(value)) {
       // change internal data
       this._signal_change();
@@ -168,7 +208,7 @@ export class Model {
    * @param {string} str
    * @memberof Model
    */
-  set_state(str: string): void {
+  public set_state(str: string): void {
     const map: IStateMap<Model> = {};
     const lst = str.split('\n');
     const mid = lst.shift();
@@ -189,8 +229,13 @@ export class Model {
     this._set_state(map[mid].data, map);
   }
 
-  // return a string which describes the changes in this and children since date
-  get_state(date: number = -1): string {
+  /**
+   * return a string which describes the changes in this and children since date
+   * @param {number} [date=-1]
+   * @return {*}  {string}
+   * @memberof Model
+   */
+  public get_state(date: number = -1): string {
     // get sub models
     const fmm: { [id: number]: Model } = {};
     this._get_flat_model_map(fmm, date);
@@ -207,11 +252,19 @@ export class Model {
   }
 
   /**
+   * add attribute
    * @param {{ [nameAttr: string]: any }} object
    * @memberof Model
    */
   public add_attr(object: { [nameAttr: string]: any }): void;
   /**
+   * @param {string} name
+   * @param {*} [instanceOfModel]
+   * @param {boolean} [signal_change]
+   * @memberof Model
+   */
+  /**
+   * add attribute
    * @param {string} name
    * @param {*} [instanceOfModel]
    * @param {boolean} [signal_change]
@@ -232,7 +285,7 @@ export class Model {
    * @param {boolean} [signal_change=true]
    * @memberof Model
    */
-  add_attr(
+  public add_attr(
     name: string | { [nameAttr: string]: any },
     instanceOfModel?: any,
     signal_change: boolean = true
@@ -276,7 +329,7 @@ export class Model {
    * @param {boolean} [signal_change=true]
    * @memberof Model
    */
-  rem_attr(name: string, signal_change: boolean = true): void {
+  public rem_attr(name: string, signal_change: boolean = true): void {
     const item = this[name];
     if (item instanceof Model) {
       let i = item._parents.indexOf(this);
@@ -305,7 +358,7 @@ export class Model {
    * @return {*}  {void}
    * @memberof Model
    */
-  mod_attr(
+  public mod_attr(
     name: string,
     instanceOfModel: any,
     signal_change: boolean = true
@@ -319,10 +372,10 @@ export class Model {
   /**
    * add / mod / rem attr to get the same data than o
    *  (assumed to be something like { key: val, ... })
-   * @param {object} instanceOfModel
+   * @param {{ [key: string]: any }} instanceOfModel
    * @memberof Model
    */
-  set_attr(instanceOfModel: { [key: string]: any }): void {
+  public set_attr(instanceOfModel: { [key: string]: any }): void {
     // new ones / updates
     for (const k in instanceOfModel) {
       this.mod_attr(k, instanceOfModel[k]);
@@ -339,17 +392,17 @@ export class Model {
    * @return {*}  {(number | number[])}
    * @memberof Model
    */
-  size(_for_display = 0): number | number[] {
+  public size(_for_display: number = 0): number | number[] {
     return [];
   }
 
   /**
    * dimensionnality of the object -> 0 for a scalar, 1 for a vector, ...
-   * @param {boolean} [_for_display]
-   * @return {*} {number}
+   * @param {number} [_for_display=0]
+   * @return {*}  {number}
    * @memberof Model
    */
-  dim(_for_display = 0): number {
+  public dim(_for_display: number = 0): number {
     const size = this.size(_for_display);
     return Array.isArray(size) ? size.length : size;
   }
@@ -359,7 +412,7 @@ export class Model {
    * @return {*}  {boolean}
    * @memberof Model
    */
-  equals(m: Model): boolean {
+  public equals(m: Model): boolean {
     if (this === m) return true;
     if (this._attribute_names.length !== m._attribute_names.length)
       return false;
@@ -388,7 +441,9 @@ export class Model {
    * @return {*}  {Model[]}
    * @memberof Model
    */
-  get_parents_that_check(func_to_check: (model: Model) => boolean): Model[] {
+  public get_parents_that_check(
+    func_to_check: (model: Model) => boolean
+  ): Model[] {
     const res: Model[] = [];
     const visited: {
       [attrName: string]: boolean;
@@ -401,7 +456,7 @@ export class Model {
    * @return {*}  {Model}
    * @memberof Model
    */
-  deep_copy(): Model {
+  public deep_copy(): Model {
     const tmp: { [key: string]: Model } = {};
     for (const key of this._attribute_names) {
       tmp[key] = this[key].deep_copy();
@@ -418,7 +473,7 @@ export class Model {
    * @return {*}  {boolean}
    * @memberof Model
    */
-  real_change(): boolean {
+  public real_change(): boolean {
     if (this.has_been_directly_modified() && !this._attribute_names.length) {
       return true;
     }
@@ -438,11 +493,12 @@ export class Model {
   }
 
   /**
+   * To be redifined in children if needed
    * @param {string} name
    * @return {*}  {boolean}
    * @memberof Model
    */
-  cosmetic_attribute(name: string): boolean {
+  public cosmetic_attribute(name: string): boolean {
     return false;
   }
 
@@ -451,7 +507,7 @@ export class Model {
    * @return {*}  {string}
    * @memberof Model
    */
-  _get_state(): string {
+  protected _get_state(): string {
     return this._attribute_names
       .map(
         (attrName: string): string => `${attrName}:${this[attrName].model_id}`
@@ -465,7 +521,7 @@ export class Model {
    * @return {*}  {string}
    * @memberof Model
    */
-  _get_fs_data(out: IFsData): void {
+  public _get_fs_data(out: IFsData): void {
     FileSystem.set_server_id_if_necessary(out, this);
     const data = this._attribute_names
       .map((attrName: string): string => {
@@ -481,11 +537,12 @@ export class Model {
    * may be redefined.
    * by default, add attributes using keys and values (and remove old unused values)
    * must return true if data is changed
-   * @param {(Model | object)} value
+   * @protected
+   * @param {*} value
    * @return {*}  {boolean}
    * @memberof Model
    */
-  _set(value: any): boolean {
+  protected _set(value: any): boolean {
     let change = 0;
     const used: { [attrName: string]: boolean } = {};
 
@@ -524,11 +581,14 @@ export class Model {
   /**
    * called by set. change_level should not be defined by the user
    *  (it permits to != change from child of from this)
+   * @protected
    * @param {number} [change_level=2]
    * @return {*}  {ReturnType<typeof setTimeout>}
    * @memberof Model
    */
-  _signal_change(change_level = 2): ReturnType<typeof setTimeout> {
+  protected _signal_change(
+    change_level: number = 2
+  ): ReturnType<typeof setTimeout> {
     if (change_level === 2 && this._server_id != null) {
       FileSystem.signal_change(this);
     }
@@ -552,7 +612,7 @@ export class Model {
    * @param {IStateMap} map
    * @memberof Model
    */
-  _set_state(str: string, map: IStateMap<Model>): void {
+  public _set_state(str: string, map: IStateMap<Model>): void {
     const used: { [attrName: string]: boolean } = {}; // used attributes. Permits to know what to destroy
     if (str.length) {
       for (const spl of str.split(',')) {
@@ -588,12 +648,13 @@ export class Model {
 
   /**
    * see get_parents_that_check
+   * @private
    * @param {Model[]} res
    * @param {{ [attrName: string]: boolean }} visited
    * @param {(model: Model) => boolean} func_to_check
    * @memberof Model
    */
-  _get_parents_that_check_rec(
+  private _get_parents_that_check_rec(
     res: Model[],
     visited: { [attrName: string]: boolean },
     func_to_check: (model: Model) => boolean
@@ -613,14 +674,17 @@ export class Model {
   /**
    * return true if info from map[ mid ] if compatible with this.
    * If it's the case, use this information to update data
+   * @protected
    * @param {string} mid
-   * @param {IStateMap} map
+   * @param {IStateMap<Model>} map
    * @return {*}  {boolean}
    * @memberof Model
    */
-  _set_state_if_same_type(mid: string, map: IStateMap<Model>): boolean {
-    var dat;
-    dat = map[mid];
+  protected _set_state_if_same_type(
+    mid: string,
+    map: IStateMap<Model>
+  ): boolean {
+    const dat = map[mid];
     if (ModelProcessManager.get_object_class(this) === dat.type) {
       dat.buff = this;
       this._set_state(dat.data, map);
@@ -631,11 +695,16 @@ export class Model {
 
   /**
    * map[ id ] = obj for each objects starting from this recursively
-   * @param {{ [id: number]: Model }} map
+   * @protected
+   * @param {IFlatModelMap} map
    * @param {number} date
+   * @return {*}  {IFlatModelMap}
    * @memberof Model
    */
-  _get_flat_model_map(map: IFlatModelMap, date: number): IFlatModelMap {
+  protected _get_flat_model_map(
+    map: IFlatModelMap,
+    date: number
+  ): IFlatModelMap {
     map[this.model_id] = this;
     for (const name of this._attribute_names) {
       const obj: Model = this[name];

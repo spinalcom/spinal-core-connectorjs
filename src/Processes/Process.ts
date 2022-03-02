@@ -27,7 +27,7 @@ import { Model } from '../Models/Model';
 import { isIterable } from '../Utils/isIterable';
 
 export class Process {
-  static readonly _constructorName: string = 'Process';
+  static _constructorName: string = 'Process';
   process_id: number;
   _models: Model[] = []; // what this is observing
 

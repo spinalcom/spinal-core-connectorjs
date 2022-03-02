@@ -31,13 +31,39 @@ import type { SpinalSortFunction } from '../interfaces/SpinalSortFunction';
 import { ModelProcessManager } from '../ModelProcessManager';
 import { Model } from './Model';
 
+/**
+ * Bese representation of an Array
+ * @export
+ * @class Lst
+ * @extends {Model}
+ * @template T
+ */
 export class Lst<T extends Model = any> extends Model {
-  static readonly _constructorName: string = 'Lst';
-  readonly _constructorName: string = Lst._constructorName;
+  /**
+   * @static
+   * @type {string}
+   * @memberof Lst
+   */
+  public static _constructorName: string = 'Lst';
 
+  /**
+   * @type {string}
+   * @memberof Lst
+   */
+  public _constructorName: string = Lst._constructorName;
+
+  /**
+   * @type {number}
+   * @memberof Lst
+   */
   public length: number = 0;
 
-  constructor(data?: any) {
+  /**
+   * Creates an instance of Lst.
+   * @param {*} [data]
+   * @memberof Lst
+   */
+  public constructor(data?: any) {
     super();
     const s = this.static_length();
     if (s >= 0) {
@@ -50,33 +76,57 @@ export class Lst<T extends Model = any> extends Model {
     if (data) this._set(data);
   }
 
-  static_length(): number {
+  /**
+   * @return {*}  {number}
+   * @memberof Lst
+   */
+  public static_length(): number {
     return -1;
   }
 
-  default_value(): number {
+  /**
+   * @protected
+   * @return {*}  {number}
+   * @memberof Lst
+   */
+  protected default_value(): number {
     return 0;
   }
 
-  base_type(): any {
+  /**
+   * @protected
+   * @return {*}  {*}
+   * @memberof Lst
+   */
+  protected base_type(): any {
     return undefined;
   }
 
-  get(): Array<T> {
+  /**
+   * @return {*}  {ReturnType<T['get']>[]}
+   * @memberof Lst
+   */
+  public get(): ReturnType<T['get']>[] {
     const res = [];
-
     for (let i = 0; i < this.length; i++) {
       if (this[i]) res.push(this[i].get());
     }
-
     return res;
   }
 
-  size(): any {
+  /**
+   * @return {*}  {[number]}
+   * @memberof Lst
+   */
+  public size(): [number] {
     return [this.length];
   }
 
-  toString(): string {
+  /**
+   * @return {*}  {string}
+   * @memberof Lst
+   */
+  public toString(): string {
     let res = [];
 
     for (let i = 0; i < this.length; i++) {
@@ -86,24 +136,31 @@ export class Lst<T extends Model = any> extends Model {
     return '';
   }
 
-  equals(lst: Lst<T>): boolean {
+  /**
+   * @param {Lst<T>} lst
+   * @return {*}  {boolean}
+   * @memberof Lst
+   */
+  public equals(lst: Lst<T>): boolean {
     if (lst.length !== this.length) return false;
     for (let i = 0; i < this.length; i++) {
       if (!this[i].equals(lst[i])) return false;
     }
-
     return true;
   }
 
-  push(value: T, force: boolean = false): void {
+  /**
+   * @param {*} value
+   * @param {boolean} [force=false]
+   * @return {*}  {void}
+   * @memberof Lst
+   */
+  public push(value: any, force: boolean = false): void {
     if (this._static_size_check(force)) return;
-
     let b = this.base_type();
-
     if (b) {
       if (!(value instanceof b)) value = new b(value);
     } else {
-      // @ts-ignore
       value = ModelProcessManager.conv(value);
     }
 
@@ -115,46 +172,45 @@ export class Lst<T extends Model = any> extends Model {
     this._signal_change();
   }
 
-  pop(): T {
-    if (this._static_size_check(false)) {
-      return;
-    }
-
+  /**
+   * @return {*}  {T}
+   * @memberof Lst
+   */
+  public pop(): T {
+    if (this._static_size_check(false)) return;
     if (this.length <= 0) return;
-
     const res = this[--this.length];
     this.rem_attr(this.length.toString(10));
     return res;
   }
 
-  clear(): void {
+  /**
+   * @memberof Lst
+   */
+  public clear(): void {
     while (this.length) {
       this.pop();
     }
   }
 
-  unshift(value: any): number {
+  /**
+   * @param {*} value
+   * @return {*}  {number}
+   * @memberof Lst
+   */
+  public unshift(value: any): number {
     if (this._static_size_check(false)) {
       return;
     }
     const b = this.base_type();
     if (b != null) {
-      if (!(value instanceof b)) {
-        value = new b(value);
-      }
-    } else {
-      value = <unknown>ModelProcessManager.conv(value);
-    }
-    if (value._parents.indexOf(this) < 0) {
-      value._parents.push(this);
-    }
+      if (!(value instanceof b)) value = new b(value);
+    } else value = ModelProcessManager.conv(value);
+
+    if (value._parents.indexOf(this) < 0) value._parents.push(this);
+
     if (this.length) {
-      let i, j, ref;
-      for (
-        i = j = ref = this.length - 1;
-        ref <= 0 ? j <= 0 : j >= 0;
-        i = ref <= 0 ? ++j : --j
-      ) {
+      for (let i = this.length - 1; i >= 0; i--) {
         this[i + 1] = this[i];
       }
     }
@@ -164,77 +220,132 @@ export class Lst<T extends Model = any> extends Model {
     return this.length;
   }
 
-  shift(): T {
+  /**
+   * @return {*}  {T}
+   * @memberof Lst
+   */
+  public shift(): T {
     const res = this[0];
     this.slice(0, 1);
     return res;
   }
 
-  remove(item: T): void {
+  /**
+   * @param {T} item
+   * @memberof Lst
+   */
+  public remove(item: T): void {
     const index = this.indexOf(item);
     if (index >= 0) this.slice(index, 1);
   }
 
-  remove_ref(item: T): void {
+  /**
+   * @param {T} item
+   * @memberof Lst
+   */
+  public remove_ref(item: T): void {
     const index = this.indexOf_ref(item);
     if (index >= 0) this.slice(index, 1);
   }
 
-  filter(f: SpinalFilterFunction<T>): T[] {
+  /**
+   * @param {SpinalFilterFunction<T>} f
+   * @return {*}  {T[]}
+   * @memberof Lst
+   */
+  public filter(f: SpinalFilterFunction<T>): T[] {
     const res = [];
     for (let i = 0; i < this.length; i++) {
       if (f(this[i])) res.push(this[i]);
     }
-
     return res;
   }
 
-  detect(f: SpinalFilterFunction<T>): T {
+  /**
+   * @param {SpinalFilterFunction<T>} f
+   * @return {*}  {T}
+   * @memberof Lst
+   */
+  public detect(f: SpinalFilterFunction<T>): T {
     for (let i = 0; i < this.length; i++) {
       if (f(this[i])) return this[i];
     }
     return undefined;
   }
 
-  sorted(sort: SpinalSortFunction<T>): Array<T> {
+  /**
+   * @param {SpinalSortFunction<T>} sort
+   * @return {*}  {Array<T>}
+   * @memberof Lst
+   */
+  public sorted(sort: SpinalSortFunction<T>): Array<T> {
     const res = [];
     for (let i = 0; i < this.length; i++) {
       res.push(this[i]);
     }
-
     return res.sort(sort);
   }
 
-  has(f: SpinalFilterFunction<T>): boolean {
+  /**
+   * @param {SpinalFilterFunction<T>} f
+   * @return {*}  {boolean}
+   * @memberof Lst
+   */
+  public has(f: SpinalFilterFunction<T>): boolean {
     for (let i = 0; i < this.length; i++) {
       if (f(this[i])) return true;
     }
     return false;
   }
 
-  indexOf(value: T): 1 | -1 {
+  /**
+   * @param {T} value
+   * @return {*}  {(1 | -1)}
+   * @memberof Lst
+   */
+  public indexOf(value: T): 1 | -1 {
     for (let i = 0; i < this.length; i++) {
       if (this[i].equals(value)) return 1;
     }
     return -1;
   }
 
-  indexOf_ref(value: T): number {
+  /**
+   * @param {T} value
+   * @return {*}  {number}
+   * @memberof Lst
+   */
+  public indexOf_ref(value: T): number {
     for (let i = 0; i < this.length; i++) {
       if (this[i] == value) return i;
     }
     return -1;
   }
 
-  contains(value: T): boolean {
+  /**
+   * @param {T} value
+   * @return {*}  {boolean}
+   * @memberof Lst
+   */
+  public contains(value: T): boolean {
     return this.indexOf(value) !== -1;
   }
 
-  contains_ref(value: T): boolean {
+  /**
+   * @param {T} value
+   * @return {*}  {boolean}
+   * @memberof Lst
+   */
+  public contains_ref(value: T): boolean {
     return this.indexOf_ref(value) !== -1;
   }
 
-  toggle(value: T): boolean {
+  /**
+   * @param {T} value
+   * @return {*}  {boolean}
+   * @memberof Lst
+   */
+  public toggle(value: T): boolean {
     const index = this.indexOf(value);
     if (index !== -1) {
       this.splice(index);
@@ -245,7 +356,12 @@ export class Lst<T extends Model = any> extends Model {
     }
   }
 
-  toggle_ref(value: T): boolean {
+  /**
+   * @param {T} value
+   * @return {*}  {boolean}
+   * @memberof Lst
+   */
+  public toggle_ref(value: T): boolean {
     const index = this.indexOf_ref(value);
     if (index !== -1) {
       this.splice(index);
@@ -256,20 +372,30 @@ export class Lst<T extends Model = any> extends Model {
     }
   }
 
-  slice(begin: number, end: number = this.length): Lst<T> {
+  /**
+   * @param {number} begin
+   * @param {number} [end=this.length]
+   * @return {*}  {Lst<T>}
+   * @memberof Lst
+   */
+  public slice(begin: number, end: number = this.length): Lst<T> {
     const res = new Lst<T>();
 
     if (begin < 0) begin = 0;
     if (end > this.length) end = this.length;
-
     for (let i = begin; i < end; i++) {
       res.push(this[i].get());
     }
-
     return res;
   }
 
-  concat(new_tab: Lst<T>, force: boolean = false): void {
+  /**
+   * @param {Lst<T>} new_tab
+   * @param {boolean} [force=false]
+   * @return {*}  {void}
+   * @memberof Lst
+   */
+  public concat(new_tab: Lst<T>, force: boolean = false): void {
     if (this._static_size_check(force)) return;
 
     if (new_tab.length) {
@@ -279,29 +405,28 @@ export class Lst<T extends Model = any> extends Model {
     }
   }
 
-  splice(index: number, n: number = 1): void {
+  /**
+   * @param {number} index
+   * @param {number} [n=1]
+   * @return {*}  {void}
+   * @memberof Lst
+   */
+  public splice(index: number, n: number = 1): void {
     if (this._static_size_check(false)) return;
-
     const end = Math.min(index + n, this.length);
-
-    for (let i = index; i < end; i++) {
-      this.rem_attr(i.toString(0));
-    }
-
-    for (let i = index; i < this.length - n; i++) {
-      this[i] = this[i + n];
-    }
-
-    for (let i = this.length - n; i < this.length; i++) {
-      delete this[i];
-    }
-
+    for (let i = index; i < end; i++) this.rem_attr(i.toString(0));
+    for (let i = index; i < this.length - n; i++) this[i] = this[i + n];
+    for (let i = this.length - n; i < this.length; i++) delete this[i];
     this.length -= n;
-
     this._signal_change();
   }
 
-  insert(index: number, lst: Lst<T>): void {
+  /**
+   * @param {number} index
+   * @param {Lst<T>} lst
+   * @memberof Lst
+   */
+  public insert(index: number, lst: Lst<T>): void {
     const end = Math.max(this.length - index, 0);
     const res = [];
     for (let i = 0; i < end; i++) {
@@ -316,7 +441,13 @@ export class Lst<T extends Model = any> extends Model {
     }
   }
 
-  set_or_push(index: number, val: T) {
+  /**
+   * @param {number} index
+   * @param {T} val
+   * @return {*}  {void}
+   * @memberof Lst
+   */
+  public set_or_push(index: number, val: T): void {
     if (index < this.length) {
       // @ts-ignore
       return this.mod_attr(index, val);
@@ -326,40 +457,61 @@ export class Lst<T extends Model = any> extends Model {
     }
   }
 
-  trim(size: number): void {
+  /**
+   * @param {number} size
+   * @memberof Lst
+   */
+  public trim(size: number): void {
     while (this.length > size) this.pop();
   }
-  join(sep: string) {
+
+  /**
+   * @param {string} sep
+   * @return {*}  {string}
+   * @memberof Lst
+   */
+  public join(sep: string): string {
     return this.get().join(sep);
   }
 
-  deep_copy(): any {
+  /**
+   * @return {*}  {Lst<T>}
+   * @memberof Lst
+   */
+  public deep_copy(): Lst<T> {
     const res = new Lst();
-
-    for (let i = 0; i < this.length; i++) {
-      res.push(this[i].deep_copy());
-    }
-
+    for (let i = 0; i < this.length; i++) res.push(this[i].deep_copy());
     return res;
   }
 
-  back() {
+  /**
+   * @return {*}  {T}
+   * @memberof Lst
+   */
+  public back(): T {
     return this[this.length - 1];
   }
 
-  real_change(): boolean {
+  /**
+   * @return {*}  {boolean}
+   * @memberof Lst
+   */
+  public real_change(): boolean {
     if (this.has_been_directly_modified()) return true;
-
     for (let i = 0; i < this.length; i++) {
       if (this[i].real_change()) return true;
     }
-
     return false;
   }
 
-  _set(value: Lst<T>): boolean {
+  /**
+   * @protected
+   * @param {Lst<T>} value
+   * @return {*}  {boolean}
+   * @memberof Lst
+   */
+  protected _set(value: Lst<T>): boolean {
     let change = Number(this.length != value.length);
-
     const s = this.static_length();
 
     if (s >= 0 && change) {
@@ -380,16 +532,23 @@ export class Lst<T extends Model = any> extends Model {
       while (this.length > value.length) {
         this.pop();
       }
-
       this.length = value.length;
     }
-
     return Boolean(change);
   }
 
-  _get_flat_model_map(map: IFlatModelMap, date: number): IFlatModelMap {
+  /**
+   * @protected
+   * @param {IFlatModelMap} map
+   * @param {number} date
+   * @return {*}  {IFlatModelMap}
+   * @memberof Lst
+   */
+  protected _get_flat_model_map(
+    map: IFlatModelMap,
+    date: number
+  ): IFlatModelMap {
     map[this.model_id] = this;
-
     for (let i = 0; i < this.length; i++) {
       if (!map.hasOwnProperty(this[i]))
         if (this[i]._date_last_modification > date)
@@ -398,7 +557,11 @@ export class Lst<T extends Model = any> extends Model {
     return map;
   }
 
-  _get_fs_data(out: IFsData): void {
+  /**
+   * @param {IFsData} out
+   * @memberof Lst
+   */
+  public _get_fs_data(out: IFsData): void {
     FileSystem.set_server_id_if_necessary(out, this);
     const res = [];
     for (let i = 0; i < this.length; i++) {
@@ -409,16 +572,25 @@ export class Lst<T extends Model = any> extends Model {
     out.mod += `C ${this._server_id} ${res.join(',')} `;
   }
 
-  _get_state(): string {
+  /**
+   * @protected
+   * @return {*}  {string}
+   * @memberof Lst
+   */
+  protected _get_state(): string {
     const res = [];
     for (let i = 0; i < this.length; i++) {
       res.push(this[i].model_id);
     }
-
     return res.join(',');
   }
 
-  _set_state(str: string, map: IStateMap<T>): void {
+  /**
+   * @param {string} str
+   * @param {IStateMap<T>} map
+   * @memberof Lst
+   */
+  public _set_state(str: string, map: IStateMap<T>): void {
     const l_id = str.split(',').filter((x) => {
       return x.length;
     });
@@ -446,7 +618,12 @@ export class Lst<T extends Model = any> extends Model {
     }
   }
 
-  _static_size_check(force: boolean): boolean {
+  /**
+   * @param {boolean} force
+   * @return {*}  {boolean}
+   * @memberof Lst
+   */
+  public _static_size_check(force: boolean): boolean {
     if (this.static_length() >= 0 && !force) {
       console.error(
         `resizing a static array (type ` +
@@ -457,9 +634,13 @@ export class Lst<T extends Model = any> extends Model {
     return false;
   }
 
-  *[Symbol.iterator](): Generator<T, void, unknown> {
-    for (const key of this._attribute_names) {
-      yield <T>this[key]; // yield [key, value] pair
+  /**
+   * @return {*}  {Generator<T, void, unknown>}
+   * @memberof Lst
+   */
+  public *[Symbol.iterator](): Generator<T, void, unknown> {
+    for (let i = 0; i < this.length; i++) {
+      yield <T>this[i];
     }
   }
 }

@@ -29,16 +29,19 @@ import { Model } from './Model';
 export abstract class TypedArray<
   T extends Int32Array | Float64Array
 > extends Model {
-  static readonly _constructorName: string = 'TypedArray';
-  readonly _constructorName: string = TypedArray._constructorName;
+  public static _constructorName: string = 'TypedArray';
+  public _constructorName: string = TypedArray._constructorName;
 
-  _size: number[];
-  _data: T;
+  public _size: number[];
+  public _data: T;
 
-  // size can be
-  //  - a number
-  //  - a list of number
-  constructor(size?: number | number[], data?: T) {
+  /**
+   * Creates an instance of TypedArray.
+   * @param {(number | number[])} [size]
+   * @param {T} [data]
+   * @memberof TypedArray
+   */
+  protected constructor(size?: number | number[], data?: T) {
     super();
     // size
     let tmpSize: number[];
@@ -52,23 +55,32 @@ export abstract class TypedArray<
     // data
     if (data == null) {
       const B = this.base_type();
-      // @ts-ignore
       if (B) data = B.from(this.nb_items());
     }
-    // @ts-ignore
     this._data = data;
   }
 
-  base_type(): any {
-    return;
-  }
+  /**
+   * @abstract
+   * @return {*}  {*}
+   * @memberof TypedArray
+   */
+  public abstract base_type(): any;
 
-  // -> to be defined by children
-  dim(): number {
+  /**
+   * @return {*}  {number}
+   * @memberof TypedArray
+   */
+  public dim(): number {
     return this._size.length;
   }
 
-  size(d?: number): number | number[] {
+  /**
+   * @param {number} [d]
+   * @return {*}  {(number | number[])}
+   * @memberof TypedArray
+   */
+  public size(d?: number): number | number[] {
     if (d != null) {
       return this._size[d];
     } else {
@@ -76,7 +88,12 @@ export abstract class TypedArray<
     }
   }
 
-  set_val(index: number[] | number, value: any): void {
+  /**
+   * @param {(number[] | number)} index
+   * @param {*} value
+   * @memberof TypedArray
+   */
+  public set_val(index: number[] | number, value: any): void {
     const idx = this._get_index(index);
     if (this._data[idx] !== value) {
       this._data[idx] = value;
@@ -84,7 +101,11 @@ export abstract class TypedArray<
     }
   }
 
-  nb_items(): number {
+  /**
+   * @return {*}  {number}
+   * @memberof TypedArray
+   */
+  public nb_items(): number {
     let total = this._size[0] || 0;
     for (let j = 1; j < this._size.length; j++) {
       total *= this._size[j];
@@ -92,7 +113,11 @@ export abstract class TypedArray<
     return total;
   }
 
-  toString(): string {
+  /**
+   * @return {*}  {string}
+   * @memberof TypedArray
+   */
+  public toString(): string {
     let m = 1;
     let res = '';
     let l = this._size.map((s: number): number => {
@@ -114,7 +139,12 @@ export abstract class TypedArray<
     return res;
   }
 
-  equals(obj: TypedArray<any> | any): boolean {
+  /**
+   * @param {(TypedArray<any> | any)} obj
+   * @return {*}  {boolean}
+   * @memberof TypedArray
+   */
+  public equals(obj: TypedArray<any> | any): boolean {
     if (!(obj instanceof TypedArray)) return this._data === obj;
     if (this._size.length !== obj._size.length) {
       return false;
@@ -129,18 +159,26 @@ export abstract class TypedArray<
     return this._data === obj._data;
   }
 
-  get(index?: number): number | T {
+  /**
+   * @param {number} [index]
+   * @return {*}  {(number | T)}
+   * @memberof TypedArray
+   */
+  public get(index?: number): number | T {
     if (typeof index !== 'undefined') return this._data[this._get_index(index)];
     return this._data;
   }
 
-  resize(new_size: number[]) {
+  /**
+   * @param {number[]} new_size
+   * @memberof TypedArray
+   */
+  public resize(new_size: number[]): void {
     let total = 1;
     for (let i = 0; i < new_size.length; i++) {
       total *= new_size[i];
     }
     const BaseType = this.base_type();
-    // @ts-ignore
     const instance = BaseType.from(total);
     instance.set(this._data);
     this._data = instance;
@@ -148,7 +186,13 @@ export abstract class TypedArray<
     this._signal_change();
   }
 
-  _set(str: any): boolean {
+  /**
+   * @protected
+   * @param {*} str
+   * @return {*}  {boolean}
+   * @memberof TypedArray
+   */
+  protected _set(str: any): boolean {
     if (typeof str === 'string') {
       // TODO optimize
       this._set_state(str);
@@ -168,7 +212,13 @@ export abstract class TypedArray<
     return false;
   }
 
-  _get_index(index: number[] | number): number {
+  /**
+   * @private
+   * @param {(number[] | number)} index
+   * @return {*}  {number}
+   * @memberof TypedArray
+   */
+  private _get_index(index: number[] | number): number {
     if (Array.isArray(index)) {
       let o = 0;
       let m = 1;
@@ -181,12 +231,21 @@ export abstract class TypedArray<
     return index;
   }
 
-  _get_fs_data(out: IFsData): void {
+  /**
+   * @param {IFsData} out
+   * @memberof TypedArray
+   */
+  public _get_fs_data(out: IFsData): void {
     FileSystem.set_server_id_if_necessary(out, this);
     out.mod += `C ${this._server_id} ${this._get_state()} `;
   }
 
-  _get_state(): string {
+  /**
+   * @protected
+   * @return {*}  {string}
+   * @memberof TypedArray
+   */
+  protected _get_state(): string {
     let res = this._size.length.toString(10);
     for (let i = 0; i < this._size.length; i++) {
       res += `, ${this._size[i]}`;
@@ -197,7 +256,11 @@ export abstract class TypedArray<
     return res;
   }
 
-  _set_state(str: string): void {
+  /**
+   * @param {string} str
+   * @memberof TypedArray
+   */
+  public _set_state(str: string): void {
     const l = str.split(',');
     let s = parseInt(l[0]);
     const size = [];

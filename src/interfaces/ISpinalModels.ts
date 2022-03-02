@@ -22,6 +22,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
+/**
+ * @export
+ * @interface ISpinalModel
+ */
 export interface ISpinalModel {
   [key: string]: any;
 }

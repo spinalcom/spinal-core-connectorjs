@@ -25,11 +25,31 @@
 import type { Model } from '../../Models/Model';
 import { Ptr } from './Ptr';
 
+/**
+ * @export
+ * @class Pbr
+ * @extends {Ptr<T>}
+ * @template T
+ */
 export class Pbr<T extends Model = any> extends Ptr<T> {
-  static readonly _constructorName: string = 'Pbr';
-  readonly _constructorName: string = Pbr._constructorName;
+  /**
+   * @static
+   * @type {string}
+   * @memberof Pbr
+   */
+  public static _constructorName: string = 'Pbr';
+  /**
+   * @type {string}
+   * @memberof Pbr
+   */
+  public _constructorName: string = Pbr._constructorName;
 
-  constructor(model: any) {
+  /**
+   * Creates an instance of Pbr.
+   * @param {*} model
+   * @memberof Pbr
+   */
+  public constructor(model: any) {
     super(model);
   }
 }

@@ -22,40 +22,11 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import { Model } from '../../Models/Model';
-
 /**
  * @export
- * @class UserRight
- * @extends {Model}
+ * @interface IFileInfoOption
  */
-export class UserRight extends Model {
-  /**
-   * @static
-   * @type {string}
-   * @memberof UserRight
-   */
-  public static _constructorName: string = 'UserRight';
-  /**
-   * @type {string}
-   * @memberof UserRight
-   */
-  public _constructorName: string = UserRight._constructorName;
-
-  /**
-   * Creates an instance of UserRight.
-   * @memberof UserRight
-   */
-  public constructor() {
-    super();
-  }
-
-  /**
-   * @return {*}  {boolean}
-   * @memberof UserRight
-   */
-  public set(): boolean {
-    console.error('Set a UserRight is not allowed.');
-    return false;
-  }
+export interface IFileInfoOption {
+  model_type?: string;
+  [key: string]: any;
 }

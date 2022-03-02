@@ -22,6 +22,10 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
+/**
+ * @export
+ * @interface IFsData
+ */
 export interface IFsData {
   cre: string;
   mod: string;

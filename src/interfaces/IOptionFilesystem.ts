@@ -21,41 +21,40 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-
-import { Model } from '../../Models/Model';
+/**
+ * @export
+ * @interface IOptionFileSystem
+ */
+export interface IOptionFileSystem {
+  url: string;
+  port?: string | number;
+  userid?: string | number;
+  password?: string;
+  sessionId?: number;
+  home_dir: string;
+  accessToken?: string;
+}
+/**
+ * @export
+ * @interface IOptionFileSystemWithUser
+ */
+export interface IOptionFileSystemWithUser {
+  url: string;
+  port?: string | number;
+  userid: string | number;
+  password: string;
+  home_dir: string;
+  accessToken?: string;
+}
 
 /**
  * @export
- * @class UserRight
- * @extends {Model}
+ * @interface IOptionFileSystemWithSessionId
  */
-export class UserRight extends Model {
-  /**
-   * @static
-   * @type {string}
-   * @memberof UserRight
-   */
-  public static _constructorName: string = 'UserRight';
-  /**
-   * @type {string}
-   * @memberof UserRight
-   */
-  public _constructorName: string = UserRight._constructorName;
-
-  /**
-   * Creates an instance of UserRight.
-   * @memberof UserRight
-   */
-  public constructor() {
-    super();
-  }
-
-  /**
-   * @return {*}  {boolean}
-   * @memberof UserRight
-   */
-  public set(): boolean {
-    console.error('Set a UserRight is not allowed.');
-    return false;
-  }
+export interface IOptionFileSystemWithSessionId {
+  url: string;
+  port?: string | number;
+  sessionId: number;
+  home_dir: string;
+  accessToken?: string;
 }

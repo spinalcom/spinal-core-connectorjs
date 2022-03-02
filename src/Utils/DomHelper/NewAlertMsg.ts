@@ -42,7 +42,7 @@ export interface INewAlertMsgParam {
  * @class NewAlertMsg
  */
 export class NewAlertMsg {
-  static readonly _constructorName: string = 'NewAlertMsg';
+  static _constructorName: string = 'NewAlertMsg';
   private background: HTMLElement;
   private footer: HTMLElement;
   private popup: HTMLElement;

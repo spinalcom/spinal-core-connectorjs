@@ -26,7 +26,7 @@ import type { Model } from '../Models/Model';
 import { Process } from './Process';
 
 export class BindProcess extends Process {
-  static readonly _constructorName: string = 'BindProcess';
+  static _constructorName: string = 'BindProcess';
   f: () => void;
 
   constructor(

@@ -25,30 +25,68 @@ import { FileSystem } from '../FileSystem/FileSystem';
 import type { IFsData } from '../interfaces/IFsData';
 import { Obj } from './Obj';
 
+/**
+ * Bese representation of a Boolean
+ * @export
+ * @class Bool
+ * @extends {Obj<boolean>}
+ */
 export class Bool extends Obj<boolean> {
-  static readonly _constructorName: string = 'Bool';
-  readonly _constructorName: string = Bool._constructorName;
+  /**
+   * @static
+   * @type {string}
+   * @memberof Bool
+   */
+  public static _constructorName: string = 'Bool';
+  /**
+   * @type {string}
+   * @memberof Bool
+   */
+  public _constructorName: string = Bool._constructorName;
 
-  constructor(data: boolean | Bool = false) {
+  /**
+   * Creates an instance of Bool.
+   * @param {(boolean | Bool)} [data=false]
+   * @memberof Bool
+   */
+  public constructor(data: boolean | Bool = false) {
     super();
     this._set(data);
   }
 
-  // toggle true / false ( 1 / 0 )
-  toggle(): boolean {
+  /**
+   * toggle true / false ( 1 / 0 )
+   * @return {*}  {boolean}
+   * @memberof Bool
+   */
+  public toggle(): boolean {
     return this.set(!this._data);
   }
 
-  toBoolean(): boolean {
+  /**
+   * @return {*}  {boolean}
+   * @memberof Bool
+   */
+  public toBoolean(): boolean {
     return this._data;
   }
 
-  deep_copy(): Bool {
+  /**
+   * @return {*}  {Bool}
+   * @memberof Bool
+   */
+  public deep_copy(): Bool {
     return new Bool(this._data);
   }
 
-  // we do not take _set from Obj because we want a conversion if value is not a boolean
-  _set(value: string | boolean | Bool): boolean {
+  /**
+   * we do not take _set from Obj because we want a conversion if value is not a boolean
+   * @protected
+   * @param {(string | boolean | Bool)} value
+   * @return {*}  {boolean}
+   * @memberof Bool
+   */
+  protected _set(value: string | boolean | Bool): boolean {
     let n: boolean;
     if (value === 'false') n = false;
     else if (value === 'true') n = true;
@@ -61,7 +99,11 @@ export class Bool extends Obj<boolean> {
     return false;
   }
 
-  _get_fs_data(out: IFsData): void {
+  /**
+   * @param {IFsData} out
+   * @memberof Bool
+   */
+  public _get_fs_data(out: IFsData): void {
     FileSystem.set_server_id_if_necessary(out, this);
     out.mod += `C ${this._server_id} ${this._data ? 1 : 0} `;
   }

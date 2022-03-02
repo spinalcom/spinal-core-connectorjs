@@ -24,19 +24,38 @@
 
 import { TypedArray } from './TypedArray';
 
+/**
+ * @export
+ * @class TypedArray_Float64
+ * @extends {TypedArray<Float64Array>}
+ */
 export class TypedArray_Float64 extends TypedArray<Float64Array> {
-  static readonly _constructorName: string = 'TypedArray_Float64';
-  readonly _constructorName: string = TypedArray_Float64._constructorName;
+  public static _constructorName: string = 'TypedArray_Float64';
+  public _constructorName: string = TypedArray_Float64._constructorName;
 
-  constructor(size?: number | number[], data?: Float64Array) {
+  /**
+   * Creates an instance of TypedArray_Float64.
+   * @param {(number | number[])} [size]
+   * @param {Float64Array} [data]
+   * @memberof TypedArray_Float64
+   */
+  public constructor(size?: number | number[], data?: Float64Array) {
     super(size, data);
   }
 
-  base_type(): typeof TypedArray_Float64 {
+  /**
+   * @return {*}  {typeof TypedArray_Float64}
+   * @memberof TypedArray_Float64
+   */
+  public base_type(): typeof TypedArray_Float64 {
     return TypedArray_Float64;
   }
 
-  deep_copy(): TypedArray_Float64 {
+  /**
+   * @return {*}  {TypedArray_Float64}
+   * @memberof TypedArray_Float64
+   */
+  public deep_copy(): TypedArray_Float64 {
     return new TypedArray_Float64(this._size, this._data);
   }
 }

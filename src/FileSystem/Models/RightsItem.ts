@@ -25,11 +25,30 @@
 import { Lst } from '../../Models/Lst';
 import type { Model } from '../../Models/Model';
 
+/**
+ * @export
+ * @class RightsItem
+ * @extends {Lst<T>}
+ * @template T
+ */
 export class RightsItem<T extends Model = any> extends Lst<T> {
-  static readonly _constructorName: string = 'RightsItem';
-  readonly _constructorName: string = RightsItem._constructorName;
+  /**
+   * @static
+   * @type {string}
+   * @memberof RightsItem
+   */
+  public static _constructorName: string = 'RightsItem';
+  /**
+   * @type {string}
+   * @memberof RightsItem
+   */
+  public _constructorName: string = RightsItem._constructorName;
 
-  constructor() {
+  /**
+   * Creates an instance of RightsItem.
+   * @memberof RightsItem
+   */
+  public constructor() {
     super();
   }
 }

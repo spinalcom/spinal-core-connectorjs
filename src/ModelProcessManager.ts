@@ -98,6 +98,11 @@ export namespace ModelProcessManager {
     return new Model(v);
   }
 
+  /**
+   * @export
+   * @param {Model} obj
+   * @return {*}  {string}
+   */
   export function get_object_class(obj: Model): string {
     if (obj?.constructor) {
       if ('_constructorName' in obj) return obj._constructorName;
@@ -114,6 +119,11 @@ export namespace ModelProcessManager {
     }
   }
 
+  /**
+   * @export
+   * @param {(Model | object)} m
+   * @return {*}  {string[]}
+   */
   export function _get_attribute_names(m: Model | object): string[] {
     if (m instanceof Model) {
       return m._attribute_names;
@@ -128,7 +138,7 @@ export namespace ModelProcessManager {
   }
 
   /**
-   *  create a Model using a line of get_state(using.type, .data, ...)
+   * create a Model using a line of get_state(using.type, .data, ...)
    * @export
    * @template T
    * @param {string} mid
@@ -158,11 +168,27 @@ export namespace ModelProcessManager {
     }
   }
 
+  /**
+   * @export
+   * @param {typeof Model} model
+   * @param {string} [name]
+   */
   export function register_models(model: typeof Model, name?: string): void;
-  export function register_models(modelList: typeof Model[]): void;
-  export function register_models(modelObj: {
-    [key: string]: typeof Model;
-  }): void;
+
+  /**
+   * @export
+   * @param {(typeof Model[]
+   *       | {
+   *           [key: string]: typeof Model;
+   *         })} modelList
+   */
+  export function register_models(
+    modelList:
+      | typeof Model[]
+      | {
+          [key: string]: typeof Model;
+        }
+  ): void;
   export function register_models(
     modelList: typeof Model | typeof Model[] | { [key: string]: typeof Model },
     name?: string
@@ -191,10 +217,16 @@ export namespace ModelProcessManager {
     }
   }
 
+  /**
+   * @export
+   * @param {typeof Model} func
+   * @param {string} [name]
+   */
   export function _register_models_check(
     func: typeof Model,
-    name: string = func.name
+    name?: string
   ): void {
+    if (!name) name = func._constructorName ? func._constructorName : func.name;
     if (
       typeof ModelProcessManager._def[name] !== 'undefined' &&
       ModelProcessManager._def[name] !== func
@@ -243,6 +275,7 @@ export namespace ModelProcessManager {
   }
 
   export const spinal: Partial<{
+    version: string;
     spinalCore: typeof spinalCore;
     FileSystem: typeof FileSystem;
     ModelProcessManager: typeof ModelProcessManager;
@@ -271,5 +304,7 @@ export namespace ModelProcessManager {
     RightSetList: typeof RightSetList;
     RightsItem: typeof RightsItem;
     [key: string]: any;
-  }> = {};
+  }> = {
+    version: /*#__PURE__*/ process.env.PACKAGE_VERSION,
+  };
 }

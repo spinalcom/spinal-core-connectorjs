@@ -23,6 +23,11 @@
  */
 
 import type { IFsData } from '../interfaces/IFsData';
+import type {
+  IOptionFileSystem,
+  IOptionFileSystemWithSessionId,
+  IOptionFileSystemWithUser,
+} from '../interfaces/IOptionFilesystem';
 import type { SpinalLoadCallBack } from '../interfaces/SpinalLoadCallBack';
 import { ModelProcessManager } from '../ModelProcessManager';
 import type { Model } from '../Models/Model';
@@ -30,66 +35,273 @@ import { NewAlertMsg } from '../Utils/DomHelper/NewAlertMsg';
 import { getUrlPath } from '../Utils/getUrlPath';
 import { Directory } from './Models/Directory';
 import type { Path } from './Models/Path';
+import type { RightsItem } from './Models/RightsItem';
 
+/**
+ * intance of the connection to an server
+ * @export
+ * @class FileSystem
+ */
 export class FileSystem {
-  static readonly _constructorName: string = 'FileSystem';
+  static _constructorName: string = 'FileSystem';
   // when object are saved, their _server_id is assigned to a tmp value
+  /**
+   *  set to true to get warning for creating unknown Model type
+   * @static
+   * @type {boolean}
+   * @memberof FileSystem
+   */
   public static debug: boolean = false;
+  /**
+   * if true, print the IO with the server
+   * @static
+   * @type {boolean}
+   * @memberof FileSystem
+   */
   public static _disp: boolean = false;
-  public static popup: NewAlertMsg = undefined;
-  public static _cur_tmp_server_id: number = 0;
+  /**
+   * @private
+   * @static
+   * @type {NewAlertMsg}
+   * @memberof FileSystem
+   */
+  private static popup: NewAlertMsg = undefined;
+  /**
+   * @private
+   * @static
+   * @type {number}
+   * @memberof FileSystem
+   */
+  private static _cur_tmp_server_id: number = 0;
+  /**
+   * if true, eval server response.
+   * @static
+   * @type {boolean}
+   * @memberof FileSystem
+   */
   public static _sig_server: boolean = true; // if changes has to be sent
-  public static _userid: string | number = '644';
+
+  /**
+   * @deprecated
+   * @readonly
+   * @static
+   * @type {(string | number)}
+   * @memberof FileSystem
+   */
+  public static get _userid(): string | number {
+    console.warn('Using FileSystem._userid is deprecated.');
+    return 644;
+  }
+
+  /**
+   * @static
+   * @type {number}
+   * @memberof FileSystem
+   */
   public static _timeout_reconnect: number = 30000;
+  /**
+   * @static
+   * @type {boolean}
+   * @memberof FileSystem
+   */
   public static is_cordova: boolean =
     typeof document !== 'undefined'
       ? document.URL.indexOf('http://') == -1 &&
         document.URL.indexOf('https://') == -1
       : false;
 
-  // data are sent after a timeout (and are concatened before)
+  /**
+   * data are sent after a timeout (and are concatened before)
+   * @static
+   * @type {{ [serverId: number]: Model }}
+   * @memberof FileSystem
+   */
   public static _objects_to_send: { [serverId: number]: Model } = {};
+  /**
+   * @static
+   * @type {ReturnType<typeof setTimeout>}
+   * @memberof FileSystem
+   */
   public static _timer_send: ReturnType<typeof setTimeout> = undefined;
+  /**
+   * @static
+   * @type {ReturnType<typeof setTimeout>}
+   * @memberof FileSystem
+   */
   public static _timer_chan: ReturnType<typeof setTimeout> = undefined;
 
-  //  functions to be called after an answer
+  /**
+   * functions to be called after an answer
+   * @static
+   * @type {number}
+   * @memberof FileSystem
+   */
   public static _nb_callbacks: number = 0;
+  /**
+   * @static
+   * @type {{ [id: number]: SpinalLoadCallBack<Model> }}
+   * @memberof FileSystem
+   */
   public static _callbacks: { [id: number]: SpinalLoadCallBack<Model> } = {};
+  /**
+   * @static
+   * @type {[string, SpinalLoadCallBack<Model>][]}
+   * @memberof FileSystem
+   */
   public static _type_callbacks: [string, SpinalLoadCallBack<Model>][] = []; // list of callbacks associated to a type: [ [ "type", function ], ... ]
 
-  // instances of FileSystem
-  public static _nb_insts: number = 0;
-  public static _insts: { [idInstance: number]: FileSystem } = {};
+  /**
+   * number of instances of FileSystem
+   * @private
+   * @static
+   * @type {number}
+   * @memberof FileSystem
+   */
+  private static _nb_insts: number = 0;
+  /**
+   * @private
+   * @static
+   * @type {{ [idInstance: number]: FileSystem }}
+   * @memberof FileSystem
+   */
+  private static _insts: { [idInstance: number]: FileSystem } = {};
 
-  // ..._server_id -> object
-  public static _files_to_upload: { [key: number]: Path } = {}; // ref to Path waiting to be registered before sending data
-  public static _ptr_to_update: { [key: number]: Model } = {}; // Ptr objects that need an update, associated with @_tmp_objects
-  public static _tmp_objects: { [key: number]: Model } = {}; // objects waiting for a real _server_id
-  public static _objects: { [key: number]: Model } = {}; //_server_id -> object
+  /**
+   * ref to Path waiting to be registered before sending data
+   * @static
+   * @type {{ [key: number]: Path }}
+   * @memberof FileSystem
+   */
+  public static _files_to_upload: { [key: number]: Path } = {};
+  /**
+   * Ptr objects that need an update, associated with FileSystem_tmp_objects
+   * @static
+   * @type {{ [key: number]: Model }}
+   * @memberof FileSystem
+   */
+  public static _ptr_to_update: { [key: number]: Model } = {};
+  /**
+   * objects waiting for a real _server_id
+   * @static
+   * @type {{ [key: number]: Model }}
+   * @memberof FileSystem
+   */
+  public static _tmp_objects: { [key: number]: Model } = {};
+  /**
+   * _server_id -> object
+   * @static
+   * @type {{ [key: number]: Model }}
+   * @memberof FileSystem
+   */
+  public static _objects: { [key: number]: Model } = {};
 
-  // url and port of the server
-  public static _url: string = '127.0.0.1';
-  public static _port: string | number = '8888';
+  /**
+   * @private
+   * @type {string}
+   * @memberof FileSystem
+   */
+  private _url: string = '127.0.0.1';
+  /**
+   * @private
+   * @type {(string | number)}
+   * @memberof FileSystem
+   */
+  private _port: string | number = '8888';
+  /**
+   * @type {string}
+   * @memberof FileSystem
+   */
+  public _home_dir: string;
+  /**
+   * @private
+   * @type {string}
+   * @memberof FileSystem
+   */
+  private _accessToken: string = null;
 
+  /**
+   * @static
+   * @type {string}
+   * @memberof FileSystem
+   */
   public static url_com: string = '/sceen/_';
+  /**
+   * @static
+   * @type {string}
+   * @memberof FileSystem
+   */
   public static url_upload: string = '/sceen/upload';
 
-  // conector type : Browser or Node
+  /**
+   * conector type : Browser or Node
+   * @static
+   * @type {('Node' | 'Browser')}
+   * @memberof FileSystem
+   */
   public static CONNECTOR_TYPE: 'Node' | 'Browser' =
     typeof globalThis.global != 'undefined' ? 'Node' : 'Browser';
-
-  // public static _def: { [constructorName: string]: typeof Model } = {};
 
   // default values
   public _data_to_send: string = '';
   public _session_num: number = -2;
   public _num_inst: number = FileSystem._nb_insts++;
   public make_channel_error_timer: number = 0;
-  public static _password: string;
   static _XMLHttpRequest: any;
-  static _home_dir: string;
 
-  public constructor(sessionId?: number) {
+  /**
+   * Creates an instance of FileSystem.
+   * @param {IOptionFileSystemWithSessionId} {
+   *     url,
+   *     port,
+   *     home_dir,
+   *     sessionId,
+   *     accessToken,
+   *   }
+   * @memberof FileSystem
+   */
+  public constructor({
+    url,
+    port,
+    home_dir,
+    sessionId,
+    accessToken,
+  }: IOptionFileSystemWithSessionId);
+
+  /**
+   * Creates an instance of FileSystem.
+   * @param {IOptionFileSystemWithUser} {
+   *     url,
+   *     port,
+   *     userid,
+   *     password,
+   *     home_dir,
+   *     accessToken,
+   *   }
+   * @memberof FileSystem
+   */
+  public constructor({
+    url,
+    port,
+    userid,
+    password,
+    home_dir,
+    accessToken,
+  }: IOptionFileSystemWithUser);
+
+  public constructor({
+    url,
+    port,
+    home_dir,
+    userid,
+    password,
+    sessionId,
+    accessToken,
+  }: IOptionFileSystem) {
+    this._url = url;
+    this._port = port;
+    this._home_dir = home_dir;
+    this._accessToken = accessToken;
+
     if (typeof global !== 'undefined') {
       const XMLHttpRequest_node = require('xhr2');
       FileSystem._XMLHttpRequest = XMLHttpRequest_node;
@@ -101,8 +313,8 @@ export class FileSystem {
     // first, we need a session id fom the server
 
     if (!sessionId) {
-      if (FileSystem._userid != null) {
-        this.send(`U ${FileSystem._userid} ${FileSystem._password} `);
+      if (userid != null) {
+        this.send(`U ${userid} ${password} `);
       }
       this.send(`S ${this._num_inst} `);
     } else {
@@ -113,22 +325,54 @@ export class FileSystem {
 
   /**
    * load object in $path and call $callback with the corresponding model ref
-   *
-   * @param {*} path
-   * @param {*} callback
+   * @template T
+   * @param {string} path
+   * @return {*}  {Promise<T>}
+   * @memberof FileSystem
+   */
+  public load<T extends Model>(path: string): Promise<T>;
+  /**
+   * load object in $path and call $callback with the corresponding model ref
+   * @template T
+   * @param {string} path
+   * @param {SpinalLoadCallBack<T>} callback
    * @memberof FileSystem
    */
   public load<T extends Model>(
     path: string,
     callback: SpinalLoadCallBack<T>
-  ): void {
+  ): void;
+  public load<T extends Model>(
+    path: string,
+    callback?: SpinalLoadCallBack<T>
+  ): Promise<T> {
+    if (typeof callback === 'undefined') {
+      return new Promise((resolve, reject): void => {
+        FileSystem._send_chan();
+        this.send(`L ${FileSystem._nb_callbacks} ${encodeURI(path)} `);
+        FileSystem._callbacks[FileSystem._nb_callbacks] = (
+          model: T,
+          isError: boolean
+        ): void => {
+          if (!model || isError) reject(new Error('Error Load'));
+          resolve(model);
+        };
+        FileSystem._nb_callbacks++;
+      });
+    }
     FileSystem._send_chan();
     this.send(`L ${FileSystem._nb_callbacks} ${encodeURI(path)} `);
     FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
     FileSystem._nb_callbacks++;
   }
 
-  // load all the objects of $type
+  /**
+   * load all the objects of $type
+   * @template T
+   * @param {string} type
+   * @param {SpinalLoadCallBack<T>} callback
+   * @memberof FileSystem
+   */
   public load_type<T extends Model>(
     type: string,
     callback: SpinalLoadCallBack<T>
@@ -138,12 +382,55 @@ export class FileSystem {
     FileSystem._type_callbacks.push([type, callback]);
   }
 
-  // make dir if not already present in the server. Call callback
-  // as in the @load proc -- when done (i.e. when loaded or created)
+  private async load_or_make_dirProm(dir: string): Promise<Directory> {
+    try {
+      const res: Directory = await this.load(dir);
+      return res;
+    } catch (error) {
+      if (dir === '/') throw error;
+      const lst = dir
+        .split('/')
+        .reduce((acc: string[], v: string): string[] => {
+          if (v.length) acc.push(v);
+          return acc;
+        }, []);
+      const nir = lst.pop();
+      const oir = '/' + lst.join('/');
+      try {
+        const n_res = await this.load_or_make_dirProm(oir);
+        const n_dir = new Directory();
+        n_res.add_file(nir, n_dir);
+        return n_dir;
+      } catch (error) {
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * make dir if not already present in the server. Call callback
+   * as in the @load proc -- when done (i.e. when loaded or created)
+   * @param {string} dir
+   * @return {*}  {Promise<Directory>}
+   * @memberof FileSystem
+   */
+  public load_or_make_dir(dir: string): Promise<Directory>;
+  /**
+   * make dir if not already present in the server. Call callback
+   * as in the @load proc -- when done (i.e. when loaded or created)
+   * @param {string} dir
+   * @param {SpinalLoadCallBack<Directory>} callback
+   * @memberof FileSystem
+   */
   public load_or_make_dir(
     dir: string,
     callback: SpinalLoadCallBack<Directory>
-  ): void {
+  ): void;
+  public load_or_make_dir(
+    dir: string,
+    callback?: SpinalLoadCallBack<Directory>
+  ): Promise<Directory> {
+    if (typeof callback === 'undefined') return this.load_or_make_dirProm(dir);
     this.load(dir, (res: Directory, err): void => {
       if (err) {
         if (dir === '/') {
@@ -155,7 +442,6 @@ export class FileSystem {
               if (v.length) acc.push(v);
               return acc;
             }, []);
-
           const nir = lst.pop();
           const oir = '/' + lst.join('/');
           this.load_or_make_dir(oir, (n_res: Directory, n_err): void => {
@@ -174,40 +460,94 @@ export class FileSystem {
     });
   }
 
-  // load an object using is pointer and call $callback with the corresponding ref
+  /**
+   * load an object using is pointer and call $callback with the corresponding ref
+   * @template T
+   * @param {number} ptr
+   * @return {*}  {Promise<T>}
+   * @memberof FileSystem
+   */
+  public load_ptr<T extends Model>(ptr: number): Promise<T>;
+  /**
+   * load an object using is pointer and call $callback with the corresponding ref
+   * @template T
+   * @param {number} ptr
+   * @param {SpinalLoadCallBack<T>} callback
+   * @memberof FileSystem
+   */
   public load_ptr<T extends Model>(
     ptr: number,
     callback: SpinalLoadCallBack<T>
-  ): void {
-    FileSystem._send_chan();
-    this.send(`l ${FileSystem._nb_callbacks} ${ptr} `);
-    FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
-    FileSystem._nb_callbacks++;
+  ): void;
+  public load_ptr<T extends Model>(
+    ptr: number,
+    callback?: SpinalLoadCallBack<T>
+  ): Promise<T> {
+    if (typeof callback === 'undefined') {
+      if (!ptr) return Promise.reject('Error Load ptr');
+      if (typeof FileSystem._objects[ptr] !== 'undefined') {
+        return Promise.resolve(<T>FileSystem._objects[ptr]);
+      }
+      return new Promise((resolve, reject): void => {
+        FileSystem._send_chan();
+        this.send(`l ${FileSystem._nb_callbacks} ${ptr} `);
+        FileSystem._callbacks[FileSystem._nb_callbacks] = (
+          model: T,
+          isError: boolean
+        ): void => {
+          if (!model || isError) reject(new Error('Error Load ptr'));
+          resolve(model);
+        };
+        FileSystem._nb_callbacks++;
+      });
+    }
+    if (!ptr) setImmediate((): void => callback(undefined));
+    else if (typeof FileSystem._objects[ptr] !== 'undefined') {
+      setImmediate((): void => callback(<T>FileSystem._objects[ptr]));
+    } else {
+      FileSystem._send_chan();
+      this.send(`l ${FileSystem._nb_callbacks} ${ptr} `);
+      FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
+      FileSystem._nb_callbacks++;
+    }
   }
 
-  public load_right<T extends Model>(
+  public load_right(ptr: number): Promise<RightsItem>;
+  public load_right(
     ptr: number,
-    callback: SpinalLoadCallBack<T>
-  ): void {
+    callback: SpinalLoadCallBack<RightsItem>
+  ): void;
+  public load_right(
+    ptr: number,
+    callback?: SpinalLoadCallBack<RightsItem>
+  ): Promise<RightsItem> {
+    if (typeof callback === 'undefined') {
+      return new Promise((resolve, reject): void => {
+        FileSystem._send_chan();
+        this.send(`r ${ptr} ${FileSystem._nb_callbacks} `);
+        FileSystem._callbacks[FileSystem._nb_callbacks] = (
+          model: RightsItem
+        ): void => {
+          if (!model) reject(new Error('Error load_right'));
+          resolve(model);
+        };
+        FileSystem._nb_callbacks++;
+      });
+    }
     FileSystem._send_chan();
     this.send(`r ${ptr} ${FileSystem._nb_callbacks} `);
     FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
     FileSystem._nb_callbacks++;
   }
 
+  /**
+   * @param {(Model | number)} ptr
+   * @param {string} file_name
+   * @param {number} share_type
+   * @param {string} targetName
+   * @memberof FileSystem
+   */
   public share_model(
-    ptr: Model,
-    file_name: string,
-    share_type: number,
-    targetName: string
-  ): void;
-  public share_model(
-    ptr: number,
-    file_name: string,
-    share_type: number,
-    targetName: string
-  ): void;
-  share_model(
     ptr: Model | number,
     file_name: string,
     share_type: number,
@@ -221,7 +561,12 @@ export class FileSystem {
     );
   }
 
-  // explicitly send a command
+  /**
+   * explicitly send a command
+   * @private
+   * @param {string} data
+   * @memberof FileSystem
+   */
   private send(data: string): void {
     this._data_to_send += data;
     if (FileSystem._timer_send == null) {
@@ -229,18 +574,24 @@ export class FileSystem {
     }
   }
 
-  // send a request for a "push" channel
-  make_channel(): void {
-    let path = getUrlPath(`?s=${this._session_num}`);
+  /**
+   * send a request for a "push" channel
+   * @private
+   * @memberof FileSystem
+   */
+  private make_channel(): void {
+    const fs = FileSystem.get_inst();
+    let path = getUrlPath(fs._url, fs._port, `?s=${this._session_num}`);
     const xhr_object = FileSystem._my_xml_http_request();
+    if (fs._accessToken)
+      xhr_object.setRequestHeader('x-access-token', fs._accessToken);
     xhr_object.open('GET', path, true);
     xhr_object.onreadystatechange = function (): void {
       if (this.readyState === 4 && this.status === 200) {
-        const _fs = FileSystem.get_inst();
-        if (_fs.make_channel_error_timer !== 0) {
-          _fs.onConnectionError(0);
+        if (fs.make_channel_error_timer !== 0) {
+          FileSystem.onConnectionError(0);
         }
-        _fs.make_channel_error_timer = 0;
+        fs.make_channel_error_timer = 0;
         if (FileSystem._disp) {
           console.log('chan ->', this.responseText);
         }
@@ -264,43 +615,46 @@ export class FileSystem {
         FileSystem._sig_server = false;
         eval(this.responseText);
         FileSystem._sig_server = true;
-        for (const { cb, _obj } of created) {
-          cb(_obj);
-        }
+        for (const { cb, _obj } of created) cb(_obj);
       } else if (this.readyState === 4 && this.status === 0) {
         console.error(`Disconnected from the server with request : ${path}.`);
-        const _fs = FileSystem.get_inst();
-        if (_fs.make_channel_error_timer === 0) {
+        if (fs.make_channel_error_timer === 0) {
           //first disconnect
           console.log('Trying to reconnect.');
-          _fs.make_channel_error_timer = Date.now();
-          setTimeout(_fs.make_channel.bind(_fs), 1000);
-          return _fs.onConnectionError(1);
+          fs.make_channel_error_timer = Date.now();
+          setTimeout(fs.make_channel.bind(fs), 1000);
+          return FileSystem.onConnectionError(1);
         } else if (
-          Date.now() - _fs.make_channel_error_timer <
+          Date.now() - fs.make_channel_error_timer <
           FileSystem._timeout_reconnect
         ) {
           // under timeout
-          setTimeout(_fs.make_channel.bind(_fs), 1000); // timeout reached
+          setTimeout(fs.make_channel.bind(fs), 1000); // timeout reached
         } else {
-          return _fs.onConnectionError(2);
+          return FileSystem.onConnectionError(2);
         }
       } else if (this.readyState === 4 && this.status === 500) {
-        FileSystem.get_inst().onConnectionError(3);
+        FileSystem.onConnectionError(3);
       }
     };
     xhr_object.send();
   }
 
-  // default callback on make_channel error after the timeout disconnected reached
-  // This method can be surcharged.
-  // error_code :
-  // 0 = Error resolved
-  // 1 = 1st disconnection
-  // 2 = disconnection timeout
-  // 3 = Server went down Reinit everything
-  // 4 = Server down on connection
-  onConnectionError(error_code: number): void {
+  /**
+   * default callback on make_channel error after the timeout disconnected reached
+   * This method can be surcharged.
+   * error_code :
+   * - 0 = Error resolved
+   * - 1 = 1st disconnection
+   * - 2 = disconnection timeout
+   * - 3 = Server went down Reinit everything
+   * - 4 = Server down on connection
+   * @private
+   * @static
+   * @param {number} error_code
+   * @memberof FileSystem
+   */
+  private static onConnectionError(error_code: number): void {
     let msg = '';
     if (error_code === 0) {
       // Error resolved
@@ -358,14 +712,24 @@ export class FileSystem {
     }
   }
 
-  // get the first running inst
+  /**
+   * get the first running inst
+   * @static
+   * @return {*}  {FileSystem}
+   * @memberof FileSystem
+   */
   static get_inst(): FileSystem {
     for (const k in FileSystem._insts) {
       return FileSystem._insts[k];
     }
-    return new FileSystem();
   }
 
+  /**
+   * @static
+   * @param {IFsData} out
+   * @param {Model} obj
+   * @memberof FileSystem
+   */
   static set_server_id_if_necessary(out: IFsData, obj: Model): void {
     if (obj._server_id == null) {
       // registering
@@ -383,7 +747,12 @@ export class FileSystem {
     }
   }
 
-  // send changes of m to instances.
+  /**
+   * send changes of m to instances.
+   * @static
+   * @param {Model} m
+   * @memberof FileSystem
+   */
   static signal_change(m: Model): void {
     if (FileSystem._sig_server) {
       FileSystem._objects_to_send[m.model_id] = m;
@@ -394,6 +763,13 @@ export class FileSystem {
     }
   }
 
+  /**
+   * @static
+   * @param {number} tmp_id
+   * @param {number} res
+   * @return {*}  {void}
+   * @memberof FileSystem
+   */
   static _tmp_id_to_real(tmp_id: number, res: number): void {
     const tmp = FileSystem._tmp_objects[tmp_id];
     if (tmp == null) {
@@ -412,8 +788,14 @@ export class FileSystem {
       delete FileSystem._files_to_upload[tmp_id];
       // send the file
       const fs = FileSystem.get_inst();
-      let path = getUrlPath(`?s=${fs._session_num}&p=${tmp._server_id}`);
+      let path = getUrlPath(
+        fs._url,
+        fs._port,
+        `?s=${fs._session_num}&p=${tmp._server_id}`
+      );
       const xhr_object = FileSystem._my_xml_http_request();
+      if (fs._accessToken)
+        xhr_object.setRequestHeader('x-access-token', fs._accessToken);
       xhr_object.open('PUT', path, true);
       xhr_object.onreadystatechange = function () {
         let _w;
@@ -434,7 +816,7 @@ export class FileSystem {
     return FileSystem.signal_change(FileSystem._objects[res]);
   }
 
-  static _create_model_by_name(name: string): any {
+  private static _create_model_by_name(name: string): any {
     if (typeof name !== 'string') {
       return name; // for old spinalcore version
     }
@@ -452,11 +834,25 @@ export class FileSystem {
     }
   }
 
-  static extend(child: any, parent: any): any {
-    throw 'FileSystem.extend is a legacy function, do ont use';
+  /**
+   * @deprecated
+   * @static
+   * @param {*} _child
+   * @param {*} _parent
+   * @return {*}  {*}
+   * @memberof FileSystem
+   */
+  static extend(_child: any, _parent: any): any {
+    throw 'FileSystem.extend is a legacy function, do not use';
   }
 
-  static _get_new_tmp_server_id(): number {
+  /**
+   * @private
+   * @static
+   * @return {*}  {number}
+   * @memberof FileSystem
+   */
+  private static _get_new_tmp_server_id(): number {
     FileSystem._cur_tmp_server_id++;
     if (FileSystem._cur_tmp_server_id % 4 === 0) {
       FileSystem._cur_tmp_server_id++;
@@ -464,22 +860,38 @@ export class FileSystem {
     return FileSystem._cur_tmp_server_id;
   }
 
-  // send changes
-  static _send_chan(): void {
+  /**
+   * send changes
+   * @private
+   * @static
+   * @memberof FileSystem
+   */
+  private static _send_chan(): void {
     const out = FileSystem._get_chan_data();
     for (const f in FileSystem._insts) {
       FileSystem._insts[f].send(out);
     }
   }
 
-  // timeout for at least one changed object
-  static _timeout_chan_func(): void {
+  /**
+   * timeout for at least one changed object
+   * @private
+   * @static
+   * @memberof FileSystem
+   */
+  private static _timeout_chan_func(): void {
     FileSystem._send_chan();
     delete FileSystem._timer_chan;
   }
 
-  // get data of objects to send
-  static _get_chan_data(): string {
+  /**
+   * get data of objects to send
+   * @private
+   * @static
+   * @return {*}  {string}
+   * @memberof FileSystem
+   */
+  private static _get_chan_data(): string {
     const out = {
       cre: '',
       mod: '',
@@ -491,7 +903,12 @@ export class FileSystem {
     return out.cre + out.mod;
   }
 
-  static _timeout_send_func() {
+  /**
+   * @private
+   * @static
+   * @memberof FileSystem
+   */
+  private static _timeout_send_func(): void {
     // if some model have changed, we have to send the changes now
     const out = FileSystem._get_chan_data();
 
@@ -500,24 +917,20 @@ export class FileSystem {
     }
     // send data
     for (const k in FileSystem._insts) {
-      const f = FileSystem._insts[k];
-      if (!f._data_to_send.length) {
-        continue;
-      }
-      // if we are waiting for a session id, do not send the data
+      const fs = FileSystem._insts[k];
+      if (!fs._data_to_send.length || fs._session_num === -1) continue;
       // (@responseText will contain another call to @_timeout_send with the session id)
-      if (f._session_num === -1) {
-        continue;
-      }
       // for first call, do not add the session id (but say that we are waiting for one)
-      if (f._session_num === -2) {
-        f._session_num = -1;
+      if (fs._session_num === -2) {
+        fs._session_num = -1;
       } else {
-        f._data_to_send = `s ${f._session_num} ` + f._data_to_send;
+        fs._data_to_send = `s ${fs._session_num} ${fs._data_to_send}`;
       }
       // request
-      let path = getUrlPath();
+      let path = getUrlPath(fs._url, fs._port);
       const xhr_object = FileSystem._my_xml_http_request();
+      if (fs._accessToken)
+        xhr_object.setRequestHeader('x-access-token', fs._accessToken);
       xhr_object.open('POST', path, true);
       xhr_object.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
@@ -554,22 +967,28 @@ export class FileSystem {
           this.readyState === 4 &&
           (this.status === 0 || this.status === 500)
         ) {
-          return FileSystem.get_inst().onConnectionError(4);
+          return FileSystem.onConnectionError(4);
         }
       };
       if (FileSystem._disp) {
-        console.log('sent ->', f._data_to_send + 'E ');
+        console.log('sent ->', fs._data_to_send + 'E ');
       }
       xhr_object.setRequestHeader('Content-Type', 'text/plain');
-      xhr_object.send(f._data_to_send + 'E ');
-      f._data_to_send = '';
+      xhr_object.send(fs._data_to_send + 'E ');
+      fs._data_to_send = '';
     }
 
     FileSystem._objects_to_send = {};
-    return delete FileSystem._timer_send;
+    delete FileSystem._timer_send;
   }
 
-  static _my_xml_http_request(): any {
+  /**
+   * @private
+   * @static
+   * @return {*}  {*}
+   * @memberof FileSystem
+   */
+  private static _my_xml_http_request(): any {
     if (FileSystem.CONNECTOR_TYPE === 'Browser') {
       if (window.XMLHttpRequest) {
         return new XMLHttpRequest();

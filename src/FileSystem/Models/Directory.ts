@@ -22,25 +22,50 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
+import type { IFileInfoOption } from '../../interfaces/IFileInfoOption';
 import type { SpinalFilterFunction } from '../../interfaces/SpinalFilterFunction';
 import type { SpinalLoadCallBack } from '../../interfaces/SpinalLoadCallBack';
 import { Lst } from '../../Models/Lst';
 import { File } from './File';
 import { TiffFile } from './TiffFile';
 
+/**
+ * representation of a virtual Directory
+ * @export
+ * @class Directory
+ * @extends {(Lst<File | TiffFile>)}
+ */
 export class Directory extends Lst<File | TiffFile> {
-  static readonly _constructorName: string = 'Directory';
-  readonly _constructorName: string = Directory._constructorName;
+  /**
+   * @static
+   * @type {string}
+   * @memberof Directory
+   */
+  public static _constructorName: string = 'Directory';
+  /**
+   * @type {string}
+   * @memberof Directory
+   */
+  public _constructorName: string = Directory._constructorName;
 
-  constructor() {
+  public constructor() {
     super();
   }
 
-  base_(): any {
+  /**
+   * @return {*}  {*}
+   * @memberof Directory
+   */
+  public base_type(): typeof File {
     return File;
   }
 
-  find(name: string): File | TiffFile {
+  /**
+   * @param {string} name
+   * @return {*}  {(File | TiffFile)}
+   * @memberof Directory
+   */
+  public find(name: string): File | TiffFile {
     for (let i = 0; i < this.length; i++) {
       const file: File = this[i];
       if (file.hasOwnProperty('name') && file.name.equals(name)) return file;
@@ -48,15 +73,30 @@ export class Directory extends Lst<File | TiffFile> {
     return undefined;
   }
 
-  load(name: string, callback: SpinalLoadCallBack<any>): void {
+  /**
+   * @param {string} name
+   * @param {SpinalLoadCallBack<any>} callback
+   * @memberof Directory
+   */
+  public load(name: string, callback: SpinalLoadCallBack<any>): void {
     let f = this.find(name);
     if (f) f.load(callback);
     else callback(undefined, 'file does not exist');
   }
 
-  has(f: SpinalFilterFunction<File>): boolean;
-  has(name: string): boolean;
-  has(name: string | SpinalFilterFunction<File>): boolean {
+  /**
+   * @param {SpinalFilterFunction<File>} f
+   * @return {*}  {boolean}
+   * @memberof Directory
+   */
+  public has(f: SpinalFilterFunction<File>): boolean;
+  /**
+   * @param {string} name
+   * @return {*}  {boolean}
+   * @memberof Directory
+   */
+  public has(name: string): boolean;
+  public has(name: string | SpinalFilterFunction<File>): boolean {
     if (typeof name === 'string') {
       for (let i = 0; i < this.length; i++) {
         const file = this[i];
@@ -70,7 +110,14 @@ export class Directory extends Lst<File | TiffFile> {
     return false;
   }
 
-  add_file(name: string, obj: any, params = {}): File {
+  /**
+   * @param {string} name
+   * @param {*} obj
+   * @param {IFileInfoOption} [params={}]
+   * @return {*}  {File}
+   * @memberof Directory
+   */
+  public add_file(name: string, obj: any, params: IFileInfoOption = {}): File {
     const f = this.find(name);
     if (f) return f;
     let res = new File(name, obj, params);
@@ -78,7 +125,20 @@ export class Directory extends Lst<File | TiffFile> {
     return res;
   }
 
-  add_tiff_file(name: string, obj: any, tiff_obj: any, params = {}): TiffFile {
+  /**
+   * @param {string} name
+   * @param {*} obj
+   * @param {*} tiff_obj
+   * @param {IFileInfoOption} [params={}]
+   * @return {*}  {TiffFile}
+   * @memberof Directory
+   */
+  public add_tiff_file(
+    name: string,
+    obj: any,
+    tiff_obj: any,
+    params: IFileInfoOption = {}
+  ): TiffFile {
     const f = this.find(name);
     if (f) return <TiffFile>f;
     const res = new TiffFile(name, obj, tiff_obj, params);
@@ -86,7 +146,18 @@ export class Directory extends Lst<File | TiffFile> {
     return res;
   }
 
-  force_add_file(name: string, obj: any, params = {}): File {
+  /**
+   * @param {string} name
+   * @param {*} obj
+   * @param {IFileInfoOption} [params={}]
+   * @return {*}  {File}
+   * @memberof Directory
+   */
+  public force_add_file(
+    name: string,
+    obj: any,
+    params: IFileInfoOption = {}
+  ): File {
     let num = 0;
     let filename = name;
     let f = this.find(filename);
@@ -100,7 +171,12 @@ export class Directory extends Lst<File | TiffFile> {
     return res;
   }
 
-  get_file_info(info: any): string {
+  /**
+   * @param {*} info
+   * @return {*}  {string}
+   * @memberof Directory
+   */
+  public get_file_info(info: any): string {
     return (info.icon = 'folder');
   }
 }

@@ -24,11 +24,29 @@
 
 import { Model } from '../../Models/Model';
 
+/**
+ * @export
+ * @class User
+ * @extends {Model}
+ */
 export class User extends Model {
-  static readonly _constructorName: string = 'User';
-  readonly _constructorName: string = User._constructorName;
+  /**
+   * @static
+   * @type {string}
+   * @memberof User
+   */
+  public static _constructorName: string = 'User';
+  /**
+   * @type {string}
+   * @memberof User
+   */
+  public _constructorName: string = User._constructorName;
 
-  constructor() {
+  /**
+   * Creates an instance of User.
+   * @memberof User
+   */
+  public constructor() {
     super();
   }
 }

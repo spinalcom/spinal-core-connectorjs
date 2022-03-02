@@ -27,25 +27,79 @@ import type { SpinalLoadCallBack } from '../../interfaces/SpinalLoadCallBack';
 import { Model } from '../../Models/Model';
 import { FileSystem } from '../FileSystem';
 
+/**
+ * @export
+ * @class Ptr
+ * @extends {Model}
+ * @template T
+ */
 export class Ptr<T extends Model = any> extends Model {
-  static readonly _constructorName: string = 'Ptr';
-  readonly _constructorName: string = Ptr._constructorName;
+  /**
+   * @static
+   * @type {string}
+   * @memberof Ptr
+   */
+  public static _constructorName: string = 'Ptr';
+  /**
+   * @type {string}
+   * @memberof Ptr
+   */
+  public _constructorName: string = Ptr._constructorName;
 
+  /**
+   * @type {{ model?: T; value?: any }}
+   * @memberof Ptr
+   */
   public data: { model?: T; value?: any } = {};
 
-  // model may be a number (the pointer)
-  constructor(model: any) {
+  /**
+   * Creates an instance of Ptr.
+   * @param {*} model
+   * @memberof Ptr
+   */
+  public constructor(model: any) {
     super();
     this._set(model);
   }
 
-  load(callback: SpinalLoadCallBack<T>) {
-    var ref;
-    if (this.data.model != null) callback(this.data.model, false);
-    else FileSystem.get_inst()?.load_ptr(this.data.value, callback);
+  /**
+   * @return {*}  {Promise<T>}
+   * @memberof Ptr
+   */
+  public load(): Promise<T>;
+  /**
+   * @param {SpinalLoadCallBack<T>} callback
+   * @memberof Ptr
+   */
+  public load(callback: SpinalLoadCallBack<T>): void;
+  /**
+   * @param {SpinalLoadCallBack<T>} [callback]
+   * @return {*}  {Promise<T>}
+   * @memberof Ptr
+   */
+  public load(callback?: SpinalLoadCallBack<T>): Promise<T> {
+    if (this.data.model != null) {
+      if (typeof callback === 'function') {
+        callback(this.data.model, false);
+      } else {
+        return Promise.resolve(this.data.model);
+      }
+    } else {
+      if (this.data.value === 0)
+        console.error(`Ptr ${this._server_id} load with value 0.`);
+      if (typeof callback === 'function') {
+        FileSystem.get_inst()?.load_ptr(this.data.value, callback);
+      } else {
+        return FileSystem.get_inst()?.load_ptr(this.data.value);
+      }
+    }
   }
 
-  _get_fs_data(out: IFsData): void {
+  /**
+   * @param {IFsData} out
+   * @memberof Ptr
+   */
+  public _get_fs_data(out: IFsData): void {
     FileSystem.set_server_id_if_necessary(out, this);
     if (this.data.model != null) {
       FileSystem.set_server_id_if_necessary(out, this.data.model);
@@ -60,17 +114,22 @@ export class Ptr<T extends Model = any> extends Model {
     }
   }
 
-  _set(model: number | T): boolean {
-    var res;
+  /**
+   * @protected
+   * @param {(number | T)} model
+   * @return {*}  {boolean}
+   * @memberof Ptr
+   */
+  protected _set(model: number | T): boolean {
     if (typeof model === 'number') {
-      res = this.data.value !== model;
+      const res = this.data.value !== model;
       this.data = {
         value: model,
       };
       return res;
     }
     if (model instanceof Model) {
-      res = this.data.value !== model._server_id;
+      const res = this.data.value !== model._server_id;
       this.data = {
         model: model,
         value: model._server_id,
@@ -80,11 +139,22 @@ export class Ptr<T extends Model = any> extends Model {
     return false;
   }
 
-  _get_state() {
+  /**
+   * @protected
+   * @return {*}
+   * @memberof Ptr
+   */
+  protected _get_state() {
     return this.data.toString();
   }
 
-  _set_state(str: string, _map: unknown): boolean {
+  /**
+   * @param {string} str
+   * @param {unknown} _map
+   * @return {*}  {boolean}
+   * @memberof Ptr
+   */
+  public _set_state(str: string, _map: unknown): boolean {
     return this.set(str);
   }
 }

@@ -24,11 +24,29 @@
 
 import { Model } from '../../Models/Model';
 
+/**
+ * @export
+ * @class SessionModel
+ * @extends {Model}
+ */
 export class SessionModel extends Model {
-  static readonly _constructorName: string = 'SessionModel';
-  readonly _constructorName: string = SessionModel._constructorName;
+  /**
+   * @static
+   * @type {string}
+   * @memberof SessionModel
+   */
+  public static _constructorName: string = 'SessionModel';
+  /**
+   * @type {string}
+   * @memberof SessionModel
+   */
+  public _constructorName: string = SessionModel._constructorName;
 
-  constructor() {
+  /**
+   * Creates an instance of SessionModel.
+   * @memberof SessionModel
+   */
+  public constructor() {
     super();
   }
 }

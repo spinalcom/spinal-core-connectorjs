@@ -22,6 +22,11 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import type { Model } from '../Models/Model';
+const { writeFileSync } = require('fs');
+const path = require('path');
 
-export type SpinalLoadCallBackSucess = (model: Model) => void;
+const packagePath = path.join(process.cwd(), 'package.json');
+const envFile = path.join(process.cwd(), '.env');
+const { version } = require(packagePath);
+
+writeFileSync(envFile, `PACKAGE_VERSION=${version}`);

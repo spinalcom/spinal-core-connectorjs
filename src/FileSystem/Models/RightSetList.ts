@@ -23,13 +23,31 @@
  */
 
 import { Lst } from '../../Models/Lst';
-import type { Model } from '../../Models/Model';
+import type { RightsItem } from './RightsItem';
 
-export class RightSetList<T extends Model = any> extends Lst<T> {
-  static readonly _constructorName: string = 'RightSetList';
-  readonly _constructorName: string = RightSetList._constructorName;
+/**
+ * @export
+ * @class RightSetList
+ * @extends {Lst<RightsItem>}
+ */
+export class RightSetList extends Lst<RightsItem> {
+  /**
+   * @static
+   * @type {string}
+   * @memberof RightSetList
+   */
+  public static _constructorName: string = 'RightSetList';
+  /**
+   * @type {string}
+   * @memberof RightSetList
+   */
+  public _constructorName: string = RightSetList._constructorName;
 
-  constructor() {
+  /**
+   * Creates an instance of RightSetList.
+   * @memberof RightSetList
+   */
+  public constructor() {
     super();
   }
 }

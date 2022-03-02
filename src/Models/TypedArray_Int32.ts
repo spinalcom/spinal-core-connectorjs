@@ -25,18 +25,32 @@
 import { TypedArray } from './TypedArray';
 
 export class TypedArray_Int32 extends TypedArray<Int32Array> {
-  static readonly _constructorName: string = 'TypedArray_Int32';
-  readonly _constructorName: string = TypedArray_Int32._constructorName;
+  public static _constructorName: string = 'TypedArray_Int32';
+  public _constructorName: string = TypedArray_Int32._constructorName;
 
-  constructor(size?: number | number[], data?: Int32Array) {
+  /**
+   * Creates an instance of TypedArray_Int32.
+   * @param {(number | number[])} [size]
+   * @param {Int32Array} [data]
+   * @memberof TypedArray_Int32
+   */
+  public constructor(size?: number | number[], data?: Int32Array) {
     super(size, data);
   }
 
-  base_type(): typeof TypedArray_Int32 {
+  /**
+   * @return {*}  {typeof TypedArray_Int32}
+   * @memberof TypedArray_Int32
+   */
+  public base_type(): typeof TypedArray_Int32 {
     return TypedArray_Int32;
   }
 
-  deep_copy(): TypedArray_Int32 {
+  /**
+   * @return {*}  {TypedArray_Int32}
+   * @memberof TypedArray_Int32
+   */
+  public deep_copy(): TypedArray_Int32 {
     return new TypedArray_Int32(this._size, this._data);
   }
 }
