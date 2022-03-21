@@ -22,12 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import {
-  spinalCore,
-  Val,
-  ICreateSessionResponse,
-  IAuthResponse,
-} from '../declarations/types';
+import { spinalCore, Val, ICreateSessionResponse, IAuthResponse } from '..';
 
 // connexion variables
 const protocol = 'http';
