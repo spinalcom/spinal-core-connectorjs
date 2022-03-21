@@ -54,7 +54,7 @@ export interface IFlatModelMap {
  * @interface IStateMap
  * @template T
  */
-export interface IStateMap<T extends Model> {
+export interface IStateMap<T extends Model = Model> {
     [key: string]: {
         type: string;
         data: string;
@@ -70,8 +70,8 @@ export interface IFileInfoOption {
     model_type?: string;
     [key: string]: any;
 }
-export type SpinalFilterFunction<T extends Model> = (item: T) => boolean;
-export type SpinalSortFunction<T extends Model> = (item1: T, item2: T) => number;
+export type SpinalFilterFunction<T extends Model = Model> = (item: T) => boolean;
+export type SpinalSortFunction<T extends Model = Model> = (item1: T, item2: T) => number;
 /**
  * Bese representation of an Array
  * @export
@@ -1283,6 +1283,14 @@ export class BindProcess extends Process {
     constructor(model: Model | Model[], onchange_construction: boolean, f: () => void);
     onchange(): void;
 }
+export interface IAuthResponse {
+    accessToken: string;
+    expires: number;
+}
+export interface ICreateSessionResponse {
+    sessionNumber: number;
+    graphServerId: number;
+}
 export type SpinalCallBackError = () => void;
 export type SpinalStoreCallBackSucess = () => void;
 declare export namespace spinalCore {
@@ -1303,16 +1311,19 @@ declare export namespace spinalCore {
      * @return {*}  {FileSystem}
      */
     function connectWithSessionId(options: URL | string, sessionId: number, accessToken?: string): FileSystem;
-    function connectAndLoadWithApi(options: URL | string, username: string, password: string, organAccessToken?: string): FileSystem;
+    function auth(options: URL | string, username: string, password: string): Promise<IAuthResponse>;
+    function authOrgan(options: URL | string, bosRegisterKey: string, organName: string, organType: string): Promise<IAuthResponse>;
+    function createSession(options: URL | string, token: string): Promise<ICreateSessionResponse>;
     /**
      * stores a model in the file system
      * @export
      * @param {FileSystem} fs
      * @param {Model} model
      * @param {string} path
+     * @param {IFileInfoOption} [fileOption]
      * @return {*}  {Promise<void>}
      */
-    function store(fs: FileSystem, model: Model, path: string, fileOption: IFileInfoOption): Promise<void>;
+    function store(fs: FileSystem, model: Model, path: string, fileOption?: IFileInfoOption): Promise<void>;
     /**
      * stores a model in the file system
      * @export
@@ -1348,7 +1359,7 @@ declare export namespace spinalCore {
      * @param {string} path
      * @return {*}  {Promise<T>}
      */
-    function load<T extends Model>(fs: FileSystem, path: string): Promise<T>;
+    function load<T extends Model = Model>(fs: FileSystem, path: string): Promise<T>;
     /**
      * loads a model from the file system
      * @export
@@ -1358,7 +1369,7 @@ declare export namespace spinalCore {
      * @param {SpinalLoadCallBack<T>} callback_success
      * @param {SpinalCallBackError} [callback_error]
      */
-    function load<T extends Model>(fs: FileSystem, path: string, callback_success: SpinalLoadCallBack<T>, callback_error?: SpinalCallBackError): void;
+    function load<T extends Model = Model>(fs: FileSystem, path: string, callback_success: SpinalLoadCallBack<T>, callback_error?: SpinalCallBackError): void;
     /**
      * loads all the models of a specific type
      * @export
@@ -1388,6 +1399,36 @@ declare export namespace spinalCore {
     /**
      * @export
      * @param {FileSystem} fs
+     * @param {string} path
+     * @return {*}  {Promise<Directory>}
+     */
+    function load_directory(fs: FileSystem, path: string): Promise<Directory>;
+    /**
+     * @export
+     * @param {FileSystem} fs
+     * @param {string} path
+     * @param {SpinalLoadCallBack<Directory>} [callback]
+     */
+    function load_directory(fs: FileSystem, path: string, callback?: SpinalLoadCallBack<Directory>): void;
+    /**
+     * @export
+     * @template T
+     * @param {FileSystem} fs
+     * @param {number} ptr
+     * @return {*}  {Promise<Model>}
+     */
+    function load_ptr<T extends Model>(fs: FileSystem, ptr: number): Promise<Model>;
+    /**
+     * @export
+     * @template T
+     * @param {FileSystem} fs
+     * @param {number} ptr
+     * @param {SpinalLoadCallBack<T>} [callback]
+     */
+    function load_ptr<T extends Model>(fs: FileSystem, ptr: number, callback?: SpinalLoadCallBack<T>): void;
+    /**
+     * @export
+     * @param {FileSystem} fs
      * @param {number} ptr
      * @param {string} file_name
      * @param {number} right_flag
@@ -1409,6 +1450,16 @@ declare export namespace spinalCore {
      * @return {*}  {*}
      */
     function extend(child: any, parent: any): any;
+}
+declare export namespace SpinalUserManager {
+    function get_user_id(options: string | URL, username: string, password: string, success_callback?: (response: string) => void, error_callback?: () => void): Promise<string>;
+    function get_admin_id(options: string | URL, adminName: string, password: string, success_callback?: (response: string) => void, error_callback?: () => void): Promise<string>;
+    function new_account(options: string | URL, username: string, password: string, success_callback?: (response: string) => void, error_callback?: () => void): Promise<string>;
+    function change_password(options: string | URL, user_id: string | number, password: string, newPassword: string, success_callback?: (response: string) => void, error_callback?: () => void): Promise<string>;
+    function delete_account(options: string | URL, userId: string | number, password: string, userNameToDelete: string, success_callback?: (response: string) => void, error_callback?: () => void): Promise<string>;
+    function change_password_by_admin(options: string | URL, targetUsername: string, targetPassword: string, adminUserId: string | number, adminPassword: string, success_callback?: (response: string) => void, error_callback?: () => void): Promise<string>;
+    function delete_account_by_admin(options: string | URL, targetUsername: string, adminUserId: string | number, adminPassword: string, success_callback?: (response: string) => void, error_callback?: () => void): Promise<string>;
+    function change_account_rights_by_admin(options: string | URL, targetUsername: string, targetAcountRight: string | number, adminUserId: string | number, adminPassword: string, success_callback?: (response: string) => void, error_callback?: () => void): Promise<string>;
 }
 declare export namespace ModelProcessManager {
     let _counter: number;
@@ -1494,6 +1545,7 @@ declare export namespace ModelProcessManager {
         spinalCore: typeof spinalCore;
         FileSystem: typeof FileSystem;
         ModelProcessManager: typeof ModelProcessManager;
+        SpinalUserManager: typeof SpinalUserManager;
         Process: typeof Process;
         BindProcess: typeof BindProcess;
         Model: typeof Model;
@@ -1797,7 +1849,7 @@ export class Model {
      */
     protected _get_flat_model_map(map: IFlatModelMap, date: number): IFlatModelMap;
 }
-export type SpinalLoadCallBack<T extends Model> = (model: T, error?: boolean | string) => void;
+export type SpinalLoadCallBack<T extends Model = Model> = (model: T, error?: boolean | string) => void;
 declare global {
     function new_dom_element(params?: INewDomElementParam, nodeName?: string): HTMLElement;
     function newDomElement(params?: INewDomElementParam, nodeName?: string): HTMLElement;
@@ -2016,12 +2068,11 @@ export class FileSystem {
     constructor({ url, port, userid, password, home_dir, accessToken, }: IOptionFileSystemWithUser);
     /**
      * load object in $path and call $callback with the corresponding model ref
-     * @template T
      * @param {string} path
-     * @return {*}  {Promise<T>}
+     * @return {*}  {Promise<Directory>}
      * @memberof FileSystem
      */
-    load<T extends Model>(path: string): Promise<T>;
+    load(path: string): Promise<Directory>;
     /**
      * load object in $path and call $callback with the corresponding model ref
      * @template T
@@ -2029,7 +2080,7 @@ export class FileSystem {
      * @param {SpinalLoadCallBack<T>} callback
      * @memberof FileSystem
      */
-    load<T extends Model>(path: string, callback: SpinalLoadCallBack<T>): void;
+    load(path: string, callback: SpinalLoadCallBack<Directory>): void;
     /**
      * load all the objects of $type
      * @template T
@@ -2118,12 +2169,19 @@ export class FileSystem {
      * @memberof FileSystem
      */
     static extend(_child: any, _parent: any): any;
+    /**
+     * @static
+     * @return {*}  {*}
+     * @memberof FileSystem
+     */
+    static _my_xml_http_request(): any;
 }
 declare global {
     var spinal: spinalType;
     var spinalCore: typeof _ModelProcessManager.spinal.spinalCore;
     var FileSystem: typeof _ModelProcessManager.spinal.FileSystem;
     var ModelProcessManager: typeof _ModelProcessManager.spinal.ModelProcessManager;
+    var SpinalUserManager: typeof _ModelProcessManager.spinal.SpinalUserManager;
     var Process: typeof _ModelProcessManager.spinal.Process;
     var BindProcess: typeof _ModelProcessManager.spinal.BindProcess;
     var Model: typeof _ModelProcessManager.spinal.Model;

@@ -25,7 +25,10 @@
 import { FileSystem } from './FileSystem/FileSystem';
 import type { Directory } from './FileSystem/Models/Directory';
 import type { File } from './FileSystem/Models/File';
+import type { TiffFile } from './FileSystem/Models/TiffFile';
 import { RightsItem } from './FileSystem/Models/RightsItem';
+import { IAuthResponse } from './interfaces/IAuthResponse';
+import { ICreateSessionResponse } from './interfaces/ICreateSessionResponse';
 import type { IFileInfoOption } from './interfaces/IFileInfoOption';
 import {
   IOptionFileSystemWithSessionId,
@@ -37,6 +40,7 @@ import type { SpinalLoadCallBack } from './interfaces/SpinalLoadCallBack';
 import type { SpinalStoreCallBackSucess } from './interfaces/SpinalStoreCallBackSucess';
 import { ModelProcessManager } from './ModelProcessManager';
 import type { Model } from './Models/Model';
+import { sendXhr } from './Utils/sendXhr';
 
 export namespace spinalCore {
   export const _def: ISpinalModel = ModelProcessManager._def;
@@ -93,29 +97,45 @@ export namespace spinalCore {
     return new FileSystem(opt);
   }
 
-  export function connectAndLoadWithApi(
+  export async function auth(
     options: URL | string,
     username: string,
-    password: string,
-    organAccessToken?: string
-  ): FileSystem {
-    const parsedOpt = typeof options === 'string' ? new URL(options) : options;
-    if (parsedOpt.pathname.slice(-1)[0] !== '/') {
-      parsedOpt.pathname += '/';
-    }
-    // do axios get
-    // username,
-    // password: string,
+    password: string
+  ): Promise<IAuthResponse> {
+    const res = await sendXhr(
+      options,
+      '/auth',
+      'POST',
+      {},
+      { login: username, password: password }
+    );
+    return JSON.parse(res);
+  }
 
-    const opt: IOptionFileSystemWithUser = {
-      home_dir: parsedOpt.pathname,
-      url: parsedOpt.hostname,
-      port: parsedOpt.port,
-      userid: username,
-      password: password,
-      // accessToken,
-    };
-    return new FileSystem(opt);
+  export async function authOrgan(
+    options: URL | string,
+    bosRegisterKey: string,
+    organName: string,
+    organType: string
+  ): Promise<IAuthResponse> {
+    const res = await sendXhr(
+      options,
+      '/authOrgan',
+      'POST',
+      {},
+      { bosRegisterKey, organName, organType }
+    );
+    return JSON.parse(res);
+  }
+
+  export async function createSession(
+    options: URL | string,
+    token: string
+  ): Promise<ICreateSessionResponse> {
+    const res = await sendXhr(options, '/createSession', 'GET', {
+      authorization: token,
+    });
+    return JSON.parse(res);
   }
 
   /**
@@ -124,13 +144,14 @@ export namespace spinalCore {
    * @param {FileSystem} fs
    * @param {Model} model
    * @param {string} path
+   * @param {IFileInfoOption} [fileOption]
    * @return {*}  {Promise<void>}
    */
   export async function store(
     fs: FileSystem,
     model: Model,
     path: string,
-    fileOption: IFileInfoOption
+    fileOption?: IFileInfoOption
   ): Promise<void>;
   /**
    * stores a model in the file system
@@ -233,7 +254,7 @@ export namespace spinalCore {
     path = lst.join('/'); // Absolute paths are not allowed
     const home_dir = FileSystem.get_inst()._home_dir;
     const current_dir = await fs.load_or_make_dir(`${home_dir}${path}`);
-    const file = current_dir.detect(
+    const file: File<T> | TiffFile<T> = current_dir.detect(
       (x: File): boolean => x.name.get() === file_name
     );
     if (file) return file.load();
@@ -248,7 +269,7 @@ export namespace spinalCore {
    * @param {string} path
    * @return {*}  {Promise<T>}
    */
-  export function load<T extends Model>(
+  export function load<T extends Model = Model>(
     fs: FileSystem,
     path: string
   ): Promise<T>;
@@ -261,7 +282,7 @@ export namespace spinalCore {
    * @param {SpinalLoadCallBack<T>} callback_success
    * @param {SpinalCallBackError} [callback_error]
    */
-  export function load<T extends Model>(
+  export function load<T extends Model = Model>(
     fs: FileSystem,
     path: string,
     callback_success: SpinalLoadCallBack<T>,
@@ -322,7 +343,7 @@ export namespace spinalCore {
     type: string,
     callback_success: SpinalLoadCallBack<T>,
     callback_error?: SpinalCallBackError
-  ) {
+  ): void {
     if (typeof callback_error === 'undefined') {
       callback_error = defaultCallbackError;
     }
@@ -369,6 +390,67 @@ export namespace spinalCore {
     } else {
       return fs.load_right(ptr);
     }
+  }
+  /**
+   * @export
+   * @param {FileSystem} fs
+   * @param {string} path
+   * @return {*}  {Promise<Directory>}
+   */
+  export function load_directory(
+    fs: FileSystem,
+    path: string
+  ): Promise<Directory>;
+  /**
+   * @export
+   * @param {FileSystem} fs
+   * @param {string} path
+   * @param {SpinalLoadCallBack<Directory>} [callback]
+   */
+  export function load_directory(
+    fs: FileSystem,
+    path: string,
+    callback?: SpinalLoadCallBack<Directory>
+  ): void;
+  export function load_directory(
+    fs: FileSystem,
+    path: string,
+    callback?: SpinalLoadCallBack<Directory>
+  ): void | Promise<Directory> {
+    if (typeof callback === 'function') return fs.load(path, callback);
+    return fs.load(path);
+  }
+
+  /**
+   * @export
+   * @template T
+   * @param {FileSystem} fs
+   * @param {number} ptr
+   * @return {*}  {Promise<Model>}
+   */
+  export function load_ptr<T extends Model>(
+    fs: FileSystem,
+    ptr: number
+  ): Promise<Model>;
+  /**
+   * @export
+   * @template T
+   * @param {FileSystem} fs
+   * @param {number} ptr
+   * @param {SpinalLoadCallBack<T>} [callback]
+   */
+  export function load_ptr<T extends Model>(
+    fs: FileSystem,
+    ptr: number,
+    callback?: SpinalLoadCallBack<T>
+  ): void;
+  export function load_ptr<T extends Model>(
+    fs: FileSystem,
+    ptr: number,
+    callback?: SpinalLoadCallBack<T>
+  ): void | Promise<Model> {
+    if (typeof callback === 'function') return fs.load_ptr(ptr, callback);
+    return fs.load_ptr(ptr);
   }
 
   /**

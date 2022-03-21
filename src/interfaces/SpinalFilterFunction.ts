@@ -24,4 +24,6 @@
 
 import type { Model } from '../Models/Model';
 
-export type SpinalFilterFunction<T extends Model> = (item: T) => boolean;
+export type SpinalFilterFunction<T extends Model = Model> = (
+  item: T
+) => boolean;

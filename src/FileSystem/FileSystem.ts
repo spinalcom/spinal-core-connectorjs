@@ -325,12 +325,11 @@ export class FileSystem {
 
   /**
    * load object in $path and call $callback with the corresponding model ref
-   * @template T
    * @param {string} path
-   * @return {*}  {Promise<T>}
+   * @return {*}  {Promise<Directory>}
    * @memberof FileSystem
    */
-  public load<T extends Model>(path: string): Promise<T>;
+  public load(path: string): Promise<Directory>;
   /**
    * load object in $path and call $callback with the corresponding model ref
    * @template T
@@ -338,20 +337,17 @@ export class FileSystem {
    * @param {SpinalLoadCallBack<T>} callback
    * @memberof FileSystem
    */
-  public load<T extends Model>(
+  public load(path: string, callback: SpinalLoadCallBack<Directory>): void;
+  public load(
     path: string,
-    callback: SpinalLoadCallBack<T>
-  ): void;
-  public load<T extends Model>(
-    path: string,
-    callback?: SpinalLoadCallBack<T>
-  ): Promise<T> {
+    callback?: SpinalLoadCallBack<Directory>
+  ): Promise<Directory> {
     if (typeof callback === 'undefined') {
       return new Promise((resolve, reject): void => {
         FileSystem._send_chan();
         this.send(`L ${FileSystem._nb_callbacks} ${encodeURI(path)} `);
         FileSystem._callbacks[FileSystem._nb_callbacks] = (
-          model: T,
+          model: Directory,
           isError: boolean
         ): void => {
           if (!model || isError) reject(new Error('Error Load'));
@@ -983,12 +979,11 @@ export class FileSystem {
   }
 
   /**
-   * @private
    * @static
    * @return {*}  {*}
    * @memberof FileSystem
    */
-  private static _my_xml_http_request(): any {
+  public static _my_xml_http_request(): any {
     if (FileSystem.CONNECTOR_TYPE === 'Browser') {
       if (window.XMLHttpRequest) {
         return new XMLHttpRequest();

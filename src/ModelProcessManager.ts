@@ -50,6 +50,7 @@ import type { Vec } from './Models/Vec';
 import type { BindProcess } from './Processes/BindProcess';
 import type { Process } from './Processes/Process';
 import type { spinalCore } from './Spinalcore';
+import type { SpinalUserManager } from './SpinalUserManager';
 import { isIterable } from './Utils/isIterable';
 
 export namespace ModelProcessManager {
@@ -279,6 +280,7 @@ export namespace ModelProcessManager {
     spinalCore: typeof spinalCore;
     FileSystem: typeof FileSystem;
     ModelProcessManager: typeof ModelProcessManager;
+    SpinalUserManager: typeof SpinalUserManager;
     Process: typeof Process;
     BindProcess: typeof BindProcess;
     Model: typeof Model;

@@ -618,7 +618,6 @@ class FileSystem {
         delete FileSystem._timer_send;
     }
     /**
-     * @private
      * @static
      * @return {*}  {*}
      * @memberof FileSystem
@@ -3378,6 +3377,30 @@ $parcel$export($628a8c82907e34e7$exports, "spinalCore", () => $628a8c82907e34e7$
 var $gavvF = parcelRequire("gavvF");
 
 var $3JI2b = parcelRequire("3JI2b");
+
+var $gavvF = parcelRequire("gavvF");
+function $c36a7239ad0468ba$export$2c0b2ede218c05b2(options, command, httpMethod, header, body) {
+    let path = '';
+    const parsedOpt = typeof options === 'string' ? new URL(options) : options;
+    const url = parsedOpt.hostname;
+    const port = parsedOpt.port;
+    if ($gavvF.FileSystem.CONNECTOR_TYPE === 'Node' || $gavvF.FileSystem.is_cordova) path = `${parsedOpt.protocol}//${url}${port}` ? ':' + port : '' + command;
+    else if ($gavvF.FileSystem.CONNECTOR_TYPE === 'Browser') path = command;
+    return new Promise((resolve, reject)=>{
+        const xhr_object = $gavvF.FileSystem._my_xml_http_request();
+        xhr_object.open(httpMethod, path, true);
+        xhr_object.onreadystatechange = function() {
+            if (this.readyState === 4 && this.status === 200) return resolve(this.responseText);
+            else if (this.readyState === 4) return reject(this.status);
+        };
+        if (header) {
+            for(const key in header)if (Object.prototype.hasOwnProperty.call(header, key)) xhr_object.setRequestHeader(key, header[key]);
+        }
+        xhr_object.send(body);
+    });
+}
+
+
 /*
  * Copyright 2022 SpinalCom - www.spinalcom.com
  *
@@ -3469,22 +3492,38 @@ var $628a8c82907e34e7$export$a34888876ba95657;
         return new $gavvF.FileSystem(opt);
     }
     $628a8c82907e34e7$export$a34888876ba95657.connectWithSessionId = connectWithSessionId;
-    function connectAndLoadWithApi(options, username, password, organAccessToken) {
-        const parsedOpt = typeof options === 'string' ? new URL(options) : options;
-        if (parsedOpt.pathname.slice(-1)[0] !== '/') parsedOpt.pathname += '/';
-        // do axios get
-        // username,
-        // password: string,
-        const opt = {
-            home_dir: parsedOpt.pathname,
-            url: parsedOpt.hostname,
-            port: parsedOpt.port,
-            userid: username,
-            password: password
-        };
-        return new $gavvF.FileSystem(opt);
+    function auth(options, username, password) {
+        return $628a8c82907e34e7$var$__awaiter(this, void 0, void 0, function*() {
+            const res = yield $c36a7239ad0468ba$export$2c0b2ede218c05b2(options, '/auth', 'POST', {
+            }, {
+                login: username,
+                password: password
+            });
+            return JSON.parse(res);
+        });
     }
-    $628a8c82907e34e7$export$a34888876ba95657.connectAndLoadWithApi = connectAndLoadWithApi;
+    $628a8c82907e34e7$export$a34888876ba95657.auth = auth;
+    function authOrgan(options, bosRegisterKey, organName, organType) {
+        return $628a8c82907e34e7$var$__awaiter(this, void 0, void 0, function*() {
+            const res = yield $c36a7239ad0468ba$export$2c0b2ede218c05b2(options, '/authOrgan', 'POST', {
+            }, {
+                bosRegisterKey: bosRegisterKey,
+                organName: organName,
+                organType: organType
+            });
+            return JSON.parse(res);
+        });
+    }
+    $628a8c82907e34e7$export$a34888876ba95657.authOrgan = authOrgan;
+    function createSession(options, token) {
+        return $628a8c82907e34e7$var$__awaiter(this, void 0, void 0, function*() {
+            const res = yield $c36a7239ad0468ba$export$2c0b2ede218c05b2(options, '/createSession', 'GET', {
+                authorization: token
+            });
+            return JSON.parse(res);
+        });
+    }
+    $628a8c82907e34e7$export$a34888876ba95657.createSession = createSession;
     function store(fs, model, path, optionOrCb, callback_error, fileOption = {
         model_type: 'Model'
     }) {
@@ -3588,6 +3627,16 @@ var $628a8c82907e34e7$export$a34888876ba95657;
         } else return fs.load_right(ptr);
     }
     $628a8c82907e34e7$export$a34888876ba95657.load_right = load_right;
+    function load_directory(fs, path, callback) {
+        if (typeof callback === 'function') return fs.load(path, callback);
+        return fs.load(path);
+    }
+    $628a8c82907e34e7$export$a34888876ba95657.load_directory = load_directory;
+    function load_ptr(fs, ptr, callback) {
+        if (typeof callback === 'function') return fs.load_ptr(ptr, callback);
+        return fs.load_ptr(ptr);
+    }
+    $628a8c82907e34e7$export$a34888876ba95657.load_ptr = load_ptr;
     /**
      * @export
      * @param {FileSystem} fs
@@ -3626,6 +3675,192 @@ var $628a8c82907e34e7$export$a34888876ba95657;
 }));
 
 
+var $5efcdb3d7358ef8c$exports = {};
+
+$parcel$export($5efcdb3d7358ef8c$exports, "SpinalUserManager", () => $5efcdb3d7358ef8c$export$d237f587010e5041, (v) => $5efcdb3d7358ef8c$export$d237f587010e5041 = v);
+
+/*
+ * Copyright 2022 SpinalCom - www.spinalcom.com
+ *
+ * This file is part of SpinalCore.
+ *
+ * Please read all of the following terms and conditions
+ * of the Free Software license Agreement ("Agreement")
+ * carefully.
+ *
+ * This Agreement is a legally binding contract between
+ * the Licensee (as defined below) and SpinalCom that
+ * sets forth the terms and conditions that govern your
+ * use of the Program. By installing and/or using the
+ * Program, you agree to abide by all the terms and
+ * conditions stated or referenced herein.
+ *
+ * If you do not agree to abide by these terms and
+ * conditions, do not demonstrate your acceptance and do
+ * not install or use the Program.
+ * You should have received a copy of the license along
+ * with this file. If not, see
+ * <http://resources.spinalcom.com/licenses.pdf>.
+ */ var $5efcdb3d7358ef8c$var$__awaiter = undefined && undefined.__awaiter || function(thisArg, _arguments, P, generator) {
+    function adopt(value) {
+        return value instanceof P ? value : new P(function(resolve) {
+            resolve(value);
+        });
+    }
+    return new (P || (P = Promise))(function(resolve, reject) {
+        function fulfilled(value) {
+            try {
+                step(generator.next(value));
+            } catch (e) {
+                reject(e);
+            }
+        }
+        function rejected(value) {
+            try {
+                step(generator["throw"](value));
+            } catch (e) {
+                reject(e);
+            }
+        }
+        function step(result) {
+            result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+        }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var $5efcdb3d7358ef8c$export$d237f587010e5041;
+(function($5efcdb3d7358ef8c$export$d237f587010e5041) {
+    function get_user_id(options, username, password, success_callback, error_callback = null) {
+        return $5efcdb3d7358ef8c$var$__awaiter(this, void 0, void 0, function*() {
+            // Access: /get_user_id?u=<user>&p=<password>
+            const get_cmd = `/get_user_id?u=${username}&p=${password}`;
+            try {
+                const response = yield $c36a7239ad0468ba$export$2c0b2ede218c05b2(options, get_cmd, 'GET');
+                if (parseInt(response) === -1) throw new Error('command rejected by the server');
+                if (typeof success_callback === 'function') success_callback(response);
+                return response;
+            } catch (error) {
+                _if_error(error_callback, 'get_user_id', error);
+            }
+        });
+    }
+    $5efcdb3d7358ef8c$export$d237f587010e5041.get_user_id = get_user_id;
+    function get_admin_id(options, adminName, password, success_callback, error_callback = null) {
+        return $5efcdb3d7358ef8c$var$__awaiter(this, void 0, void 0, function*() {
+            // Access: /get_user_id?u=<user>&p=<password>
+            var get_cmd = `/get_admin_id?u=${adminName}&p=${password}`;
+            try {
+                const response = yield $c36a7239ad0468ba$export$2c0b2ede218c05b2(options, get_cmd, 'GET');
+                if (parseInt(response) === -1) throw new Error('command rejected by the server');
+                if (typeof success_callback === 'function') success_callback(response);
+                return response;
+            } catch (error) {
+                _if_error(error_callback, 'get_admin_id', error);
+            }
+        });
+    }
+    $5efcdb3d7358ef8c$export$d237f587010e5041.get_admin_id = get_admin_id;
+    function new_account(options, username, password, success_callback, error_callback = null) {
+        return $5efcdb3d7358ef8c$var$__awaiter(this, void 0, void 0, function*() {
+            // Access: /get_new_account?e=<user>&p=<password>&cp=<confirm_password>
+            var get_cmd = `/get_new_account?e=${username}&p=${password}&cp=${password}`;
+            try {
+                const response = yield $c36a7239ad0468ba$export$2c0b2ede218c05b2(options, get_cmd, 'GET');
+                if (parseInt(response) === -1) throw new Error('command rejected by the server');
+                if (typeof success_callback === 'function') success_callback(response);
+                return response;
+            } catch (error) {
+                _if_error(error_callback, 'get_new_account', error);
+            }
+        });
+    }
+    $5efcdb3d7358ef8c$export$d237f587010e5041.new_account = new_account;
+    function change_password(options, user_id, password, newPassword, success_callback, error_callback = null) {
+        return $5efcdb3d7358ef8c$var$__awaiter(this, void 0, void 0, function*() {
+            // Access: /get_change_user_password?e=<user>&op=<old_pass>&np=<newpass>&cp=<confim_pass>
+            var get_cmd = `/get_change_user_password?e=${user_id}&op=${password}&np=${newPassword}&cp=${newPassword}`;
+            try {
+                const response = yield $c36a7239ad0468ba$export$2c0b2ede218c05b2(options, get_cmd, 'GET');
+                if (parseInt(response) === -1) throw new Error('command rejected by the server');
+                if (typeof success_callback === 'function') success_callback(response);
+                return response;
+            } catch (error) {
+                _if_error(error_callback, 'get_change_user_password', error);
+            }
+        });
+    }
+    $5efcdb3d7358ef8c$export$d237f587010e5041.change_password = change_password;
+    function delete_account(options, userId, password, userNameToDelete, success_callback, error_callback = null) {
+        return $5efcdb3d7358ef8c$var$__awaiter(this, void 0, void 0, function*() {
+            // Access: /get_delete_account?e=<user>&i=<id>&p=<password>
+            const get_cmd = `/get_delete_account?e=${userNameToDelete}&i=${userId}&p=${password}`;
+            try {
+                const response = yield $c36a7239ad0468ba$export$2c0b2ede218c05b2(options, get_cmd, 'GET');
+                if (parseInt(response) === -1) throw new Error('command rejected by the server');
+                if (typeof success_callback === 'function') success_callback(response);
+                return response;
+            } catch (error) {
+                _if_error(error_callback, 'get_delete_account', error);
+            }
+        });
+    }
+    $5efcdb3d7358ef8c$export$d237f587010e5041.delete_account = delete_account;
+    function change_password_by_admin(options, targetUsername, targetPassword, adminUserId, adminPassword, success_callback, error_callback = null) {
+        return $5efcdb3d7358ef8c$var$__awaiter(this, void 0, void 0, function*() {
+            // Access: ?u=<username>&np=<newpass>&a=<admin_id>&ap=<adminPass>
+            // admin == 644(root) or 168(admin)
+            const get_cmd = `/get_change_user_password_by_admin?u=${targetUsername}&np=${targetPassword}&a=${adminUserId}&ap=${adminPassword}`;
+            try {
+                const response = yield $c36a7239ad0468ba$export$2c0b2ede218c05b2(options, get_cmd, 'GET');
+                if (parseInt(response) === -1) throw new Error('command rejected by the server');
+                if (typeof success_callback === 'function') success_callback(response);
+                return response;
+            } catch (error) {
+                _if_error(error_callback, 'get_change_user_password_by_admin', error);
+            }
+        });
+    }
+    $5efcdb3d7358ef8c$export$d237f587010e5041.change_password_by_admin = change_password_by_admin;
+    function delete_account_by_admin(options, targetUsername, adminUserId, adminPassword, success_callback, error_callback = null) {
+        return $5efcdb3d7358ef8c$var$__awaiter(this, void 0, void 0, function*() {
+            // Access: /get_delete_account_by_admin?u=<username>&a=<admin_id>&ap=<adminPassword>
+            // admin == 644(root) or 168(admin)
+            const get_cmd = `/get_delete_account_by_admin?u=${targetUsername}&a=${adminUserId}&ap=${adminPassword}`;
+            try {
+                const response = yield $c36a7239ad0468ba$export$2c0b2ede218c05b2(options, get_cmd, 'GET');
+                if (parseInt(response) === -1) throw new Error('command rejected by the server');
+                if (typeof success_callback === 'function') success_callback(response);
+                return response;
+            } catch (error) {
+                _if_error(error_callback, 'get_delete_account_by_admin', error);
+            }
+        });
+    }
+    $5efcdb3d7358ef8c$export$d237f587010e5041.delete_account_by_admin = delete_account_by_admin;
+    function change_account_rights_by_admin(options, targetUsername, targetAcountRight, adminUserId, adminPassword, success_callback, error_callback = null) {
+        return $5efcdb3d7358ef8c$var$__awaiter(this, void 0, void 0, function*() {
+            // Access: ?u=<username>&ri=<rights>&a=<admin_id>&ap=<adminPass>
+            // admin == 644(root) or 168(admin)
+            const get_cmd = `/get_change_account_rights_by_admin?u=${targetUsername}&ri=${targetAcountRight}&a=${adminUserId}&ap=${adminPassword}`;
+            try {
+                const response = yield $c36a7239ad0468ba$export$2c0b2ede218c05b2(options, get_cmd, 'GET');
+                if (parseInt(response) === -1) throw new Error('command rejected by the server');
+                if (typeof success_callback === 'function') success_callback(response);
+                return response;
+            } catch (error) {
+                _if_error(error_callback, 'get_change_account_rights_by_admin', error);
+            }
+        });
+    }
+    $5efcdb3d7358ef8c$export$d237f587010e5041.change_account_rights_by_admin = change_account_rights_by_admin;
+    function _if_error(error_callback, fun, response) {
+        if (error_callback !== null) return error_callback(response);
+        else return console.log('Error on ' + fun + ' and the error_callback was not set.');
+    }
+})($5efcdb3d7358ef8c$export$d237f587010e5041 || ($5efcdb3d7358ef8c$export$d237f587010e5041 = {
+}));
+
+
 var $589ebaa3cc7527d9$exports = {};
 
 $parcel$export($589ebaa3cc7527d9$exports, "spinalRegisterModel", () => $589ebaa3cc7527d9$export$322c967aeb5c06d6);
@@ -3658,6 +3893,12 @@ var $4slPs = parcelRequire("4slPs");
 
 
 var $4Biiw = parcelRequire("4Biiw");
+
+
+var $b0448e60c92b3ae9$exports = {};
+
+
+var $37c89bf5a20faae3$exports = {};
 
 
 var $6ef81293b2ac1c62$exports = {};
@@ -3736,6 +3977,7 @@ globalThis.bind = $accbf9e3b1280427$export$2385a24977818dd0;
 
 
 var $01Pqy = parcelRequire("01Pqy");
+
 
 var $43aec7f24602197c$exports = {};
 var $2a31c265435af559$exports = {};
@@ -3957,6 +4199,7 @@ if (!('spinal' in globalThis)) globalThis.spinal = $3JI2b.ModelProcessManager.sp
 $589ebaa3cc7527d9$export$a4e9f07232169aad($628a8c82907e34e7$exports.spinalCore, 'spinalCore');
 $589ebaa3cc7527d9$export$a4e9f07232169aad($gavvF.FileSystem, 'FileSystem');
 $589ebaa3cc7527d9$export$a4e9f07232169aad($3JI2b.ModelProcessManager, 'ModelProcessManager');
+$589ebaa3cc7527d9$export$a4e9f07232169aad($5efcdb3d7358ef8c$exports.SpinalUserManager, 'SpinalUserManager');
 $589ebaa3cc7527d9$export$a4e9f07232169aad($01Pqy.Process, 'Process');
 $589ebaa3cc7527d9$export$a4e9f07232169aad($7O6Yd.BindProcess, 'BindProcess');
 $589ebaa3cc7527d9$export$322c967aeb5c06d6($6QX0c.Model, 'Model');
@@ -4000,5 +4243,5 @@ var $0057fc83374542cb$export$ddab65ae98aaa487 = parcelRequire("01Pqy").Process;
 var $fc9e73763bdb50c9$export$e6de3ff0fa45a019 = parcelRequire("lGGs8").NewAlertMsg;
 var $0eca0a3d4cae8e8f$export$e947614430708c91 = parcelRequire("1gINV").getUrlPath;
 var $6ee9f94fde05cca5$export$9652023d9040757 = parcelRequire("9wokq").isIterable;
-export {FileSystem as FileSystem, $bc5605b5c95143d4$exports as default, $b97d5e4a2c99b386$export$1dbf9926a0d54d98 as Directory, $3944b6afa5d7b3fc$export$b6afa8811b7e644e as File, $93f6f76dad5dbc67$export$4b2950bdac9b6ee9 as Path, $5ddc74eda8135f89$export$598ea37cc1e20dfa as Pbr, $33eab5bbddef97cc$export$96d7e0bc5363b2c6 as Ptr, $b6dd1cfb910cf9e7$export$86422d9fcaac5a78 as RightSetList, $03519d1f15dee83d$export$d4cfb3e939ea5c80 as RightsItem, $eea429a64ca10631$export$d0f738c06f5e6fee as SessionModel, $3598cfb07079992a$export$f26600b5cf417d1a as TiffFile, $dfce4a4de10c079b$export$1f44aaf2ec115b54 as User, $55f2fc367e06512f$export$56864abfbf86ef48 as UserRight, $2b87bb530c041ae3$export$30855ecba71b29fd as ModelProcessManager, $e337ab00d77288e8$export$6e6298e1abe0d5b as Bool, $5c65d5123fa66ba6$export$32a7462f6a06cbd5 as Choice, $8e9e78668bc86ca0$export$774a0e74f4f3f461 as Lst, $4fd55e0a7b376205$export$a1edc412be3e1841 as Model, $e057a98189eac8dd$export$6738a6d9146a0cdc as Obj, $99ea262d9051c95f$export$ed61451db706e904 as Str, $679f7f26f7c26e4f$export$83502047e761f50b as TypedArray_Float64, $b39888fbde163a8b$export$95edd4638367a48f as TypedArray_Int32, $7a682b302f2f8a48$export$38dfac6a73b2b45e as Val, $b1b0838feaa6067f$export$e947a0f742cf021e as Vec, $017786a5667b466a$export$3f2ba963eed9fec6 as BindProcess, $0057fc83374542cb$export$ddab65ae98aaa487 as Process, $628a8c82907e34e7$export$a34888876ba95657 as spinalCore, $628a8c82907e34e7$exports as default, $589ebaa3cc7527d9$export$322c967aeb5c06d6 as spinalRegisterModel, $589ebaa3cc7527d9$export$a4e9f07232169aad as spinalRegister, $12a8e9845cd38347$export$914b3a8889b8a8a9 as TypedArray, $accbf9e3b1280427$export$2385a24977818dd0 as bind, $2a31c265435af559$export$d2cf6cd1dc7067d3 as addClass, $7898c3c4430faba3$export$da405662c16fca8e as getLeft, $87290287db6ba45f$export$449115d164fc37c3 as getTop, $fc9e73763bdb50c9$export$e6de3ff0fa45a019 as NewAlertMsg, $53d3eaf9257f5b36$export$bf01a0cff267368f as remClass, $e8ce62e2c96864f5$export$4401ffb216812b56 as spinalNewPopup, $0eca0a3d4cae8e8f$export$e947614430708c91 as getUrlPath, $6ee9f94fde05cca5$export$9652023d9040757 as isIterable};
+export {FileSystem as FileSystem, $bc5605b5c95143d4$exports as default, $b97d5e4a2c99b386$export$1dbf9926a0d54d98 as Directory, $3944b6afa5d7b3fc$export$b6afa8811b7e644e as File, $93f6f76dad5dbc67$export$4b2950bdac9b6ee9 as Path, $5ddc74eda8135f89$export$598ea37cc1e20dfa as Pbr, $33eab5bbddef97cc$export$96d7e0bc5363b2c6 as Ptr, $b6dd1cfb910cf9e7$export$86422d9fcaac5a78 as RightSetList, $03519d1f15dee83d$export$d4cfb3e939ea5c80 as RightsItem, $eea429a64ca10631$export$d0f738c06f5e6fee as SessionModel, $3598cfb07079992a$export$f26600b5cf417d1a as TiffFile, $dfce4a4de10c079b$export$1f44aaf2ec115b54 as User, $55f2fc367e06512f$export$56864abfbf86ef48 as UserRight, $2b87bb530c041ae3$export$30855ecba71b29fd as ModelProcessManager, $e337ab00d77288e8$export$6e6298e1abe0d5b as Bool, $5c65d5123fa66ba6$export$32a7462f6a06cbd5 as Choice, $8e9e78668bc86ca0$export$774a0e74f4f3f461 as Lst, $4fd55e0a7b376205$export$a1edc412be3e1841 as Model, $e057a98189eac8dd$export$6738a6d9146a0cdc as Obj, $99ea262d9051c95f$export$ed61451db706e904 as Str, $679f7f26f7c26e4f$export$83502047e761f50b as TypedArray_Float64, $b39888fbde163a8b$export$95edd4638367a48f as TypedArray_Int32, $7a682b302f2f8a48$export$38dfac6a73b2b45e as Val, $b1b0838feaa6067f$export$e947a0f742cf021e as Vec, $017786a5667b466a$export$3f2ba963eed9fec6 as BindProcess, $0057fc83374542cb$export$ddab65ae98aaa487 as Process, $628a8c82907e34e7$export$a34888876ba95657 as spinalCore, $628a8c82907e34e7$exports as default, $5efcdb3d7358ef8c$export$d237f587010e5041 as SpinalUserManager, $5efcdb3d7358ef8c$exports as default, $589ebaa3cc7527d9$export$322c967aeb5c06d6 as spinalRegisterModel, $589ebaa3cc7527d9$export$a4e9f07232169aad as spinalRegister, $12a8e9845cd38347$export$914b3a8889b8a8a9 as TypedArray, $accbf9e3b1280427$export$2385a24977818dd0 as bind, $2a31c265435af559$export$d2cf6cd1dc7067d3 as addClass, $7898c3c4430faba3$export$da405662c16fca8e as getLeft, $87290287db6ba45f$export$449115d164fc37c3 as getTop, $fc9e73763bdb50c9$export$e6de3ff0fa45a019 as NewAlertMsg, $53d3eaf9257f5b36$export$bf01a0cff267368f as remClass, $e8ce62e2c96864f5$export$4401ffb216812b56 as spinalNewPopup, $0eca0a3d4cae8e8f$export$e947614430708c91 as getUrlPath, $6ee9f94fde05cca5$export$9652023d9040757 as isIterable};
 //# sourceMappingURL=module.js.map

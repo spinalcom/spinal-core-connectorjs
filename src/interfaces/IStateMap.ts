@@ -29,7 +29,7 @@ import type { Model } from '../Models/Model';
  * @interface IStateMap
  * @template T
  */
-export interface IStateMap<T extends Model> {
+export interface IStateMap<T extends Model = Model> {
   [key: string]: {
     type: string;
     data: string;

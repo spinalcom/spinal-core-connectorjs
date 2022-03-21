@@ -33,6 +33,7 @@ declare global {
   // @ts-ignore
   var FileSystem: typeof _ModelProcessManager.spinal.FileSystem;
   var ModelProcessManager: typeof _ModelProcessManager.spinal.ModelProcessManager;
+  var SpinalUserManager: typeof _ModelProcessManager.spinal.SpinalUserManager;
 
   var Process: typeof _ModelProcessManager.spinal.Process;
   var BindProcess: typeof _ModelProcessManager.spinal.BindProcess;

@@ -24,7 +24,7 @@
 
 import type { Model } from '../Models/Model';
 
-export type SpinalLoadCallBack<T extends Model> = (
+export type SpinalLoadCallBack<T extends Model = Model> = (
   model: T,
   error?: boolean | string
 ) => void;

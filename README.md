@@ -4,19 +4,29 @@ SpinalCore is a library built for Fog computing that synchronizes objects in rea
 
 ## Features
 
-* **Fog computing ready** - SpinalCore runs on IoT gateways, development cards, edge servers and provide every fog application components required: database, event manager, replication system, etc.
-* **Simple & Fast** - SpinalCore allows you to design and implement flexible IoT system in minutes. It offer open, simple and documented APIs.
-* **Interoperable** - SpinalCore enable powerful virtualization, object management, data replication and workflow orchestration between all your devices and applications.
+- **Fog computing ready** - SpinalCore runs on IoT gateways, development cards, edge servers and provide every fog application components required: database, event manager, replication system, etc.
+- **Simple & Fast** - SpinalCore allows you to design and implement flexible IoT system in minutes. It offer open, simple and documented APIs.
+- **Interoperable** - SpinalCore enable powerful virtualization, object management, data replication and workflow orchestration between all your devices and applications.
 
 ## Installation
 
 ```
-npm install https://github.com/spinalcom/spinal-core-connectorjs
+npm install -S https://github.com/spinalcom/spinal-core-connectorjs
 ```
 
-## QuickStart & docs
+## QuickStart
 
-Go to [doc.spinalcom.com/quick_start.html](http://doc.spinalcom.com/quick_start.html)
+For a quick start, checkout the files in the folder [exemple](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/exemple):
+
+- [publisher](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/exemple/publisher.ts)
+- [publisherWithAuthOrgan](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/exemple/publisherWithAuthOrgan.ts)
+- [subcriber](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/exemple/subscriber.ts)
+- [subscriberWithAuthOrgan](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/exemple/subscriberWithAuthOrgan.ts)
+- [subscriberWithAuthBrowser](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/exemple/subscriberWithAuthBrowser.ts)
+
+## API Documentation
+
+https://spinalcom.github.io/spinal-core-connectorjs/
 
 ## More info
 
