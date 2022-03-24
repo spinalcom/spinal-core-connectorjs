@@ -16,13 +16,13 @@ npm install -S https://github.com/spinalcom/spinal-core-connectorjs
 
 ## QuickStart
 
-For a quick start, checkout the files in the folder [exemple](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/exemple):
+For a quick start, checkout the files in the folder [example](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/example):
 
-- [publisher](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/exemple/publisher.ts)
-- [publisherWithAuthOrgan](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/exemple/publisherWithAuthOrgan.ts)
-- [subcriber](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/exemple/subscriber.ts)
-- [subscriberWithAuthOrgan](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/exemple/subscriberWithAuthOrgan.ts)
-- [subscriberWithAuthBrowser](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/exemple/subscriberWithAuthBrowser.ts)
+- [publisher](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/example/publisher.ts)
+- [publisherWithAuthOrgan](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/example/publisherWithAuthOrgan.ts)
+- [subcriber](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/example/subscriber.ts)
+- [subscriberWithAuthOrgan](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/example/subscriberWithAuthOrgan.ts)
+- [subscriberWithAuthBrowser](https://github.com/spinalcom/spinal-core-connectorjs/blob/master/example/subscriberWithAuthBrowser.ts)
 
 ## API Documentation
 
