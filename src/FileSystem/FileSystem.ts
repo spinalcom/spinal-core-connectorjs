@@ -637,6 +637,14 @@ export class FileSystem {
   }
 
   /**
+   * to be refedifined to change the handleing for connections error
+   * @static
+   * @memberof FileSystem
+   */
+  public static onConnectionError: (error_code: number) => void =
+    FileSystem._onConnectionError;
+
+  /**
    * default callback on make_channel error after the timeout disconnected reached
    * This method can be surcharged.
    * error_code :
@@ -650,7 +658,7 @@ export class FileSystem {
    * @param {number} error_code
    * @memberof FileSystem
    */
-  private static onConnectionError(error_code: number): void {
+  private static _onConnectionError(error_code: number): void {
     let msg = '';
     if (error_code === 0) {
       // Error resolved

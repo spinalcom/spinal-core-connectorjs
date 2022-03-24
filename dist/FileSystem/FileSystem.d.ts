@@ -312,6 +312,12 @@ export declare class FileSystem {
      */
     private make_channel;
     /**
+     * to be refedifined to change the handleing for connections error
+     * @static
+     * @memberof FileSystem
+     */
+    static onConnectionError: (error_code: number) => void;
+    /**
      * default callback on make_channel error after the timeout disconnected reached
      * This method can be surcharged.
      * error_code :
@@ -325,7 +331,7 @@ export declare class FileSystem {
      * @param {number} error_code
      * @memberof FileSystem
      */
-    private static onConnectionError;
+    private static _onConnectionError;
     /**
      * get the first running inst
      * @static

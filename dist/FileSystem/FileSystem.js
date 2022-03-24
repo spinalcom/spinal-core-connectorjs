@@ -349,7 +349,7 @@ class FileSystem {
      * @param {number} error_code
      * @memberof FileSystem
      */
-    static onConnectionError(error_code) {
+    static _onConnectionError(error_code) {
         let msg = '';
         if (error_code === 0) {
             // Error resolved
@@ -840,4 +840,10 @@ FileSystem.url_upload = '/sceen/upload';
  * @memberof FileSystem
  */
 FileSystem.CONNECTOR_TYPE = typeof globalThis.global != 'undefined' ? 'Node' : 'Browser';
+/**
+ * to be refedifined to change the handleing for connections error
+ * @static
+ * @memberof FileSystem
+ */
+FileSystem.onConnectionError = FileSystem._onConnectionError;
 //# sourceMappingURL=FileSystem.js.map

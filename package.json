@@ -10,7 +10,7 @@
     "watch": "parcel watch --no-optimize",
     "clean": "rm -rf dist declarations .parcel-cache .env",
     "build": "npm run clean && tsc",
-    "docs": "typedoc --readme README.md src"
+    "docs": "rm -rf docs && typedoc --readme README.md src"
   },
   "author": "SpinalCom",
   "license": "SpinalCom Free Software License Agreement",
