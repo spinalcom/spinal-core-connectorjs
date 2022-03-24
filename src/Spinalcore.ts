@@ -25,12 +25,12 @@
 import { FileSystem } from './FileSystem/FileSystem';
 import type { Directory } from './FileSystem/Models/Directory';
 import type { File } from './FileSystem/Models/File';
+import type { RightsItem } from './FileSystem/Models/RightsItem';
 import type { TiffFile } from './FileSystem/Models/TiffFile';
-import { RightsItem } from './FileSystem/Models/RightsItem';
-import { IAuthResponse } from './interfaces/IAuthResponse';
-import { ICreateSessionResponse } from './interfaces/ICreateSessionResponse';
+import type { IAuthResponse } from './interfaces/IAuthResponse';
+import type { ICreateSessionResponse } from './interfaces/ICreateSessionResponse';
 import type { IFileInfoOption } from './interfaces/IFileInfoOption';
-import {
+import type {
   IOptionFileSystemWithSessionId,
   IOptionFileSystemWithUser,
 } from './interfaces/IOptionFilesystem';
@@ -42,17 +42,18 @@ import { ModelProcessManager } from './ModelProcessManager';
 import type { Model } from './Models/Model';
 import { sendXhr } from './Utils/sendXhr';
 
-export namespace spinalCore {
-  export const _def: ISpinalModel = ModelProcessManager._def;
-  export const version: string = /*#__PURE__*/ process.env.PACKAGE_VERSION;
+export class spinalCore {
+  public static _def: ISpinalModel = ModelProcessManager._def;
+  public static version: string = ModelProcessManager.spinal.version;
 
   /**
-   * @export
+   * @static
    * @param {(URL | string)} options
    * @param {string} [accessToken]
    * @return {*}  {FileSystem}
+   * @memberof spinalCore
    */
-  export function connect(
+  public static connect(
     options: URL | string,
     accessToken?: string
   ): FileSystem {
@@ -72,13 +73,14 @@ export namespace spinalCore {
   }
 
   /**
-   * @export
+   * @static
    * @param {(URL | string)} options
    * @param {number} sessionId
    * @param {string} [accessToken]
    * @return {*}  {FileSystem}
+   * @memberof spinalCore
    */
-  export function connectWithSessionId(
+  public static connectWithSessionId(
     options: URL | string,
     sessionId: number,
     accessToken?: string
@@ -97,7 +99,15 @@ export namespace spinalCore {
     return new FileSystem(opt);
   }
 
-  export async function auth(
+  /**
+   * @static
+   * @param {(URL | string)} options
+   * @param {string} username
+   * @param {string} password
+   * @return {*}  {Promise<IAuthResponse>}
+   * @memberof spinalCore
+   */
+  public static async auth(
     options: URL | string,
     username: string,
     password: string
@@ -112,7 +122,16 @@ export namespace spinalCore {
     return JSON.parse(res);
   }
 
-  export async function authOrgan(
+  /**
+   * @static
+   * @param {(URL | string)} options
+   * @param {string} bosRegisterKey
+   * @param {string} organName
+   * @param {string} organType
+   * @return {*}  {Promise<IAuthResponse>}
+   * @memberof spinalCore
+   */
+  public static async authOrgan(
     options: URL | string,
     bosRegisterKey: string,
     organName: string,
@@ -128,7 +147,14 @@ export namespace spinalCore {
     return JSON.parse(res);
   }
 
-  export async function createSession(
+  /**
+   * @static
+   * @param {(URL | string)} options
+   * @param {string} token
+   * @return {*}  {Promise<ICreateSessionResponse>}
+   * @memberof spinalCore
+   */
+  public static async createSession(
     options: URL | string,
     token: string
   ): Promise<ICreateSessionResponse> {
@@ -140,14 +166,15 @@ export namespace spinalCore {
 
   /**
    * stores a model in the file system
-   * @export
+   * @static
    * @param {FileSystem} fs
    * @param {Model} model
    * @param {string} path
    * @param {IFileInfoOption} [fileOption]
    * @return {*}  {Promise<void>}
+   * @memberof spinalCore
    */
-  export async function store(
+  public static async store(
     fs: FileSystem,
     model: Model,
     path: string,
@@ -155,15 +182,16 @@ export namespace spinalCore {
   ): Promise<void>;
   /**
    * stores a model in the file system
-   * @export
+   * @static
    * @param {FileSystem} fs
    * @param {Model} model
    * @param {string} path
    * @param {SpinalStoreCallBackSucess} callback_success
    * @param {SpinalCallBackError} [callback_error]
-   * @return {*}  {void}
+   * @param {IFileInfoOption} [fileOption]
+   * @memberof spinalCore
    */
-  export function store(
+  public static store(
     fs: FileSystem,
     model: Model,
     path: string,
@@ -171,7 +199,7 @@ export namespace spinalCore {
     callback_error?: SpinalCallBackError,
     fileOption?: IFileInfoOption
   ): void;
-  export async function store(
+  public static async store(
     fs: FileSystem,
     model: Model,
     path: string,
@@ -201,32 +229,34 @@ export namespace spinalCore {
     } catch (error) {
       if (typeof optionOrCb === 'undefined') throw error;
       if (typeof callback_error === 'undefined') {
-        defaultCallbackError();
+        spinalCore.defaultCallbackError();
       } else callback_error();
     }
   }
 
   /**
-   * @export
+   * @static
    * @param {typeof Model} model
    * @param {string} [name]
+   * @memberof spinalCore
    */
-  export function register_models(model: typeof Model, name?: string): void;
+  public static register_models(model: typeof Model, name?: string): void;
   /**
-   * @export
+   * @static
    * @param {(typeof Model[]
    *       | {
    *           [key: string]: typeof Model;
    *         })} modelList
+   * @memberof spinalCore
    */
-  export function register_models(
+  public static register_models(
     modelList:
       | typeof Model[]
       | {
           [key: string]: typeof Model;
         }
   ): void;
-  export function register_models(
+  public static register_models(
     modelList: typeof Model | typeof Model[] | { [key: string]: typeof Model },
     name?: string
   ): void {
@@ -238,12 +268,14 @@ export namespace spinalCore {
   }
 
   /**
+   * @static
    * @template T
    * @param {FileSystem} fs
    * @param {string} path
    * @return {*}  {Promise<T>}
+   * @memberof spinalCore
    */
-  async function loadPromise<T extends Model>(
+  public static async loadPromise<T extends Model>(
     fs: FileSystem,
     path: string
   ): Promise<T> {
@@ -263,40 +295,43 @@ export namespace spinalCore {
 
   /**
    * loads a model from the file system
-   * @export
+   * @static
    * @template T
    * @param {FileSystem} fs
    * @param {string} path
    * @return {*}  {Promise<T>}
+   * @memberof spinalCore
    */
-  export function load<T extends Model = Model>(
+  public static load<T extends Model = Model>(
     fs: FileSystem,
     path: string
   ): Promise<T>;
   /**
    * loads a model from the file system
-   * @export
+   * @static
    * @template T
    * @param {FileSystem} fs
    * @param {string} path
    * @param {SpinalLoadCallBack<T>} callback_success
    * @param {SpinalCallBackError} [callback_error]
+   * @memberof spinalCore
    */
-  export function load<T extends Model = Model>(
+  public static load<T extends Model = Model>(
     fs: FileSystem,
     path: string,
     callback_success: SpinalLoadCallBack<T>,
     callback_error?: SpinalCallBackError
   ): void;
-  export function load<T extends Model>(
+  public static load<T extends Model>(
     fs: FileSystem,
     path: string,
     callback_success?: SpinalLoadCallBack<T>,
     callback_error?: SpinalCallBackError
   ): Promise<T> {
-    if (typeof callback_success === 'undefined') return loadPromise(fs, path);
+    if (typeof callback_success === 'undefined')
+      return spinalCore.loadPromise(fs, path);
     if (typeof callback_error === 'undefined')
-      callback_error = defaultCallbackError;
+      callback_error = spinalCore.defaultCallbackError;
     // Parse path
     const lst = path.split('/');
     const file_name = lst.pop();
@@ -330,22 +365,23 @@ export namespace spinalCore {
 
   /**
    * loads all the models of a specific type
-   * @export
+   * @static
    * @template T
    * @param {FileSystem} fs
    * @param {string} type
    * @param {SpinalLoadCallBack<T>} callback_success
    * @param {SpinalCallBackError} [callback_error]
-   * @return {*}
+   * @return {*}  {void}
+   * @memberof spinalCore
    */
-  export function load_type<T extends Model>(
+  public static load_type<T extends Model>(
     fs: FileSystem,
     type: string,
     callback_success: SpinalLoadCallBack<T>,
     callback_error?: SpinalCallBackError
   ): void {
     if (typeof callback_error === 'undefined') {
-      callback_error = defaultCallbackError;
+      callback_error = spinalCore.defaultCallbackError;
     }
     return fs.load_type(type, (data: T, error: boolean): void => {
       if (!data || error) callback_error();
@@ -359,21 +395,22 @@ export namespace spinalCore {
    * @param {number} ptr
    * @return {*}  {Promise<RightsItem>}
    */
-  export function load_right(fs: FileSystem, ptr: number): Promise<RightsItem>;
+  public static load_right(fs: FileSystem, ptr: number): Promise<RightsItem>;
   /**
-   * @export
+   * @static
    * @param {FileSystem} fs
    * @param {number} ptr
    * @param {SpinalLoadCallBack<RightsItem>} callback_success
    * @param {SpinalCallBackError} [callback_error]
+   * @memberof spinalCore
    */
-  export function load_right(
+  public static load_right(
     fs: FileSystem,
     ptr: number,
     callback_success: SpinalLoadCallBack<RightsItem>,
     callback_error?: SpinalCallBackError
   ): void;
-  export function load_right(
+  public static load_right(
     fs: FileSystem,
     ptr: number,
     callback_success?: SpinalLoadCallBack<RightsItem>,
@@ -381,7 +418,7 @@ export namespace spinalCore {
   ): Promise<RightsItem> {
     if (typeof callback_success === 'function') {
       if (typeof callback_error === 'undefined') {
-        callback_error = defaultCallbackError;
+        callback_error = spinalCore.defaultCallbackError;
       }
       fs.load_right(ptr, (data: RightsItem, err: boolean): void => {
         if (err) return callback_error();
@@ -392,27 +429,29 @@ export namespace spinalCore {
     }
   }
   /**
-   * @export
+   * @static
    * @param {FileSystem} fs
    * @param {string} path
    * @return {*}  {Promise<Directory>}
+   * @memberof spinalCore
    */
-  export function load_directory(
+  public static load_directory(
     fs: FileSystem,
     path: string
   ): Promise<Directory>;
   /**
-   * @export
+   * @static
    * @param {FileSystem} fs
    * @param {string} path
    * @param {SpinalLoadCallBack<Directory>} [callback]
+   * @memberof spinalCore
    */
-  export function load_directory(
+  public static load_directory(
     fs: FileSystem,
     path: string,
     callback?: SpinalLoadCallBack<Directory>
   ): void;
-  export function load_directory(
+  public static load_directory(
     fs: FileSystem,
     path: string,
     callback?: SpinalLoadCallBack<Directory>
@@ -422,29 +461,31 @@ export namespace spinalCore {
   }
 
   /**
-   * @export
+   * @static
    * @template T
    * @param {FileSystem} fs
    * @param {number} ptr
    * @return {*}  {Promise<Model>}
+   * @memberof spinalCore
    */
-  export function load_ptr<T extends Model>(
+  public static load_ptr<T extends Model>(
     fs: FileSystem,
     ptr: number
   ): Promise<Model>;
   /**
-   * @export
+   * @static
    * @template T
    * @param {FileSystem} fs
    * @param {number} ptr
    * @param {SpinalLoadCallBack<T>} [callback]
+   * @memberof spinalCore
    */
-  export function load_ptr<T extends Model>(
+  public static load_ptr<T extends Model>(
     fs: FileSystem,
     ptr: number,
     callback?: SpinalLoadCallBack<T>
   ): void;
-  export function load_ptr<T extends Model>(
+  public static load_ptr<T extends Model>(
     fs: FileSystem,
     ptr: number,
     callback?: SpinalLoadCallBack<T>
@@ -454,15 +495,16 @@ export namespace spinalCore {
   }
 
   /**
-   * @export
+   * @static
    * @param {FileSystem} fs
    * @param {number} ptr
    * @param {string} file_name
    * @param {number} right_flag
    * @param {string} targetName
    * @return {*}  {void}
+   * @memberof spinalCore
    */
-  export function share_model(
+  public static share_model(
     fs: FileSystem,
     ptr: number,
     file_name: string,
@@ -472,25 +514,28 @@ export namespace spinalCore {
     return fs.share_model(ptr, file_name, right_flag, targetName);
   }
 
-  export const right_flag = { AD: 1, WR: 2, RD: 4 };
+  public static right_flag = { AD: 1, WR: 2, RD: 4 };
 
   /**
-   * "export function" method: extend one object as a class, using the same 'class' concept as coffeescript
+   * "public static" method: extend one object as a class, using the same 'class' concept as coffeescript
    * @deprecated
-   * @export
+   * @static
    * @param {*} child
    * @param {*} parent
    * @return {*}  {*}
+   * @memberof spinalCore
    */
-  export function extend(child: any, parent: any): any {
+  public static extend(child: any, parent: any): any {
     return FileSystem.extend(child, parent);
   }
 
   /**
    * default callback function
+   * @static
    * @return {*}  {void}
+   * @memberof spinalCore
    */
-  function defaultCallbackError(): void {
+  public static defaultCallbackError(): void {
     return console.log(
       'Model could not be loaded. You can pass a callback to handle this error.'
     );

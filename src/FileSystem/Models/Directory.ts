@@ -26,6 +26,7 @@ import type { IFileInfoOption } from '../../interfaces/IFileInfoOption';
 import type { SpinalFilterFunction } from '../../interfaces/SpinalFilterFunction';
 import type { SpinalLoadCallBack } from '../../interfaces/SpinalLoadCallBack';
 import { Lst } from '../../Models/Lst';
+import type { Model } from '../../Models/Model';
 import { File } from './File';
 import { TiffFile } from './TiffFile';
 
@@ -35,7 +36,7 @@ import { TiffFile } from './TiffFile';
  * @class Directory
  * @extends {(Lst<File | TiffFile>)}
  */
-export class Directory extends Lst<File | TiffFile> {
+export class Directory<T extends Model = any> extends Lst<File | TiffFile> {
   /**
    * @static
    * @type {string}
@@ -65,7 +66,7 @@ export class Directory extends Lst<File | TiffFile> {
    * @return {*}  {(File | TiffFile)}
    * @memberof Directory
    */
-  public find(name: string): File | TiffFile {
+  public find(name: string): File<T> | TiffFile<T> {
     for (let i = 0; i < this.length; i++) {
       const file: File = this[i];
       if (file.hasOwnProperty('name') && file.name.equals(name)) return file;
@@ -178,5 +179,11 @@ export class Directory extends Lst<File | TiffFile> {
    */
   public get_file_info(info: any): string {
     return (info.icon = 'folder');
+  }
+}
+type _Directory<T extends Model = any> = Directory<T>;
+declare global {
+  export namespace spinal {
+    export type Directory<T extends Model = any> = _Directory<T>;
   }
 }

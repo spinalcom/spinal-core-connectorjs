@@ -84,3 +84,10 @@ export class TiffFile<T extends Model = any> extends File<T> {
     this._ptr_tiff.load(callback);
   }
 }
+
+type _TiffFile<T extends Model = any> = TiffFile<T>;
+declare global {
+  export namespace spinal {
+    export type TiffFile<T extends Model = any> = _TiffFile<T>;
+  }
+}

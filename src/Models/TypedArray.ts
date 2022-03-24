@@ -23,7 +23,7 @@
  */
 
 import { FileSystem } from '../FileSystem/FileSystem';
-import { IFsData } from '../interfaces/IFsData';
+import type { IFsData } from '../interfaces/IFsData';
 import { Model } from './Model';
 
 export abstract class TypedArray<

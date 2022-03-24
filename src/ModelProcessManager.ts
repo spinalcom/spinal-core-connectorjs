@@ -22,75 +22,55 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-import type { FileSystem } from './FileSystem/FileSystem';
-import type { Directory } from './FileSystem/Models/Directory';
-import type { File } from './FileSystem/Models/File';
-import type { Path } from './FileSystem/Models/Path';
-import type { Pbr } from './FileSystem/Models/Pbr';
-import type { Ptr } from './FileSystem/Models/Ptr';
-import type { RightSetList } from './FileSystem/Models/RightSetList';
-import type { RightsItem } from './FileSystem/Models/RightsItem';
-import type { SessionModel } from './FileSystem/Models/SessionModel';
-import type { TiffFile } from './FileSystem/Models/TiffFile';
-import type { User } from './FileSystem/Models/User';
-import type { UserRight } from './FileSystem/Models/UserRight';
 import type { ISpinalModel } from './interfaces/ISpinalModels';
 import type { IStateMap } from './interfaces/IStateMap';
+import type { SpinalType } from './interfaces/SpinalType';
 import { Bool } from './Models/Bool';
-import type { Choice } from './Models/Choice';
 import { Lst } from './Models/Lst';
 import { Model } from './Models/Model';
-import type { Obj } from './Models/Obj';
 import { Str } from './Models/Str';
-import type { TypedArray } from './Models/TypedArray';
-import type { TypedArray_Float64 } from './Models/TypedArray_Float64';
-import type { TypedArray_Int32 } from './Models/TypedArray_Int32';
 import { Val } from './Models/Val';
-import type { Vec } from './Models/Vec';
-import type { BindProcess } from './Processes/BindProcess';
 import type { Process } from './Processes/Process';
-import type { spinalCore } from './Spinalcore';
-import type { SpinalUserManager } from './SpinalUserManager';
 import { isIterable } from './Utils/isIterable';
 
-export namespace ModelProcessManager {
+export class ModelProcessManager {
   // nb "change rounds" since the beginning ( * 2 to differenciate direct and indirect changes )
-  export let _counter: number = 0;
+  public static _counter: number = 0;
   // changed models (current round)
-  export const _modlist: Map<number, Model> = new Map();
+  public static _modlist: Map<number, Model> = new Map();
   // new processes (that will need a first onchange call in "force" mode)
-  export const _n_processes: Map<number, Process> = new Map();
+  public static _n_processes: Map<number, Process> = new Map();
   // current model id (used to create new ids)
-  export let _cur_mid: number = 0;
+  public static _cur_mid: number = 0;
   // current process id (used to create new ids)
-  export let _cur_process_id: number = 0;
+  public static _cur_process_id: number = 0;
   // timer used to create a new "round"
-  export let _timeout: ReturnType<typeof setTimeout> = undefined;
+  public static _timeout: ReturnType<typeof setTimeout> = undefined;
   // if _force_m == true, every has_been_modified function will return true
-  export let _force_m: boolean = false;
+  public static _force_m: boolean = false;
 
-  export const _def: ISpinalModel = {};
+  public static _def: ISpinalModel = {};
 
-  export function new_from_state(): void {
+  public static new_from_state(): void {
     throw 'function obsolete';
   }
-  export function load(): void {
+  public static load(): void {
     throw 'function obsolete';
   }
 
   /**
    * translate a normal javascript to their spinal model connter part
-   * @export
+   * @public
    * @param {*} v
    * @return {*}  {Model}
    */
-  export function conv(v: Model): Model;
-  export function conv(v: any[]): Lst;
-  export function conv(v: string): Str;
-  export function conv(v: number): Val;
-  export function conv(v: boolean): Bool;
-  export function conv(v: any): Model;
-  export function conv(v: any): Model {
+  public static conv(v: Model): Model;
+  public static conv(v: any[]): Lst<any>;
+  public static conv(v: string): Str;
+  public static conv(v: number): Val;
+  public static conv(v: boolean): Bool;
+  public static conv(v: any): Model;
+  public static conv(v: any): Model {
     if (v instanceof Model) return v;
     if (v instanceof Array) return new Lst(v);
     if (typeof v === 'string') return new Str(v);
@@ -100,11 +80,11 @@ export namespace ModelProcessManager {
   }
 
   /**
-   * @export
+   * @public
    * @param {Model} obj
    * @return {*}  {string}
    */
-  export function get_object_class(obj: Model): string {
+  public static get_object_class(obj: Model): string {
     if (obj?.constructor) {
       if ('_constructorName' in obj) return obj._constructorName;
       if ('name' in obj.constructor) return obj.constructor.name;
@@ -121,11 +101,11 @@ export namespace ModelProcessManager {
   }
 
   /**
-   * @export
+   * @public
    * @param {(Model | object)} m
    * @return {*}  {string[]}
    */
-  export function _get_attribute_names(m: Model | object): string[] {
+  public static _get_attribute_names(m: Model | object): string[] {
     if (m instanceof Model) {
       return m._attribute_names;
     }
@@ -140,13 +120,13 @@ export namespace ModelProcessManager {
 
   /**
    * create a Model using a line of get_state(using.type, .data, ...)
-   * @export
+   * @public
    * @template T
    * @param {string} mid
    * @param {IStateMap<T>} map
    * @return {*}  {T}
    */
-  export function _new_model_from_state<T extends Model>(
+  public static _new_model_from_state<T extends Model>(
     mid: string,
     map: IStateMap<T>
   ): T {
@@ -159,38 +139,41 @@ export namespace ModelProcessManager {
   /**
    * say that something will need a call
    * to ModelProcessManager._sync_processes during the next round
-   * @export
+   * @public
    * @return {*}  {ReturnType<typeof setTimeout>}
    */
-  export function _need_sync_processes(): ReturnType<typeof setTimeout> {
-    if (_timeout == null) {
-      _timeout = setTimeout(_sync_processes, 1);
-      return _timeout;
+  public static _need_sync_processes(): ReturnType<typeof setTimeout> {
+    if (ModelProcessManager._timeout == null) {
+      ModelProcessManager._timeout = setTimeout(
+        ModelProcessManager._sync_processes,
+        1
+      );
+      return ModelProcessManager._timeout;
     }
   }
 
   /**
-   * @export
+   * @public
    * @param {typeof Model} model
    * @param {string} [name]
    */
-  export function register_models(model: typeof Model, name?: string): void;
+  public static register_models(model: typeof Model, name?: string): void;
 
   /**
-   * @export
+   * @public
    * @param {(typeof Model[]
    *       | {
    *           [key: string]: typeof Model;
    *         })} modelList
    */
-  export function register_models(
+  public static register_models(
     modelList:
       | typeof Model[]
       | {
           [key: string]: typeof Model;
         }
   ): void;
-  export function register_models(
+  public static register_models(
     modelList: typeof Model | typeof Model[] | { [key: string]: typeof Model },
     name?: string
   ): void {
@@ -219,15 +202,19 @@ export namespace ModelProcessManager {
   }
 
   /**
-   * @export
+   * @public
    * @param {typeof Model} func
    * @param {string} [name]
    */
-  export function _register_models_check(
+  public static _register_models_check(
     func: typeof Model,
     name?: string
   ): void {
-    if (!name) name = func._constructorName ? func._constructorName : func.name;
+    if (!name)
+      name =
+        typeof ModelProcessManager._def[name] !== 'undefined'
+          ? func._constructorName
+          : func.name;
     if (
       typeof ModelProcessManager._def[name] !== 'undefined' &&
       ModelProcessManager._def[name] !== func
@@ -245,9 +232,9 @@ export namespace ModelProcessManager {
   /**
    * the function that is called after a very short timeout,
    * when at least one object has been modified
-   * @export
+   * @public
    */
-  export function _sync_processes(): void {
+  public static _sync_processes(): void {
     const processes: Map<number, { value: Process; force: boolean }> =
       new Map();
     for (const [, model] of ModelProcessManager._modlist) {
@@ -275,38 +262,7 @@ export namespace ModelProcessManager {
     ModelProcessManager._force_m = false;
   }
 
-  export const spinal: Partial<{
-    version: string;
-    spinalCore: typeof spinalCore;
-    FileSystem: typeof FileSystem;
-    ModelProcessManager: typeof ModelProcessManager;
-    SpinalUserManager: typeof SpinalUserManager;
-    Process: typeof Process;
-    BindProcess: typeof BindProcess;
-    Model: typeof Model;
-    Obj: typeof Obj;
-    Bool: typeof Bool;
-    Val: typeof Val;
-    Str: typeof Str;
-    Lst: typeof Lst;
-    Vec: typeof Vec;
-    Choice: typeof Choice;
-    TypedArray: typeof TypedArray;
-    TypedArray_Int32: typeof TypedArray_Int32;
-    TypedArray_Float64: typeof TypedArray_Float64;
-    Directory: typeof Directory;
-    File: typeof File;
-    TiffFile: typeof TiffFile;
-    Path: typeof Path;
-    Ptr: typeof Ptr;
-    Pbr: typeof Pbr;
-    SessionModel: typeof SessionModel;
-    User: typeof User;
-    UserRight: typeof UserRight;
-    RightSetList: typeof RightSetList;
-    RightsItem: typeof RightsItem;
-    [key: string]: any;
-  }> = {
-    version: /*#__PURE__*/ process.env.PACKAGE_VERSION,
+  public static spinal: SpinalType = {
+    version: '2.5.0',
   };
 }

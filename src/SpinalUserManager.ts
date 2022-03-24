@@ -24,8 +24,8 @@
 
 import { sendXhr } from './Utils/sendXhr';
 
-export namespace SpinalUserManager {
-  export async function get_user_id(
+export class SpinalUserManager {
+  public static async get_user_id(
     options: string | URL,
     username: string,
     password: string,
@@ -43,11 +43,11 @@ export namespace SpinalUserManager {
       }
       return response;
     } catch (error) {
-      _if_error(error_callback, 'get_user_id', error);
+      SpinalUserManager._if_error(error_callback, 'get_user_id', error);
     }
   }
 
-  export async function get_admin_id(
+  public static async get_admin_id(
     options: string | URL,
     adminName: string,
     password: string,
@@ -66,11 +66,11 @@ export namespace SpinalUserManager {
       }
       return response;
     } catch (error) {
-      _if_error(error_callback, 'get_admin_id', error);
+      SpinalUserManager._if_error(error_callback, 'get_admin_id', error);
     }
   }
 
-  export async function new_account(
+  public static async new_account(
     options: string | URL,
     username: string,
     password: string,
@@ -88,11 +88,11 @@ export namespace SpinalUserManager {
       }
       return response;
     } catch (error) {
-      _if_error(error_callback, 'get_new_account', error);
+      SpinalUserManager._if_error(error_callback, 'get_new_account', error);
     }
   }
 
-  export async function change_password(
+  public static async change_password(
     options: string | URL,
     user_id: string | number,
     password: string,
@@ -111,11 +111,15 @@ export namespace SpinalUserManager {
       }
       return response;
     } catch (error) {
-      _if_error(error_callback, 'get_change_user_password', error);
+      SpinalUserManager._if_error(
+        error_callback,
+        'get_change_user_password',
+        error
+      );
     }
   }
 
-  export async function delete_account(
+  public static async delete_account(
     options: string | URL,
     userId: string | number,
     password: string,
@@ -135,11 +139,11 @@ export namespace SpinalUserManager {
       }
       return response;
     } catch (error) {
-      _if_error(error_callback, 'get_delete_account', error);
+      SpinalUserManager._if_error(error_callback, 'get_delete_account', error);
     }
   }
 
-  export async function change_password_by_admin(
+  public static async change_password_by_admin(
     options: string | URL,
     targetUsername: string,
     targetPassword: string,
@@ -160,11 +164,15 @@ export namespace SpinalUserManager {
       }
       return response;
     } catch (error) {
-      _if_error(error_callback, 'get_change_user_password_by_admin', error);
+      SpinalUserManager._if_error(
+        error_callback,
+        'get_change_user_password_by_admin',
+        error
+      );
     }
   }
 
-  export async function delete_account_by_admin(
+  public static async delete_account_by_admin(
     options: string | URL,
     targetUsername: string,
     adminUserId: string | number,
@@ -184,11 +192,15 @@ export namespace SpinalUserManager {
       }
       return response;
     } catch (error) {
-      _if_error(error_callback, 'get_delete_account_by_admin', error);
+      SpinalUserManager._if_error(
+        error_callback,
+        'get_delete_account_by_admin',
+        error
+      );
     }
   }
 
-  export async function change_account_rights_by_admin(
+  public static async change_account_rights_by_admin(
     options: string | URL,
     targetUsername: string,
     targetAcountRight: string | number,
@@ -209,11 +221,15 @@ export namespace SpinalUserManager {
       }
       return response;
     } catch (error) {
-      _if_error(error_callback, 'get_change_account_rights_by_admin', error);
+      SpinalUserManager._if_error(
+        error_callback,
+        'get_change_account_rights_by_admin',
+        error
+      );
     }
   }
 
-  function _if_error(
+  public static _if_error(
     error_callback: (e: Error) => void,
     fun: string,
     response: Error

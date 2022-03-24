@@ -30,7 +30,6 @@
  * @param {(string | string[])} src
  * @return {*}  {void}
  */
-
 export function remClass(obj: HTMLElement, src: string | string[]): void {
   if (typeof src === 'string') return remClass(obj, src.split(' '));
   const old = (obj.className || '').split(' ');

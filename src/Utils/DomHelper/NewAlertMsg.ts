@@ -202,10 +202,11 @@ export class NewAlertMsg {
     }
   }
 }
-type NewAlertMsgType = typeof NewAlertMsg;
+// export type NewAlertMsgType = typeof NewAlertMsg;
+const NewAlertMsgType = NewAlertMsg;
 declare global {
-  var NewAlertMsg: NewAlertMsgType;
-  var new_alert_msg: NewAlertMsgType;
+  var NewAlertMsg: typeof NewAlertMsgType;
+  var new_alert_msg: typeof NewAlertMsgType;
 }
 
 globalThis.NewAlertMsg = NewAlertMsg;

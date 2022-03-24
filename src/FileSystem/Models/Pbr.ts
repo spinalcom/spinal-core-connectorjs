@@ -53,3 +53,10 @@ export class Pbr<T extends Model = any> extends Ptr<T> {
     super(model);
   }
 }
+
+type _Pbr<T extends Model = any> = Pbr<T>;
+declare global {
+  export namespace spinal {
+    export type Pbr<T extends Model = any> = _Pbr<T>;
+  }
+}

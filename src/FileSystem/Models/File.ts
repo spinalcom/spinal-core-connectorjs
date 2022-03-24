@@ -116,3 +116,10 @@ export class File<T extends Model = any> extends Model {
     else return this._ptr.load();
   }
 }
+
+type _File<T extends Model = any> = File<T>;
+declare global {
+  export namespace spinal {
+    export type File<T extends Model = any> = _File<T>;
+  }
+}

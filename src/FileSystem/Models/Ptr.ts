@@ -158,3 +158,10 @@ export class Ptr<T extends Model = any> extends Model {
     return this.set(str);
   }
 }
+
+type _Ptr<T extends Model = any> = Ptr<T>;
+declare global {
+  export namespace spinal {
+    export type Ptr<T extends Model = any> = _Ptr<T>;
+  }
+}

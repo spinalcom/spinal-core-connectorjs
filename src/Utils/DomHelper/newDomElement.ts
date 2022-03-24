@@ -22,15 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
-export interface INewDomElementParam {
-  nodeName?: string;
-  parentNode?: HTMLElement;
-  style?: {
-    [key: string]: string | number;
-  };
-  onclick?: (evt: MouseEvent) => boolean;
-  [key: string]: any;
-}
+import type { INewDomElementParam } from '../../interfaces/INewDomElementParam';
 
 /**
  * create a new dom element

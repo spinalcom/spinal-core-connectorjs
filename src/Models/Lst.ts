@@ -479,7 +479,7 @@ export class Lst<T extends Model = any> extends Model {
    * @memberof Lst
    */
   public deep_copy(): Lst<T> {
-    const res = new Lst();
+    const res: Lst<T> = new Lst();
     for (let i = 0; i < this.length; i++) res.push(this[i].deep_copy());
     return res;
   }
@@ -642,5 +642,12 @@ export class Lst<T extends Model = any> extends Model {
     for (let i = 0; i < this.length; i++) {
       yield <T>this[i];
     }
+  }
+}
+
+type LstAlias<T extends Model = any> = Lst<T>;
+declare global {
+  export namespace spinal {
+    export type Lst<T extends Model = any> = LstAlias<T>;
   }
 }
