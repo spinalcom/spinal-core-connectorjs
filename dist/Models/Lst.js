@@ -395,7 +395,7 @@ class Lst extends Model_1.Model {
             return;
         const end = Math.min(index + n, this.length);
         for (let i = index; i < end; i++)
-            this.rem_attr(i.toString(0));
+            this.rem_attr(i.toString(10));
         for (let i = index; i < this.length - n; i++)
             this[i] = this[i + n];
         for (let i = this.length - n; i < this.length; i++)
