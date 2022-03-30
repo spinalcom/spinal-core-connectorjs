@@ -29,10 +29,10 @@ export declare class Ptr<T extends Model = any> extends Model {
     };
     /**
      * Creates an instance of Ptr.
-     * @param {*} model
+     * @param {*} [model]
      * @memberof Ptr
      */
-    constructor(model: any);
+    constructor(model?: any);
     /**
      * @return {*}  {Promise<T>}
      * @memberof Ptr

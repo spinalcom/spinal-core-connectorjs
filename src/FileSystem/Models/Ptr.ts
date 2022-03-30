@@ -54,10 +54,10 @@ export class Ptr<T extends Model = any> extends Model {
 
   /**
    * Creates an instance of Ptr.
-   * @param {*} model
+   * @param {*} [model]
    * @memberof Ptr
    */
-  public constructor(model: any) {
+  public constructor(model?: any) {
     super();
     this._set(model);
   }

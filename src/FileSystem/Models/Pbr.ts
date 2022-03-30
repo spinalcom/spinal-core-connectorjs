@@ -46,10 +46,10 @@ export class Pbr<T extends Model = any> extends Ptr<T> {
 
   /**
    * Creates an instance of Pbr.
-   * @param {*} model
+   * @param {*} [model]
    * @memberof Pbr
    */
-  public constructor(model: any) {
+  public constructor(model?: any) {
     super(model);
   }
 }

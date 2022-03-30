@@ -35,7 +35,7 @@ const FileSystem_1 = require("../FileSystem");
 class Ptr extends Model_1.Model {
     /**
      * Creates an instance of Ptr.
-     * @param {*} model
+     * @param {*} [model]
      * @memberof Ptr
      */
     constructor(model) {

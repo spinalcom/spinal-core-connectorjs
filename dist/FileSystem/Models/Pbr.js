@@ -34,7 +34,7 @@ const Ptr_1 = require("./Ptr");
 class Pbr extends Ptr_1.Ptr {
     /**
      * Creates an instance of Pbr.
-     * @param {*} model
+     * @param {*} [model]
      * @memberof Pbr
      */
     constructor(model) {

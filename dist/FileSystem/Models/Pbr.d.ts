@@ -20,10 +20,10 @@ export declare class Pbr<T extends Model = any> extends Ptr<T> {
     _constructorName: string;
     /**
      * Creates an instance of Pbr.
-     * @param {*} model
+     * @param {*} [model]
      * @memberof Pbr
      */
-    constructor(model: any);
+    constructor(model?: any);
 }
 declare type _Pbr<T extends Model = any> = Pbr<T>;
 declare global {
