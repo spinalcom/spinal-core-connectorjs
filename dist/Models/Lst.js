@@ -220,7 +220,7 @@ class Lst extends Model_1.Model {
     remove(item) {
         const index = this.indexOf(item);
         if (index >= 0)
-            this.slice(index, 1);
+            this.splice(index, 1);
     }
     /**
      * @param {T} item
@@ -229,7 +229,7 @@ class Lst extends Model_1.Model {
     remove_ref(item) {
         const index = this.indexOf_ref(item);
         if (index >= 0)
-            this.slice(index, 1);
+            this.splice(index, 1);
     }
     /**
      * @param {SpinalFilterFunction<T>} f

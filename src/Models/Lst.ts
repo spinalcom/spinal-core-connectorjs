@@ -236,7 +236,7 @@ export class Lst<T extends Model = any> extends Model {
    */
   public remove(item: T): void {
     const index = this.indexOf(item);
-    if (index >= 0) this.slice(index, 1);
+    if (index >= 0) this.splice(index, 1);
   }
 
   /**
@@ -245,7 +245,7 @@ export class Lst<T extends Model = any> extends Model {
    */
   public remove_ref(item: T): void {
     const index = this.indexOf_ref(item);
-    if (index >= 0) this.slice(index, 1);
+    if (index >= 0) this.splice(index, 1);
   }
 
   /**
