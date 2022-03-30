@@ -282,13 +282,13 @@ class Lst extends Model_1.Model {
     }
     /**
      * @param {T} value
-     * @return {*}  {(1 | -1)}
+     * @return {*}  {(number | -1)} -1 if not found
      * @memberof Lst
      */
     indexOf(value) {
         for (let i = 0; i < this.length; i++) {
             if (this[i].equals(value))
-                return 1;
+                return i;
         }
         return -1;
     }

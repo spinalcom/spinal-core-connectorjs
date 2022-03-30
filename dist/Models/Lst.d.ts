@@ -135,10 +135,10 @@ export declare class Lst<T extends Model = any> extends Model {
     has(f: SpinalFilterFunction<T>): boolean;
     /**
      * @param {T} value
-     * @return {*}  {(1 | -1)}
+     * @return {*}  {(number | -1)} -1 if not found
      * @memberof Lst
      */
-    indexOf(value: T): 1 | -1;
+    indexOf(value: T): number | -1;
     /**
      * @param {T} value
      * @return {*}  {number}

@@ -300,12 +300,12 @@ export class Lst<T extends Model = any> extends Model {
 
   /**
    * @param {T} value
-   * @return {*}  {(1 | -1)}
+   * @return {*}  {(number | -1)} -1 if not found
    * @memberof Lst
    */
-  public indexOf(value: T): 1 | -1 {
+  public indexOf(value: T): number | -1 {
     for (let i = 0; i < this.length; i++) {
-      if (this[i].equals(value)) return 1;
+      if (this[i].equals(value)) return i;
     }
     return -1;
   }
