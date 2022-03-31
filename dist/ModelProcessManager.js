@@ -210,6 +210,6 @@ ModelProcessManager._timeout = undefined;
 ModelProcessManager._force_m = false;
 ModelProcessManager._def = {};
 ModelProcessManager.spinal = {
-    version: '2.5.5',
+    version: '2.5.6',
 };
 //# sourceMappingURL=ModelProcessManager.js.map
