@@ -103,12 +103,12 @@ export declare class Lst<T extends Model = any> extends Model {
      * @param {T} item
      * @memberof Lst
      */
-    remove(item: T): void;
+    remove(item: T | ReturnType<T['get']>): void;
     /**
      * @param {T} item
      * @memberof Lst
      */
-    remove_ref(item: T): void;
+    remove_ref(item: T | ReturnType<T['get']>): void;
     /**
      * @param {SpinalFilterFunction<T>} f
      * @return {*}  {T[]}
@@ -138,37 +138,37 @@ export declare class Lst<T extends Model = any> extends Model {
      * @return {*}  {(number | -1)} -1 if not found
      * @memberof Lst
      */
-    indexOf(value: T): number | -1;
+    indexOf(value: T | ReturnType<T['get']>): number | -1;
     /**
      * @param {T} value
      * @return {*}  {number}
      * @memberof Lst
      */
-    indexOf_ref(value: T): number;
+    indexOf_ref(value: T | ReturnType<T['get']>): number;
     /**
      * @param {T} value
      * @return {*}  {boolean}
      * @memberof Lst
      */
-    contains(value: T): boolean;
+    contains(value: T | ReturnType<T['get']>): boolean;
     /**
      * @param {T} value
      * @return {*}  {boolean}
      * @memberof Lst
      */
-    contains_ref(value: T): boolean;
+    contains_ref(value: T | ReturnType<T['get']>): boolean;
     /**
      * @param {T} value
      * @return {*}  {boolean}
      * @memberof Lst
      */
-    toggle(value: T): boolean;
+    toggle(value: T | ReturnType<T['get']>): boolean;
     /**
      * @param {T} value
      * @return {*}  {boolean}
      * @memberof Lst
      */
-    toggle_ref(value: T): boolean;
+    toggle_ref(value: T | ReturnType<T['get']>): boolean;
     /**
      * @param {number} begin
      * @param {number} [end=this.length]
@@ -182,7 +182,7 @@ export declare class Lst<T extends Model = any> extends Model {
      * @return {*}  {void}
      * @memberof Lst
      */
-    concat(new_tab: Lst<T>, force?: boolean): void;
+    concat(new_tab: any, force?: boolean): void;
     /**
      * @param {number} index
      * @param {number} [n=1]
@@ -195,14 +195,14 @@ export declare class Lst<T extends Model = any> extends Model {
      * @param {(Lst<T> | T[] | Lst<any> | any[])} lst
      * @memberof Lst
      */
-    insert(index: number, lst: Lst<T> | T[] | Lst<any> | any[]): void;
+    insert(index: number, lst: Lst<T> | T[] | ReturnType<T['get']>[]): void;
     /**
      * @param {number} index
      * @param {T} val
      * @return {*}  {void}
      * @memberof Lst
      */
-    set_or_push(index: number, val: T): void;
+    set_or_push(index: number, val: T | ReturnType<T['get']>): void;
     /**
      * @param {number} size
      * @memberof Lst
@@ -235,7 +235,7 @@ export declare class Lst<T extends Model = any> extends Model {
      * @return {*}  {boolean}
      * @memberof Lst
      */
-    protected _set(value: Lst<T>): boolean;
+    protected _set(value: Lst<T> | ReturnType<T['get']>[] | T[]): boolean;
     /**
      * @protected
      * @param {IFlatModelMap} map

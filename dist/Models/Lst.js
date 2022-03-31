@@ -497,9 +497,11 @@ class Lst extends Model_1.Model {
             console.error(`resizing a static array (type ${ModelProcessManager_1.ModelProcessManager.get_object_class(this)}) is forbidden`);
         }
         for (let i = 0; i < value.length; i++) {
+            // @ts-ignore
             if (i < this.length)
                 change |= this[i].set(value[i]);
             else if (s < 0) {
+                // @ts-ignore
                 this.push(value[i]);
             }
         }

@@ -234,7 +234,7 @@ export class Lst<T extends Model = any> extends Model {
    * @param {T} item
    * @memberof Lst
    */
-  public remove(item: T): void {
+  public remove(item: T | ReturnType<T['get']>): void {
     const index = this.indexOf(item);
     if (index >= 0) this.splice(index, 1);
   }
@@ -243,7 +243,7 @@ export class Lst<T extends Model = any> extends Model {
    * @param {T} item
    * @memberof Lst
    */
-  public remove_ref(item: T): void {
+  public remove_ref(item: T | ReturnType<T['get']>): void {
     const index = this.indexOf_ref(item);
     if (index >= 0) this.splice(index, 1);
   }
@@ -303,7 +303,7 @@ export class Lst<T extends Model = any> extends Model {
    * @return {*}  {(number | -1)} -1 if not found
    * @memberof Lst
    */
-  public indexOf(value: T): number | -1 {
+  public indexOf(value: T | ReturnType<T['get']>): number | -1 {
     for (let i = 0; i < this.length; i++) {
       if (this[i].equals(value)) return i;
     }
@@ -315,7 +315,7 @@ export class Lst<T extends Model = any> extends Model {
    * @return {*}  {number}
    * @memberof Lst
    */
-  public indexOf_ref(value: T): number {
+  public indexOf_ref(value: T | ReturnType<T['get']>): number {
     for (let i = 0; i < this.length; i++) {
       if (this[i] == value) return i;
     }
@@ -327,7 +327,7 @@ export class Lst<T extends Model = any> extends Model {
    * @return {*}  {boolean}
    * @memberof Lst
    */
-  public contains(value: T): boolean {
+  public contains(value: T | ReturnType<T['get']>): boolean {
     return this.indexOf(value) !== -1;
   }
 
@@ -336,7 +336,7 @@ export class Lst<T extends Model = any> extends Model {
    * @return {*}  {boolean}
    * @memberof Lst
    */
-  public contains_ref(value: T): boolean {
+  public contains_ref(value: T | ReturnType<T['get']>): boolean {
     return this.indexOf_ref(value) !== -1;
   }
 
@@ -345,7 +345,7 @@ export class Lst<T extends Model = any> extends Model {
    * @return {*}  {boolean}
    * @memberof Lst
    */
-  public toggle(value: T): boolean {
+  public toggle(value: T | ReturnType<T['get']>): boolean {
     const index = this.indexOf(value);
     if (index !== -1) {
       this.splice(index);
@@ -361,7 +361,7 @@ export class Lst<T extends Model = any> extends Model {
    * @return {*}  {boolean}
    * @memberof Lst
    */
-  public toggle_ref(value: T): boolean {
+  public toggle_ref(value: T | ReturnType<T['get']>): boolean {
     const index = this.indexOf_ref(value);
     if (index !== -1) {
       this.splice(index);
@@ -395,7 +395,7 @@ export class Lst<T extends Model = any> extends Model {
    * @return {*}  {void}
    * @memberof Lst
    */
-  public concat(new_tab: Lst<T>, force: boolean = false): void {
+  public concat(new_tab: any, force: boolean = false): void {
     if (this._static_size_check(force)) return;
 
     if (new_tab.length) {
@@ -426,7 +426,10 @@ export class Lst<T extends Model = any> extends Model {
    * @param {(Lst<T> | T[] | Lst<any> | any[])} lst
    * @memberof Lst
    */
-  public insert(index: number, lst: Lst<T> | T[] | Lst<any> | any[]): void {
+  public insert(
+    index: number,
+    lst: Lst<T> | T[] | ReturnType<T['get']>[]
+  ): void {
     const end = Math.max(this.length - index, 0);
     const res = [];
     for (let i = 0; i < end; i++) {
@@ -448,7 +451,7 @@ export class Lst<T extends Model = any> extends Model {
    * @return {*}  {void}
    * @memberof Lst
    */
-  public set_or_push(index: number, val: T): void {
+  public set_or_push(index: number, val: T | ReturnType<T['get']>): void {
     if (index < this.length) {
       // @ts-ignore
       return this.mod_attr(index, val);
@@ -511,7 +514,7 @@ export class Lst<T extends Model = any> extends Model {
    * @return {*}  {boolean}
    * @memberof Lst
    */
-  protected _set(value: Lst<T>): boolean {
+  protected _set(value: Lst<T> | ReturnType<T['get']>[] | T[]): boolean {
     let change = Number(this.length != value.length);
     const s = this.static_length();
 
@@ -524,8 +527,10 @@ export class Lst<T extends Model = any> extends Model {
     }
 
     for (let i = 0; i < value.length; i++) {
+      // @ts-ignore
       if (i < this.length) change |= this[i].set(value[i]);
       else if (s < 0) {
+        // @ts-ignore
         this.push(value[i]);
       }
     }
