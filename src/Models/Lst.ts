@@ -423,10 +423,10 @@ export class Lst<T extends Model = any> extends Model {
 
   /**
    * @param {number} index
-   * @param {Lst<T>} lst
+   * @param {(Lst<T> | T[] | Lst<any> | any[])} lst
    * @memberof Lst
    */
-  public insert(index: number, lst: Lst<T> | T[]): void {
+  public insert(index: number, lst: Lst<T> | T[] | Lst<any> | any[]): void {
     const end = Math.max(this.length - index, 0);
     const res = [];
     for (let i = 0; i < end; i++) {

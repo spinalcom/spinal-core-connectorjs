@@ -405,7 +405,7 @@ class Lst extends Model_1.Model {
     }
     /**
      * @param {number} index
-     * @param {Lst<T>} lst
+     * @param {(Lst<T> | T[] | Lst<any> | any[])} lst
      * @memberof Lst
      */
     insert(index, lst) {

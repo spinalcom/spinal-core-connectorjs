@@ -192,10 +192,10 @@ export declare class Lst<T extends Model = any> extends Model {
     splice(index: number, n?: number): void;
     /**
      * @param {number} index
-     * @param {Lst<T>} lst
+     * @param {(Lst<T> | T[] | Lst<any> | any[])} lst
      * @memberof Lst
      */
-    insert(index: number, lst: Lst<T> | T[]): void;
+    insert(index: number, lst: Lst<T> | T[] | Lst<any> | any[]): void;
     /**
      * @param {number} index
      * @param {T} val
