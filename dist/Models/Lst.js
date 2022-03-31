@@ -416,6 +416,7 @@ class Lst extends Model_1.Model {
         }
         res.reverse();
         for (let i = 0; i < lst.length; i++) {
+            // @ts-ignore
             this.push(lst[i]);
         }
         for (let i = 0; i < res.length; i++) {

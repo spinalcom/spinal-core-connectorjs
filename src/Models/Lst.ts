@@ -426,7 +426,7 @@ export class Lst<T extends Model = any> extends Model {
    * @param {Lst<T>} lst
    * @memberof Lst
    */
-  public insert(index: number, lst: Lst<T>): void {
+  public insert(index: number, lst: Lst<T> | T[]): void {
     const end = Math.max(this.length - index, 0);
     const res = [];
     for (let i = 0; i < end; i++) {
@@ -434,6 +434,7 @@ export class Lst<T extends Model = any> extends Model {
     }
     res.reverse();
     for (let i = 0; i < lst.length; i++) {
+      // @ts-ignore
       this.push(lst[i]);
     }
     for (let i = 0; i < res.length; i++) {

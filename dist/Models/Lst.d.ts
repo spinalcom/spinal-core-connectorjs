@@ -195,7 +195,7 @@ export declare class Lst<T extends Model = any> extends Model {
      * @param {Lst<T>} lst
      * @memberof Lst
      */
-    insert(index: number, lst: Lst<T>): void;
+    insert(index: number, lst: Lst<T> | T[]): void;
     /**
      * @param {number} index
      * @param {T} val
