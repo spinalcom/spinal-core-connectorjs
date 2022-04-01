@@ -717,3 +717,10 @@ export class Model {
     return map;
   }
 }
+
+type ModelAlias = Model;
+declare global {
+  export namespace spinal {
+    export type Model = ModelAlias;
+  }
+}

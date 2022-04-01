@@ -289,3 +289,10 @@ export declare class Model {
      */
     protected _get_flat_model_map(map: IFlatModelMap, date: number): IFlatModelMap;
 }
+declare type ModelAlias = Model;
+declare global {
+    export namespace spinal {
+        type Model = ModelAlias;
+    }
+}
+export {};

@@ -33,6 +33,7 @@ import { SessionModel } from './FileSystem/Models/SessionModel';
 import { TiffFile } from './FileSystem/Models/TiffFile';
 import { User } from './FileSystem/Models/User';
 import { UserRight } from './FileSystem/Models/UserRight';
+import type { SpinalType } from './interfaces/SpinalType';
 import { ModelProcessManager } from './ModelProcessManager';
 import { Bool } from './Models/Bool';
 import { Choice } from './Models/Choice';
@@ -132,6 +133,7 @@ ModelProcessManager.register_models(RightsItem, 'RightsItem');
 var _ModelProcessManager = ModelProcessManager;
 
 declare global {
+  var spinal: SpinalType;
   export namespace spinal {
     export type spinalCore = InstanceType<
       typeof _ModelProcessManager.spinal.spinalCore
@@ -151,7 +153,7 @@ declare global {
     export type BindProcess = InstanceType<
       typeof _ModelProcessManager.spinal.BindProcess
     >;
-    export type Model = InstanceType<typeof _ModelProcessManager.spinal.Model>;
+    // export type Model = InstanceType<typeof _ModelProcessManager.spinal.Model>;
     export type Obj = InstanceType<typeof _ModelProcessManager.spinal.Obj>;
     export type Bool = InstanceType<typeof _ModelProcessManager.spinal.Bool>;
     export type Val = InstanceType<typeof _ModelProcessManager.spinal.Val>;

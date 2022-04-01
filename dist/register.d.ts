@@ -1,6 +1,8 @@
+import type { SpinalType } from './interfaces/SpinalType';
 import { ModelProcessManager } from './ModelProcessManager';
 declare var _ModelProcessManager: typeof ModelProcessManager;
 declare global {
+    var spinal: SpinalType;
     export namespace spinal {
         type spinalCore = InstanceType<typeof _ModelProcessManager.spinal.spinalCore>;
         type FileSystem = InstanceType<typeof _ModelProcessManager.spinal.FileSystem>;
@@ -8,7 +10,6 @@ declare global {
         type SpinalUserManager = InstanceType<typeof _ModelProcessManager.spinal.SpinalUserManager>;
         type Process = InstanceType<typeof _ModelProcessManager.spinal.Process>;
         type BindProcess = InstanceType<typeof _ModelProcessManager.spinal.BindProcess>;
-        type Model = InstanceType<typeof _ModelProcessManager.spinal.Model>;
         type Obj = InstanceType<typeof _ModelProcessManager.spinal.Obj>;
         type Bool = InstanceType<typeof _ModelProcessManager.spinal.Bool>;
         type Val = InstanceType<typeof _ModelProcessManager.spinal.Val>;
