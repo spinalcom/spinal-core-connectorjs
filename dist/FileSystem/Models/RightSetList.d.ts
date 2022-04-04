@@ -13,11 +13,6 @@ export declare class RightSetList extends Lst<RightsItem> {
      */
     static _constructorName: string;
     /**
-     * @type {string}
-     * @memberof RightSetList
-     */
-    _constructorName: string;
-    /**
      * Creates an instance of RightSetList.
      * @memberof RightSetList
      */

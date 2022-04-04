@@ -38,11 +38,6 @@ export class Bool extends Obj<boolean> {
    * @memberof Bool
    */
   public static _constructorName: string = 'Bool';
-  /**
-   * @type {string}
-   * @memberof Bool
-   */
-  public _constructorName: string = Bool._constructorName;
 
   /**
    * Creates an instance of Bool.

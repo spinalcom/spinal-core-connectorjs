@@ -12,11 +12,6 @@ export declare class User extends Model {
      */
     static _constructorName: string;
     /**
-     * @type {string}
-     * @memberof User
-     */
-    _constructorName: string;
-    /**
      * Creates an instance of User.
      * @memberof User
      */

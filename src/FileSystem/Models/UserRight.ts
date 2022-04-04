@@ -36,11 +36,6 @@ export class UserRight extends Model {
    * @memberof UserRight
    */
   public static _constructorName: string = 'UserRight';
-  /**
-   * @type {string}
-   * @memberof UserRight
-   */
-  public _constructorName: string = UserRight._constructorName;
 
   /**
    * Creates an instance of UserRight.

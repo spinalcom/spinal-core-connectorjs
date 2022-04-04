@@ -14,11 +14,6 @@ export declare class Pbr<T extends Model = any> extends Ptr<T> {
      */
     static _constructorName: string;
     /**
-     * @type {string}
-     * @memberof Pbr
-     */
-    _constructorName: string;
-    /**
      * Creates an instance of Pbr.
      * @param {*} [model]
      * @memberof Pbr

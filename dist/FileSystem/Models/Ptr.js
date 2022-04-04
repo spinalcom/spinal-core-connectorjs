@@ -41,11 +41,6 @@ class Ptr extends Model_1.Model {
     constructor(model) {
         super();
         /**
-         * @type {string}
-         * @memberof Ptr
-         */
-        this._constructorName = Ptr._constructorName;
-        /**
          * @type {{ model?: T; value?: any }}
          * @memberof Ptr
          */

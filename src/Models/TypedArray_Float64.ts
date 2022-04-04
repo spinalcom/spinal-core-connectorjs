@@ -31,7 +31,6 @@ import { TypedArray } from './TypedArray';
  */
 export class TypedArray_Float64 extends TypedArray<Float64Array> {
   public static _constructorName: string = 'TypedArray_Float64';
-  public _constructorName: string = TypedArray_Float64._constructorName;
 
   /**
    * Creates an instance of TypedArray_Float64.

@@ -57,8 +57,9 @@ class ModelProcessManager {
      */
     static get_object_class(obj) {
         if (obj === null || obj === void 0 ? void 0 : obj.constructor) {
-            if ('_constructorName' in obj)
-                return obj._constructorName;
+            if ('_constructorName' in obj.constructor)
+                // @ts-ignore
+                return obj.constructor._constructorName;
             if ('name' in obj.constructor)
                 return obj.constructor.name;
             if ('toString' in obj.constructor) {
@@ -210,6 +211,6 @@ ModelProcessManager._timeout = undefined;
 ModelProcessManager._force_m = false;
 ModelProcessManager._def = {};
 ModelProcessManager.spinal = {
-    version: '2.5.7',
+    version: '2.5.8',
 };
 //# sourceMappingURL=ModelProcessManager.js.map

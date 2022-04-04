@@ -27,7 +27,6 @@ import { Val } from './Val';
 
 export class Vec extends Lst<Val> {
   public static _constructorName: string = 'Vec';
-  public _constructorName: string = Vec._constructorName;
 
   /**
    * Creates an instance of Vec.

@@ -27,11 +27,14 @@ import { Model } from '../Models/Model';
 import { isIterable } from '../Utils/isIterable';
 
 export class Process {
-  static _constructorName: string = 'Process';
-  process_id: number;
-  _models: Model[] = []; // what this is observing
+  public static _constructorName: string = 'Process';
+  public process_id: number;
+  public _models: Model[] = []; // what this is observing
 
-  constructor(m: Model | Model[], onchange_construction: boolean = true) {
+  public constructor(
+    m: Model | Model[],
+    onchange_construction: boolean = true
+  ) {
     this.process_id = ModelProcessManager._cur_process_id;
     ModelProcessManager._cur_process_id += 1;
 
@@ -46,7 +49,7 @@ export class Process {
     }
   }
 
-  destructor() {
+  public destructor() {
     for (const model of this._models) {
       const idx = model._processes.indexOf(this);
       if (idx >= 0) model._processes.splice(idx, 1);
@@ -58,5 +61,5 @@ export class Process {
    * in the previous round
    * @memberof Process
    */
-  onchange(): void {}
+  public onchange(): void {}
 }

@@ -36,11 +36,6 @@ export class User extends Model {
    * @memberof User
    */
   public static _constructorName: string = 'User';
-  /**
-   * @type {string}
-   * @memberof User
-   */
-  public _constructorName: string = User._constructorName;
 
   /**
    * Creates an instance of User.

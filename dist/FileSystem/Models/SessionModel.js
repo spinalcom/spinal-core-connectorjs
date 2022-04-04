@@ -37,11 +37,6 @@ class SessionModel extends Model_1.Model {
      */
     constructor() {
         super();
-        /**
-         * @type {string}
-         * @memberof SessionModel
-         */
-        this._constructorName = SessionModel._constructorName;
     }
 }
 exports.SessionModel = SessionModel;

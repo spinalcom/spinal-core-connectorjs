@@ -39,11 +39,6 @@ export class Choice extends Model {
    * @memberof Choice
    */
   public static _constructorName: string = 'Choice';
-  /**
-   * @type {string}
-   * @memberof Choice
-   */
-  public _constructorName: string = Choice._constructorName;
 
   /**
    * @type {Val}

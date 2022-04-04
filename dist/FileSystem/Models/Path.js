@@ -40,11 +40,6 @@ class Path extends Model_1.Model {
      */
     constructor(file) {
         super();
-        /**
-         * @type {string}
-         * @memberof Path
-         */
-        this._constructorName = Path._constructorName;
         this.file = file;
         const size = this.file != null
             ? // @ts-ignore

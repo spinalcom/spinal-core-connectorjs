@@ -34,7 +34,6 @@ import { Obj } from './Obj';
  */
 export class Str extends Obj<string> {
   public static _constructorName: string = 'Str';
-  public _constructorName: string = Str._constructorName;
   public _data: string;
 
   /**

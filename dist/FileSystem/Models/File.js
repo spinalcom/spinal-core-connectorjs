@@ -45,11 +45,6 @@ class File extends Model_1.Model {
     constructor(name = '', ptr_or_model = 0, info = {}) {
         var _a;
         super();
-        /**
-         * @type {string}
-         * @memberof File
-         */
-        this._constructorName = File._constructorName;
         const cp_info = {};
         for (const key in info) {
             cp_info[key] = info[key];

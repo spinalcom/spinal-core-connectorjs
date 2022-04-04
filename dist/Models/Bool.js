@@ -40,11 +40,6 @@ class Bool extends Obj_1.Obj {
      */
     constructor(data = false) {
         super();
-        /**
-         * @type {string}
-         * @memberof Bool
-         */
-        this._constructorName = Bool._constructorName;
         this._set(data);
     }
     /**

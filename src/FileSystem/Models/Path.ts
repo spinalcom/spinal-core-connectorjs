@@ -40,11 +40,6 @@ export class Path extends Model {
    * @memberof Path
    */
   public static _constructorName: string = 'Path';
-  /**
-   * @type {string}
-   * @memberof Path
-   */
-  public _constructorName: string = Path._constructorName;
 
   /**
    * @type {(File | Buffer)}

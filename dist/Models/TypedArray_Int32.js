@@ -34,7 +34,6 @@ class TypedArray_Int32 extends TypedArray_1.TypedArray {
      */
     constructor(size, data) {
         super(size, data);
-        this._constructorName = TypedArray_Int32._constructorName;
     }
     /**
      * @return {*}  {typeof TypedArray_Int32}

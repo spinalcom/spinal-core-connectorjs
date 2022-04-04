@@ -43,11 +43,6 @@ export class Directory<T extends Model = any> extends Lst<File | TiffFile> {
    * @memberof Directory
    */
   public static _constructorName: string = 'Directory';
-  /**
-   * @type {string}
-   * @memberof Directory
-   */
-  public _constructorName: string = Directory._constructorName;
 
   public constructor() {
     super();

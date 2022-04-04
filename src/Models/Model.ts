@@ -37,46 +37,45 @@ import { Process } from '../Processes/Process';
  * @class Model
  */
 export class Model {
-  static _constructorName: string = 'Model';
-  _constructorName: string = Model._constructorName;
+  public static _constructorName: string = 'Model';
   /**
    * registered attribute names (in declaration order)
    * @type {string[]}
    * @memberof Model
    */
-  _attribute_names: string[] = [];
+  public _attribute_names: string[] = [];
   /**
    * id of the model
    * @type {number}
    * @memberof Model
    */
-  model_id: number = ModelProcessManager._cur_mid++;
+  public model_id: number = ModelProcessManager._cur_mid++;
   /**
    * synchronized processes
    * @type {Process[]}
    * @memberof Model
    */
-  _processes: Process[] = [];
+  public _processes: Process[] = [];
   /**
    * parent models (depending on this)
    * @type {Model[]}
    * @memberof Model
    */
-  _parents: Model[] = [];
+  public _parents: Model[] = [];
   /**
    * "date" of previous change. We start at + 2 because
    * we consider that an initialisation is a modification.
    * @type {number}
    * @memberof Model
    */
-  _date_last_modification: number = ModelProcessManager._counter + 2;
+  public _date_last_modification: number = ModelProcessManager._counter + 2;
   /**
    * id unique from server.
    * It doesn't exist at creation but added after a sync of the server
    * @type {number}
    * @memberof Model
    */
-  _server_id?: number;
+  public _server_id?: number;
   [nameAttr: string]: any;
 
   /**

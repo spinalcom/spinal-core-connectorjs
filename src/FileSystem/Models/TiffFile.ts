@@ -40,11 +40,6 @@ export class TiffFile<T extends Model = any> extends File<T> {
    * @memberof TiffFile
    */
   public static _constructorName: string = 'TiffFile';
-  /**
-   * @type {string}
-   * @memberof TiffFile
-   */
-  public _constructorName: string = TiffFile._constructorName;
 
   /**
    * @type {Ptr}

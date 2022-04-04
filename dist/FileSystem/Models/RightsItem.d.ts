@@ -14,11 +14,6 @@ export declare class RightsItem<T extends Model = any> extends Lst<T> {
      */
     static _constructorName: string;
     /**
-     * @type {string}
-     * @memberof RightsItem
-     */
-    _constructorName: string;
-    /**
      * Creates an instance of RightsItem.
      * @memberof RightsItem
      */

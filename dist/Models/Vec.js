@@ -33,7 +33,6 @@ class Vec extends Lst_1.Lst {
      */
     constructor() {
         super();
-        this._constructorName = Vec._constructorName;
     }
     /**
      * @return {*}  {typeof Val}

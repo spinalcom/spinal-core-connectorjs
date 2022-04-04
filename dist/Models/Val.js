@@ -39,7 +39,6 @@ class Val extends Obj_1.Obj {
      */
     constructor(data = 0) {
         super();
-        this._constructorName = Val._constructorName;
         this._set(data);
     }
     /**

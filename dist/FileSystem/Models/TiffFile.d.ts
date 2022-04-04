@@ -16,11 +16,6 @@ export declare class TiffFile<T extends Model = any> extends File<T> {
      */
     static _constructorName: string;
     /**
-     * @type {string}
-     * @memberof TiffFile
-     */
-    _constructorName: string;
-    /**
      * @type {Ptr}
      * @memberof TiffFile
      */

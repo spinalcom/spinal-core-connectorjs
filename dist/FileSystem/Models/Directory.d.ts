@@ -18,11 +18,6 @@ export declare class Directory<T extends Model = any> extends Lst<File | TiffFil
      * @memberof Directory
      */
     static _constructorName: string;
-    /**
-     * @type {string}
-     * @memberof Directory
-     */
-    _constructorName: string;
     constructor();
     /**
      * @return {*}  {*}

@@ -43,11 +43,6 @@ export class File<T extends Model = any> extends Model {
    * @memberof File
    */
   public static _constructorName: string = 'File';
-  /**
-   * @type {string}
-   * @memberof File
-   */
-  public _constructorName: string = File._constructorName;
 
   /**
    * @type {Str}

@@ -32,7 +32,6 @@ import { Obj } from './Obj';
  */
 export class Val extends Obj<number> {
   public static _constructorName: string = 'Val';
-  public _constructorName: string = Val._constructorName;
 
   /**
    * Creates an instance of Val.

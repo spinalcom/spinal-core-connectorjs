@@ -37,11 +37,6 @@ class RightSetList extends Lst_1.Lst {
      */
     constructor() {
         super();
-        /**
-         * @type {string}
-         * @memberof RightSetList
-         */
-        this._constructorName = RightSetList._constructorName;
     }
 }
 exports.RightSetList = RightSetList;

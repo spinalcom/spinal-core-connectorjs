@@ -40,11 +40,6 @@ export class Ptr<T extends Model = any> extends Model {
    * @memberof Ptr
    */
   public static _constructorName: string = 'Ptr';
-  /**
-   * @type {string}
-   * @memberof Ptr
-   */
-  public _constructorName: string = Ptr._constructorName;
 
   /**
    * @type {{ model?: T; value?: any }}

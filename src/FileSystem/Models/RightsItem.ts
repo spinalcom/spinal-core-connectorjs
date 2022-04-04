@@ -38,11 +38,6 @@ export class RightsItem<T extends Model = any> extends Lst<T> {
    * @memberof RightsItem
    */
   public static _constructorName: string = 'RightsItem';
-  /**
-   * @type {string}
-   * @memberof RightsItem
-   */
-  public _constructorName: string = RightsItem._constructorName;
 
   /**
    * Creates an instance of RightsItem.

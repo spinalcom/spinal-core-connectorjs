@@ -43,11 +43,6 @@ class Lst extends Model_1.Model {
     constructor(data) {
         super();
         /**
-         * @type {string}
-         * @memberof Lst
-         */
-        this._constructorName = Lst._constructorName;
-        /**
          * @type {number}
          * @memberof Lst
          */

@@ -47,12 +47,6 @@ export class Lst<T extends Model = any> extends Model {
   public static _constructorName: string = 'Lst';
 
   /**
-   * @type {string}
-   * @memberof Lst
-   */
-  public _constructorName: string = Lst._constructorName;
-
-  /**
    * @type {number}
    * @memberof Lst
    */

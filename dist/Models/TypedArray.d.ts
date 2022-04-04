@@ -2,7 +2,6 @@ import type { IFsData } from '../interfaces/IFsData';
 import { Model } from './Model';
 export declare abstract class TypedArray<T extends Int32Array | Float64Array> extends Model {
     static _constructorName: string;
-    _constructorName: string;
     _size: number[];
     _data: T;
     /**

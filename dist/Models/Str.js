@@ -41,7 +41,6 @@ class Str extends Obj_1.Obj {
      */
     constructor(data = '') {
         super();
-        this._constructorName = Str._constructorName;
         this._data = data.toString();
     }
     /**

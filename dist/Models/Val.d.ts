@@ -7,7 +7,6 @@ import { Obj } from './Obj';
  */
 export declare class Val extends Obj<number> {
     static _constructorName: string;
-    _constructorName: string;
     /**
      * Creates an instance of Val.
      * @param {(number | Val)} [data=0]

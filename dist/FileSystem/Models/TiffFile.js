@@ -43,11 +43,6 @@ class TiffFile extends File_1.File {
      */
     constructor(name = '', ptr_or_model = 0, ptr_tiff = 0, info = {}) {
         super(name, ptr_or_model, info);
-        /**
-         * @type {string}
-         * @memberof TiffFile
-         */
-        this._constructorName = TiffFile._constructorName;
         this.add_attr({
             _ptr_tiff: new Ptr_1.Ptr(ptr_tiff),
             _has_been_converted: 0,

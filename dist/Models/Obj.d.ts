@@ -8,7 +8,6 @@ import { Model } from './Model';
  */
 export declare class Obj<T extends string | number | boolean> extends Model {
     static _constructorName: string;
-    _constructorName: string;
     _data: T;
     /**
      * Creates an instance of Obj.

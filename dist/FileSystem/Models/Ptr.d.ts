@@ -15,11 +15,6 @@ export declare class Ptr<T extends Model = any> extends Model {
      */
     static _constructorName: string;
     /**
-     * @type {string}
-     * @memberof Ptr
-     */
-    _constructorName: string;
-    /**
      * @type {{ model?: T; value?: any }}
      * @memberof Ptr
      */

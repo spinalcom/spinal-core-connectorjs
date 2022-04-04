@@ -40,7 +40,6 @@ class Obj extends Model_1.Model {
      */
     constructor(data) {
         super();
-        this._constructorName = Obj._constructorName;
         if (data != null) {
             this._set(data);
         }

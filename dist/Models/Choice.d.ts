@@ -15,11 +15,6 @@ export declare class Choice extends Model {
      */
     static _constructorName: string;
     /**
-     * @type {string}
-     * @memberof Choice
-     */
-    _constructorName: string;
-    /**
      * @type {Val}
      * @memberof Choice
      */

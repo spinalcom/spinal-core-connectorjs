@@ -35,7 +35,6 @@ class TypedArray extends Model_1.Model {
      */
     constructor(size, data) {
         super();
-        this._constructorName = TypedArray._constructorName;
         // size
         let tmpSize;
         if (size == null) {

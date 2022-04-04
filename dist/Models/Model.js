@@ -40,7 +40,6 @@ class Model {
      * @memberof Model
      */
     constructor(attr) {
-        this._constructorName = Model._constructorName;
         /**
          * registered attribute names (in declaration order)
          * @type {string[]}

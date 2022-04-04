@@ -37,11 +37,6 @@ class User extends Model_1.Model {
      */
     constructor() {
         super();
-        /**
-         * @type {string}
-         * @memberof User
-         */
-        this._constructorName = User._constructorName;
     }
 }
 exports.User = User;

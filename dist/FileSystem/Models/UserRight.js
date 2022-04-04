@@ -37,11 +37,6 @@ class UserRight extends Model_1.Model {
      */
     constructor() {
         super();
-        /**
-         * @type {string}
-         * @memberof UserRight
-         */
-        this._constructorName = UserRight._constructorName;
     }
     /**
      * @return {*}  {boolean}

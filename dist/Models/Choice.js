@@ -39,11 +39,6 @@ class Choice extends Model_1.Model {
      */
     constructor(InitIdx, stringChoises) {
         super();
-        /**
-         * @type {string}
-         * @memberof Choice
-         */
-        this._constructorName = Choice._constructorName;
         // default
         this.add_attr({
             num: 0,

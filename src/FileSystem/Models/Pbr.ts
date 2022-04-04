@@ -38,11 +38,6 @@ export class Pbr<T extends Model = any> extends Ptr<T> {
    * @memberof Pbr
    */
   public static _constructorName: string = 'Pbr';
-  /**
-   * @type {string}
-   * @memberof Pbr
-   */
-  public _constructorName: string = Pbr._constructorName;
 
   /**
    * Creates an instance of Pbr.

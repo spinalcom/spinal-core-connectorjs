@@ -26,10 +26,10 @@ import type { Model } from '../Models/Model';
 import { Process } from './Process';
 
 export class BindProcess extends Process {
-  static _constructorName: string = 'BindProcess';
-  f: () => void;
+  public static _constructorName: string = 'BindProcess';
+  public f: () => void;
 
-  constructor(
+  public constructor(
     model: Model | Model[],
     onchange_construction: boolean,
     f: () => void
@@ -37,7 +37,7 @@ export class BindProcess extends Process {
     super(model, onchange_construction);
     this.f = f;
   }
-  onchange() {
+  public onchange() {
     return this.f();
   }
 }

@@ -16,11 +16,6 @@ export declare class Path extends Model {
      */
     static _constructorName: string;
     /**
-     * @type {string}
-     * @memberof Path
-     */
-    _constructorName: string;
-    /**
      * @type {(File | Buffer)}
      * @memberof Path
      */

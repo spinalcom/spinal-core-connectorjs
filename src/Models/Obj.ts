@@ -34,7 +34,6 @@ import { Model } from './Model';
  */
 export class Obj<T extends string | number | boolean> extends Model {
   public static _constructorName: string = 'Obj';
-  public _constructorName: string = Obj._constructorName;
   public _data: T;
 
   /**

@@ -14,11 +14,6 @@ export declare class Bool extends Obj<boolean> {
      */
     static _constructorName: string;
     /**
-     * @type {string}
-     * @memberof Bool
-     */
-    _constructorName: string;
-    /**
      * Creates an instance of Bool.
      * @param {(boolean | Bool)} [data=false]
      * @memberof Bool

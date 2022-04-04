@@ -2,7 +2,6 @@ import { Lst } from './Lst';
 import { Val } from './Val';
 export declare class Vec extends Lst<Val> {
     static _constructorName: string;
-    _constructorName: string;
     /**
      * Creates an instance of Vec.
      * @memberof Vec

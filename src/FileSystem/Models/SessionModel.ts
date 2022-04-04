@@ -36,11 +36,6 @@ export class SessionModel extends Model {
    * @memberof SessionModel
    */
   public static _constructorName: string = 'SessionModel';
-  /**
-   * @type {string}
-   * @memberof SessionModel
-   */
-  public _constructorName: string = SessionModel._constructorName;
 
   /**
    * Creates an instance of SessionModel.

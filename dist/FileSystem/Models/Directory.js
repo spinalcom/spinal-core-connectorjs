@@ -36,11 +36,6 @@ const TiffFile_1 = require("./TiffFile");
 class Directory extends Lst_1.Lst {
     constructor() {
         super();
-        /**
-         * @type {string}
-         * @memberof Directory
-         */
-        this._constructorName = Directory._constructorName;
     }
     /**
      * @return {*}  {*}

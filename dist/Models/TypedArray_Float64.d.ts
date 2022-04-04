@@ -6,7 +6,6 @@ import { TypedArray } from './TypedArray';
  */
 export declare class TypedArray_Float64 extends TypedArray<Float64Array> {
     static _constructorName: string;
-    _constructorName: string;
     /**
      * Creates an instance of TypedArray_Float64.
      * @param {(number | number[])} [size]

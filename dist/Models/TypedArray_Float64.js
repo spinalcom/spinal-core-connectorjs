@@ -39,7 +39,6 @@ class TypedArray_Float64 extends TypedArray_1.TypedArray {
      */
     constructor(size, data) {
         super(size, data);
-        this._constructorName = TypedArray_Float64._constructorName;
     }
     /**
      * @return {*}  {typeof TypedArray_Float64}

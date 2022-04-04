@@ -30,7 +30,6 @@ export abstract class TypedArray<
   T extends Int32Array | Float64Array
 > extends Model {
   public static _constructorName: string = 'TypedArray';
-  public _constructorName: string = TypedArray._constructorName;
 
   public _size: number[];
   public _data: T;

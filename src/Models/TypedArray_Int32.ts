@@ -26,7 +26,6 @@ import { TypedArray } from './TypedArray';
 
 export class TypedArray_Int32 extends TypedArray<Int32Array> {
   public static _constructorName: string = 'TypedArray_Int32';
-  public _constructorName: string = TypedArray_Int32._constructorName;
 
   /**
    * Creates an instance of TypedArray_Int32.

@@ -11,7 +11,6 @@ import { Process } from '../Processes/Process';
  */
 export declare class Model {
     static _constructorName: string;
-    _constructorName: string;
     /**
      * registered attribute names (in declaration order)
      * @type {string[]}

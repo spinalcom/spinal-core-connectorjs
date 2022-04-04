@@ -39,11 +39,6 @@ class Pbr extends Ptr_1.Ptr {
      */
     constructor(model) {
         super(model);
-        /**
-         * @type {string}
-         * @memberof Pbr
-         */
-        this._constructorName = Pbr._constructorName;
     }
 }
 exports.Pbr = Pbr;

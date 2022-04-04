@@ -9,7 +9,6 @@ import { Obj } from './Obj';
  */
 export declare class Str extends Obj<string> {
     static _constructorName: string;
-    _constructorName: string;
     _data: string;
     /**
      * @readonly

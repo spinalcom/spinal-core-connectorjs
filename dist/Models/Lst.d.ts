@@ -19,11 +19,6 @@ export declare class Lst<T extends Model = any> extends Model {
      */
     static _constructorName: string;
     /**
-     * @type {string}
-     * @memberof Lst
-     */
-    _constructorName: string;
-    /**
      * @type {number}
      * @memberof Lst
      */

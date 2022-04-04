@@ -18,11 +18,6 @@ export declare class File<T extends Model = any> extends Model {
      */
     static _constructorName: string;
     /**
-     * @type {string}
-     * @memberof File
-     */
-    _constructorName: string;
-    /**
      * @type {Str}
      * @memberof File
      */

@@ -38,11 +38,6 @@ class RightsItem extends Lst_1.Lst {
      */
     constructor() {
         super();
-        /**
-         * @type {string}
-         * @memberof RightsItem
-         */
-        this._constructorName = RightsItem._constructorName;
     }
 }
 exports.RightsItem = RightsItem;

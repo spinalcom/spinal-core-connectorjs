@@ -37,11 +37,6 @@ export class RightSetList extends Lst<RightsItem> {
    * @memberof RightSetList
    */
   public static _constructorName: string = 'RightSetList';
-  /**
-   * @type {string}
-   * @memberof RightSetList
-   */
-  public _constructorName: string = RightSetList._constructorName;
 
   /**
    * Creates an instance of RightSetList.
