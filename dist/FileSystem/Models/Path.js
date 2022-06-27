@@ -22,63 +22,81 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
 exports.Path = void 0;
-const Model_1 = require("../../Models/Model");
-const FileSystem_1 = require("../FileSystem");
+var Model_1 = require("../../Models/Model");
+var FileSystem_1 = require("../FileSystem");
 /**
  * representation of a file to upload
  * @export
  * @class Path
  * @extends {Model}
  */
-class Path extends Model_1.Model {
+var Path = /** @class */ (function (_super) {
+    __extends(Path, _super);
     /**
      * Creates an instance of Path.
      * @param {(File | Buffer)} [file]
      * @memberof Path
      */
-    constructor(file) {
-        super();
-        this.file = file;
-        const size = this.file != null
+    function Path(file) {
+        var _this = _super.call(this) || this;
+        _this.file = file;
+        var size = _this.file != null
             ? // @ts-ignore
-                this.file.fileSize != null
+                _this.file.fileSize != null
                     ? // @ts-ignore
-                        this.file.fileSize
+                        _this.file.fileSize
                     : // @ts-ignore
-                        this.file.size
+                        _this.file.size
             : 0;
-        this.add_attr({
+        _this.add_attr({
             remaining: size,
-            to_upload: size,
+            to_upload: size
         });
+        return _this;
     }
     /**
      * @param {{ remaining: Val; to_upload: Val }} info
      * @memberof Path
      */
-    get_file_info(info) {
+    Path.prototype.get_file_info = function (info) {
         info.remaining = this.remaining;
         info.to_upload = this.to_upload;
-    }
+    };
     /**
      * @param {IFsData} out
      * @memberof Path
      */
-    _get_fs_data(out) {
-        super._get_fs_data(out);
+    Path.prototype._get_fs_data = function (out) {
+        _super.prototype._get_fs_data.call(this, out);
         // permit to send the data after the server's answer
         if (this.file != null && this._server_id & 3) {
             FileSystem_1.FileSystem._files_to_upload[this._server_id] = this;
         }
-    }
-}
+    };
+    /**
+     * @static
+     * @type {string}
+     * @memberof Path
+     */
+    Path._constructorName = 'Path';
+    return Path;
+}(Model_1.Model));
 exports.Path = Path;
-/**
- * @static
- * @type {string}
- * @memberof Path
- */
-Path._constructorName = 'Path';
 //# sourceMappingURL=Path.js.map

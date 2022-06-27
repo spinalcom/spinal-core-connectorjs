@@ -22,57 +22,75 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
 exports.Val = void 0;
-const Obj_1 = require("./Obj");
+var Obj_1 = require("./Obj");
 /**
  * representation of a number
  * @export
  * @class Val
  * @extends {Obj<number>}
  */
-class Val extends Obj_1.Obj {
+var Val = /** @class */ (function (_super) {
+    __extends(Val, _super);
     /**
      * Creates an instance of Val.
      * @param {(number | Val)} [data=0]
      * @memberof Val
      */
-    constructor(data = 0) {
-        super();
-        this._set(data);
+    function Val(data) {
+        if (data === void 0) { data = 0; }
+        var _this = _super.call(this) || this;
+        _this._set(data);
+        return _this;
     }
     /**
      * toggle true / false ( 1 / 0 )
      * @return {*}  {boolean}
      * @memberof Val
      */
-    toggle() {
+    Val.prototype.toggle = function () {
         return this.set(!this._data);
-    }
+    };
     /**
      * @return {*}  {boolean}
      * @memberof Val
      */
-    toBoolean() {
+    Val.prototype.toBoolean = function () {
         return Boolean(this._data);
-    }
+    };
     /**
      * @return {*}  {Val}
      * @memberof Val
      */
-    deep_copy() {
+    Val.prototype.deep_copy = function () {
         return new Val(this._data);
-    }
+    };
     /**
      * @param {number} v
      * @memberof Val
      */
-    add(v) {
+    Val.prototype.add = function (v) {
         if (v) {
             this._data += v;
             this._signal_change();
         }
-    }
+    };
     /**
      * we do not take _set from Obj because we want a conversion if value is not a number
      * @protected
@@ -80,12 +98,12 @@ class Val extends Obj_1.Obj {
      * @return {*}  {boolean}
      * @memberof Val
      */
-    _set(value) {
-        let n;
+    Val.prototype._set = function (value) {
+        var n;
         if (typeof value === 'string' || typeof value === 'boolean') {
             n = Number(value);
             if (isNaN(n))
-                console.log(`Don't know how to transform ${value} to a Val`);
+                console.log("Don't know how to transform ".concat(value, " to a Val"));
         }
         else if (value instanceof Val)
             n = value._data;
@@ -96,8 +114,9 @@ class Val extends Obj_1.Obj {
             return true;
         }
         return false;
-    }
-}
+    };
+    Val._constructorName = 'Val';
+    return Val;
+}(Obj_1.Obj));
 exports.Val = Val;
-Val._constructorName = 'Val';
 //# sourceMappingURL=Val.js.map

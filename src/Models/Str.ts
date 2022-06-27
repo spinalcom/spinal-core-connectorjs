@@ -35,15 +35,16 @@ import { Obj } from './Obj';
 export class Str extends Obj<string> {
   public static _constructorName: string = 'Str';
   public _data: string;
+  public length: number = 0;
 
-  /**
-   * @readonly
-   * @type {number}
-   * @memberof Str
-   */
-  public get length(): number {
-    return this._data.length;
-  }
+  // /**
+  //  * @readonly
+  //  * @type {number}
+  //  * @memberof Str
+  //  */
+  // public get length(): number {
+  //   return this._data.length;
+  // }
 
   /**
    * Creates an instance of Str.
@@ -53,6 +54,7 @@ export class Str extends Obj<string> {
   public constructor(data: string | Str = '') {
     super();
     this._data = data.toString();
+    this.length = this._data.length;
   }
 
   /**
@@ -139,6 +141,7 @@ export class Str extends Obj<string> {
     const n: string = value.toString();
     if (this._data !== n) {
       this._data = n;
+      this.length = this._data.length;
       return true;
     }
     return false;

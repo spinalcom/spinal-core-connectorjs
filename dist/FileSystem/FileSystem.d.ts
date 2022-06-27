@@ -54,7 +54,7 @@ export declare class FileSystem {
      * @type {(string | number)}
      * @memberof FileSystem
      */
-    static get _userid(): string | number;
+    static readonly _userid: string | number;
     /**
      * @static
      * @type {number}

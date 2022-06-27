@@ -22,36 +22,53 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
 exports.UserRight = void 0;
-const Model_1 = require("../../Models/Model");
+var Model_1 = require("../../Models/Model");
 /**
  * @export
  * @class UserRight
  * @extends {Model}
  */
-class UserRight extends Model_1.Model {
+var UserRight = /** @class */ (function (_super) {
+    __extends(UserRight, _super);
     /**
      * Creates an instance of UserRight.
      * @memberof UserRight
      */
-    constructor() {
-        super();
+    function UserRight() {
+        return _super.call(this) || this;
     }
     /**
      * @return {*}  {boolean}
      * @memberof UserRight
      */
-    set() {
+    UserRight.prototype.set = function () {
         console.error('Set a UserRight is not allowed.');
         return false;
-    }
-}
+    };
+    /**
+     * @static
+     * @type {string}
+     * @memberof UserRight
+     */
+    UserRight._constructorName = 'UserRight';
+    return UserRight;
+}(Model_1.Model));
 exports.UserRight = UserRight;
-/**
- * @static
- * @type {string}
- * @memberof UserRight
- */
-UserRight._constructorName = 'UserRight';
 //# sourceMappingURL=UserRight.js.map

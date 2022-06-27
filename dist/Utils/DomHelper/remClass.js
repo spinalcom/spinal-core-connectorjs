@@ -22,7 +22,7 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 exports.remClass = void 0;
 /**
  * obj is a DOM object. src is a string or an array of string
@@ -35,9 +35,9 @@ exports.remClass = void 0;
 function remClass(obj, src) {
     if (typeof src === 'string')
         return remClass(obj, src.split(' '));
-    const old = (obj.className || '').split(' ');
+    var old = (obj.className || '').split(' ');
     obj.className = old
-        .filter((x) => src.indexOf(x) < 0)
+        .filter(function (x) { return src.indexOf(x) < 0; })
         .join(' ');
 }
 exports.remClass = remClass;

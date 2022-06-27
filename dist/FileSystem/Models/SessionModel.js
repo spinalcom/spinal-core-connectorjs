@@ -22,28 +22,45 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
 exports.SessionModel = void 0;
-const Model_1 = require("../../Models/Model");
+var Model_1 = require("../../Models/Model");
 /**
  * @export
  * @class SessionModel
  * @extends {Model}
  */
-class SessionModel extends Model_1.Model {
+var SessionModel = /** @class */ (function (_super) {
+    __extends(SessionModel, _super);
     /**
      * Creates an instance of SessionModel.
      * @memberof SessionModel
      */
-    constructor() {
-        super();
+    function SessionModel() {
+        return _super.call(this) || this;
     }
-}
+    /**
+     * @static
+     * @type {string}
+     * @memberof SessionModel
+     */
+    SessionModel._constructorName = 'SessionModel';
+    return SessionModel;
+}(Model_1.Model));
 exports.SessionModel = SessionModel;
-/**
- * @static
- * @type {string}
- * @memberof SessionModel
- */
-SessionModel._constructorName = 'SessionModel';
 //# sourceMappingURL=SessionModel.js.map

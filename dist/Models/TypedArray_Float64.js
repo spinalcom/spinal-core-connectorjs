@@ -22,39 +22,56 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
 exports.TypedArray_Float64 = void 0;
-const TypedArray_1 = require("./TypedArray");
+var TypedArray_1 = require("./TypedArray");
 /**
  * @export
  * @class TypedArray_Float64
  * @extends {TypedArray<Float64Array>}
  */
-class TypedArray_Float64 extends TypedArray_1.TypedArray {
+var TypedArray_Float64 = /** @class */ (function (_super) {
+    __extends(TypedArray_Float64, _super);
     /**
      * Creates an instance of TypedArray_Float64.
      * @param {(number | number[])} [size]
      * @param {Float64Array} [data]
      * @memberof TypedArray_Float64
      */
-    constructor(size, data) {
-        super(size, data);
+    function TypedArray_Float64(size, data) {
+        return _super.call(this, size, data) || this;
     }
     /**
      * @return {*}  {typeof TypedArray_Float64}
      * @memberof TypedArray_Float64
      */
-    base_type() {
+    TypedArray_Float64.prototype.base_type = function () {
         return TypedArray_Float64;
-    }
+    };
     /**
      * @return {*}  {TypedArray_Float64}
      * @memberof TypedArray_Float64
      */
-    deep_copy() {
+    TypedArray_Float64.prototype.deep_copy = function () {
         return new TypedArray_Float64(this._size, this._data);
-    }
-}
+    };
+    TypedArray_Float64._constructorName = 'TypedArray_Float64';
+    return TypedArray_Float64;
+}(TypedArray_1.TypedArray));
 exports.TypedArray_Float64 = TypedArray_Float64;
-TypedArray_Float64._constructorName = 'TypedArray_Float64';
 //# sourceMappingURL=TypedArray_Float64.js.map

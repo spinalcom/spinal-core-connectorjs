@@ -31,19 +31,74 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+exports.__esModule = true;
 exports.FileSystem = void 0;
-const ModelProcessManager_1 = require("../ModelProcessManager");
-const NewAlertMsg_1 = require("../Utils/DomHelper/NewAlertMsg");
-const getUrlPath_1 = require("../Utils/getUrlPath");
-const Directory_1 = require("./Models/Directory");
+var ModelProcessManager_1 = require("../ModelProcessManager");
+var NewAlertMsg_1 = require("../Utils/DomHelper/NewAlertMsg");
+var getUrlPath_1 = require("../Utils/getUrlPath");
+var Directory_1 = require("./Models/Directory");
 /**
  * intance of the connection to an server
  * @export
  * @class FileSystem
  */
-class FileSystem {
-    constructor({ url, port, home_dir, userid, password, sessionId, accessToken, }) {
+var FileSystem = /** @class */ (function () {
+    function FileSystem(_a) {
+        var url = _a.url, port = _a.port, home_dir = _a.home_dir, userid = _a.userid, password = _a.password, sessionId = _a.sessionId, accessToken = _a.accessToken;
         /**
          * @private
          * @type {string}
@@ -72,7 +127,7 @@ class FileSystem {
         this._home_dir = home_dir;
         this._accessToken = accessToken;
         if (typeof global !== 'undefined') {
-            const XMLHttpRequest_node = require('xhr2');
+            var XMLHttpRequest_node = require('xhr2');
             FileSystem._XMLHttpRequest = XMLHttpRequest_node;
         }
         this._num_inst = FileSystem._nb_insts++;
@@ -82,32 +137,22 @@ class FileSystem {
         // first, we need a session id fom the server
         if (!sessionId) {
             if (userid != null) {
-                this.send(`U ${userid} ${password} `);
+                this.send("U ".concat(userid, " ").concat(password, " "));
             }
-            this.send(`S ${this._num_inst} `);
+            this.send("S ".concat(this._num_inst, " "));
         }
         else {
             FileSystem._insts[this._num_inst]._session_num = sessionId;
             FileSystem._insts[this._num_inst].make_channel();
         }
     }
-    /**
-     * @deprecated
-     * @readonly
-     * @static
-     * @type {(string | number)}
-     * @memberof FileSystem
-     */
-    static get _userid() {
-        console.warn('Using FileSystem._userid is deprecated.');
-        return 644;
-    }
-    load(path, callback) {
+    FileSystem.prototype.load = function (path, callback) {
+        var _this = this;
         if (typeof callback === 'undefined') {
-            return new Promise((resolve, reject) => {
+            return new Promise(function (resolve, reject) {
                 FileSystem._send_chan();
-                this.send(`L ${FileSystem._nb_callbacks} ${encodeURI(path)} `);
-                FileSystem._callbacks[FileSystem._nb_callbacks] = (model, isError) => {
+                _this.send("L ".concat(FileSystem._nb_callbacks, " ").concat(encodeURI(path), " "));
+                FileSystem._callbacks[FileSystem._nb_callbacks] = function (model, isError) {
                     if (!model || isError)
                         reject(new Error('Error Load'));
                     resolve(model);
@@ -116,10 +161,10 @@ class FileSystem {
             });
         }
         FileSystem._send_chan();
-        this.send(`L ${FileSystem._nb_callbacks} ${encodeURI(path)} `);
+        this.send("L ".concat(FileSystem._nb_callbacks, " ").concat(encodeURI(path), " "));
         FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
         FileSystem._nb_callbacks++;
-    }
+    };
     /**
      * load all the objects of $type
      * @template T
@@ -127,66 +172,79 @@ class FileSystem {
      * @param {SpinalLoadCallBack<T>} callback
      * @memberof FileSystem
      */
-    load_type(type, callback) {
+    FileSystem.prototype.load_type = function (type, callback) {
         FileSystem._send_chan();
-        this.send(`R 0 ${type} `);
+        this.send("R 0 ".concat(type, " "));
         FileSystem._type_callbacks.push([type, callback]);
-    }
-    load_or_make_dirProm(dir) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const res = yield this.load(dir);
-                return res;
-            }
-            catch (error) {
-                if (dir === '/')
-                    throw error;
-                const lst = dir
-                    .split('/')
-                    .reduce((acc, v) => {
-                    if (v.length)
-                        acc.push(v);
-                    return acc;
-                }, []);
-                const nir = lst.pop();
-                const oir = '/' + lst.join('/');
-                try {
-                    const n_res = yield this.load_or_make_dirProm(oir);
-                    const n_dir = new Directory_1.Directory();
-                    n_res.add_file(nir, n_dir);
-                    return n_dir;
+    };
+    FileSystem.prototype.load_or_make_dirProm = function (dir) {
+        return __awaiter(this, void 0, void 0, function () {
+            var res, error_1, lst, nir, oir, n_res, n_dir, error_2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 7]);
+                        return [4 /*yield*/, this.load(dir)];
+                    case 1:
+                        res = _a.sent();
+                        return [2 /*return*/, res];
+                    case 2:
+                        error_1 = _a.sent();
+                        if (dir === '/')
+                            throw error_1;
+                        lst = dir
+                            .split('/')
+                            .reduce(function (acc, v) {
+                            if (v.length)
+                                acc.push(v);
+                            return acc;
+                        }, []);
+                        nir = lst.pop();
+                        oir = '/' + lst.join('/');
+                        _a.label = 3;
+                    case 3:
+                        _a.trys.push([3, 5, , 6]);
+                        return [4 /*yield*/, this.load_or_make_dirProm(oir)];
+                    case 4:
+                        n_res = _a.sent();
+                        n_dir = new Directory_1.Directory();
+                        n_res.add_file(nir, n_dir);
+                        return [2 /*return*/, n_dir];
+                    case 5:
+                        error_2 = _a.sent();
+                        throw error_2;
+                    case 6: return [3 /*break*/, 7];
+                    case 7: return [2 /*return*/];
                 }
-                catch (error) {
-                    throw error;
-                }
-            }
+            });
         });
-    }
-    load_or_make_dir(dir, callback) {
+    };
+    FileSystem.prototype.load_or_make_dir = function (dir, callback) {
+        var _this = this;
         if (typeof callback === 'undefined')
             return this.load_or_make_dirProm(dir);
-        this.load(dir, (res, err) => {
+        this.load(dir, function (res, err) {
             if (err) {
                 if (dir === '/') {
                     return callback(null, err);
                 }
                 else {
-                    const lst = dir
+                    var lst = dir
                         .split('/')
-                        .reduce((acc, v) => {
+                        .reduce(function (acc, v) {
                         if (v.length)
                             acc.push(v);
                         return acc;
                     }, []);
-                    const nir = lst.pop();
-                    const oir = '/' + lst.join('/');
-                    this.load_or_make_dir(oir, (n_res, n_err) => {
+                    var nir_1 = lst.pop();
+                    var oir = '/' + lst.join('/');
+                    _this.load_or_make_dir(oir, function (n_res, n_err) {
                         if (n_err) {
                             return callback(null, n_err);
                         }
                         else {
-                            const n_dir = new Directory_1.Directory();
-                            n_res.add_file(nir, n_dir);
+                            var n_dir = new Directory_1.Directory();
+                            n_res.add_file(nir_1, n_dir);
                             return callback(n_dir, n_err);
                         }
                     });
@@ -196,18 +254,19 @@ class FileSystem {
                 return callback(res, err);
             }
         });
-    }
-    load_ptr(ptr, callback) {
+    };
+    FileSystem.prototype.load_ptr = function (ptr, callback) {
+        var _this = this;
         if (typeof callback === 'undefined') {
             if (!ptr)
                 return Promise.reject('Error Load ptr');
             if (typeof FileSystem._objects[ptr] !== 'undefined') {
                 return Promise.resolve(FileSystem._objects[ptr]);
             }
-            return new Promise((resolve, reject) => {
+            return new Promise(function (resolve, reject) {
                 FileSystem._send_chan();
-                this.send(`l ${FileSystem._nb_callbacks} ${ptr} `);
-                FileSystem._callbacks[FileSystem._nb_callbacks] = (model, isError) => {
+                _this.send("l ".concat(FileSystem._nb_callbacks, " ").concat(ptr, " "));
+                FileSystem._callbacks[FileSystem._nb_callbacks] = function (model, isError) {
                     if (!model || isError)
                         reject(new Error('Error Load ptr'));
                     resolve(model);
@@ -216,23 +275,24 @@ class FileSystem {
             });
         }
         if (!ptr)
-            setImmediate(() => callback(undefined));
+            setImmediate(function () { return callback(undefined); });
         else if (typeof FileSystem._objects[ptr] !== 'undefined') {
-            setImmediate(() => callback(FileSystem._objects[ptr]));
+            setImmediate(function () { return callback(FileSystem._objects[ptr]); });
         }
         else {
             FileSystem._send_chan();
-            this.send(`l ${FileSystem._nb_callbacks} ${ptr} `);
+            this.send("l ".concat(FileSystem._nb_callbacks, " ").concat(ptr, " "));
             FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
             FileSystem._nb_callbacks++;
         }
-    }
-    load_right(ptr, callback) {
+    };
+    FileSystem.prototype.load_right = function (ptr, callback) {
+        var _this = this;
         if (typeof callback === 'undefined') {
-            return new Promise((resolve, reject) => {
+            return new Promise(function (resolve, reject) {
                 FileSystem._send_chan();
-                this.send(`r ${ptr} ${FileSystem._nb_callbacks} `);
-                FileSystem._callbacks[FileSystem._nb_callbacks] = (model) => {
+                _this.send("r ".concat(ptr, " ").concat(FileSystem._nb_callbacks, " "));
+                FileSystem._callbacks[FileSystem._nb_callbacks] = function (model) {
                     if (!model)
                         reject(new Error('Error load_right'));
                     resolve(model);
@@ -241,10 +301,10 @@ class FileSystem {
             });
         }
         FileSystem._send_chan();
-        this.send(`r ${ptr} ${FileSystem._nb_callbacks} `);
+        this.send("r ".concat(ptr, " ").concat(FileSystem._nb_callbacks, " "));
         FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
         FileSystem._nb_callbacks++;
-    }
+    };
     /**
      * @param {(Model | number)} ptr
      * @param {string} file_name
@@ -252,35 +312,36 @@ class FileSystem {
      * @param {string} targetName
      * @memberof FileSystem
      */
-    share_model(ptr, file_name, share_type, targetName) {
+    FileSystem.prototype.share_model = function (ptr, file_name, share_type, targetName) {
         FileSystem._send_chan();
-        this.send(`h ${typeof ptr === 'number' ? ptr : ptr._server_id} ${share_type} ${encodeURI(targetName)} ${encodeURI(file_name)} `);
-    }
+        this.send("h ".concat(typeof ptr === 'number' ? ptr : ptr._server_id, " ").concat(share_type, " ").concat(encodeURI(targetName), " ").concat(encodeURI(file_name), " "));
+    };
     /**
      * explicitly send a command
      * @private
      * @param {string} data
      * @memberof FileSystem
      */
-    send(data) {
+    FileSystem.prototype.send = function (data) {
         this._data_to_send += data;
         if (FileSystem._timer_send == null) {
             FileSystem._timer_send = setTimeout(FileSystem._timeout_send_func, 1);
         }
-    }
+    };
     /**
      * send a request for a "push" channel
      * @private
      * @memberof FileSystem
      */
-    make_channel() {
-        const fs = FileSystem.get_inst();
-        let path = (0, getUrlPath_1.getUrlPath)(fs._url, fs._port, `?s=${this._session_num}`);
-        const xhr_object = FileSystem._my_xml_http_request();
+    FileSystem.prototype.make_channel = function () {
+        var fs = FileSystem.get_inst();
+        var path = (0, getUrlPath_1.getUrlPath)(fs._url, fs._port, "?s=".concat(this._session_num));
+        var xhr_object = FileSystem._my_xml_http_request();
+        xhr_object.open('GET', path, true);
         if (fs._accessToken)
             xhr_object.setRequestHeader('x-access-token', fs._accessToken);
-        xhr_object.open('GET', path, true);
         xhr_object.onreadystatechange = function () {
+            var e_1, _a;
             if (this.readyState === 4 && this.status === 200) {
                 if (fs.make_channel_error_timer !== 0) {
                     FileSystem.onConnectionError(0);
@@ -289,30 +350,52 @@ class FileSystem {
                 if (FileSystem._disp) {
                     console.log('chan ->', this.responseText);
                 }
-                const created = [];
-                function _w(sid, obj) {
-                    const _obj = FileSystem._create_model_by_name(obj);
+                var created_2 = [];
+                var _w = function (sid, obj) {
+                    var e_2, _a;
+                    var _obj = FileSystem._create_model_by_name(obj);
                     if (sid != null && _obj != null) {
                         _obj._server_id = sid;
                         FileSystem._objects[sid] = _obj;
-                        for (const [type, cb] of FileSystem._type_callbacks) {
-                            // @ts-ignore
-                            const mod_R = ModelProcessManager_1.ModelProcessManager._def[type] ||
-                                ModelProcessManager_1.ModelProcessManager.spinal[type];
-                            if (_obj instanceof mod_R) {
-                                created.push({ cb, _obj });
+                        try {
+                            for (var _b = __values(FileSystem._type_callbacks), _d = _b.next(); !_d.done; _d = _b.next()) {
+                                var _e = __read(_d.value, 2), type = _e[0], cb = _e[1];
+                                // @ts-ignore
+                                var mod_R = ModelProcessManager_1.ModelProcessManager._def[type] ||
+                                    ModelProcessManager_1.ModelProcessManager.spinal[type];
+                                if (_obj instanceof mod_R) {
+                                    created_2.push({ cb: cb, _obj: _obj });
+                                }
                             }
                         }
+                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                        finally {
+                            try {
+                                if (_d && !_d.done && (_a = _b["return"])) _a.call(_b);
+                            }
+                            finally { if (e_2) throw e_2.error; }
+                        }
                     }
-                }
+                };
                 FileSystem._sig_server = false;
                 eval(this.responseText);
                 FileSystem._sig_server = true;
-                for (const { cb, _obj } of created)
-                    cb(_obj);
+                try {
+                    for (var created_1 = __values(created_2), created_1_1 = created_1.next(); !created_1_1.done; created_1_1 = created_1.next()) {
+                        var _b = created_1_1.value, cb = _b.cb, _obj = _b._obj;
+                        cb(_obj);
+                    }
+                }
+                catch (e_1_1) { e_1 = { error: e_1_1 }; }
+                finally {
+                    try {
+                        if (created_1_1 && !created_1_1.done && (_a = created_1["return"])) _a.call(created_1);
+                    }
+                    finally { if (e_1) throw e_1.error; }
+                }
             }
             else if (this.readyState === 4 && this.status === 0) {
-                console.error(`Disconnected from the server with request : ${path}.`);
+                console.error("Disconnected from the server with request : ".concat(path, "."));
                 if (fs.make_channel_error_timer === 0) {
                     //first disconnect
                     console.log('Trying to reconnect.');
@@ -334,7 +417,7 @@ class FileSystem {
             }
         };
         xhr_object.send();
-    }
+    };
     /**
      * default callback on make_channel error after the timeout disconnected reached
      * This method can be surcharged.
@@ -349,8 +432,8 @@ class FileSystem {
      * @param {number} error_code
      * @memberof FileSystem
      */
-    static _onConnectionError(error_code) {
-        let msg = '';
+    FileSystem._onConnectionError = function (error_code) {
+        var msg = '';
         if (error_code === 0) {
             // Error resolved
             if (FileSystem.CONNECTOR_TYPE === 'Browser' || FileSystem.is_cordova) {
@@ -390,16 +473,16 @@ class FileSystem {
                         {
                             txt: 'reload page',
                             click: window.location.reload.bind(window.location),
-                            backgroundColor: '#ff5b57',
+                            backgroundColor: '#ff5b57'
                         },
                         {
                             txt: 'close',
                             backgroundColor: '#348fe2',
                             click: function () {
                                 return FileSystem.popup.hide();
-                            },
+                            }
                         },
-                    ],
+                    ]
                 });
             }
             else {
@@ -413,47 +496,47 @@ class FileSystem {
             }
             FileSystem.popup.setMsg(msg);
         }
-    }
+    };
     /**
      * get the first running inst
      * @static
      * @return {*}  {FileSystem}
      * @memberof FileSystem
      */
-    static get_inst() {
-        for (const k in FileSystem._insts) {
+    FileSystem.get_inst = function () {
+        for (var k in FileSystem._insts) {
             return FileSystem._insts[k];
         }
-    }
+    };
     /**
      * @static
      * @param {IFsData} out
      * @param {Model} obj
      * @memberof FileSystem
      */
-    static set_server_id_if_necessary(out, obj) {
+    FileSystem.set_server_id_if_necessary = function (out, obj) {
         if (obj._server_id == null) {
             // registering
             obj._server_id = FileSystem._get_new_tmp_server_id();
             FileSystem._tmp_objects[obj._server_id] = obj;
             // new object
-            let ncl = ModelProcessManager_1.ModelProcessManager.get_object_class(obj);
+            var ncl = ModelProcessManager_1.ModelProcessManager.get_object_class(obj);
             if (obj._underlying_fs_type != null) {
-                out.mod += `T ${obj._server_id} ${ncl} `;
+                out.mod += "T ".concat(obj._server_id, " ").concat(ncl, " ");
                 ncl = obj._underlying_fs_type();
             }
-            out.cre += `N ${obj._server_id} ${ncl} `;
+            out.cre += "N ".concat(obj._server_id, " ").concat(ncl, " ");
             // data
             obj._get_fs_data(out);
         }
-    }
+    };
     /**
      * send changes of m to instances.
      * @static
      * @param {Model} m
      * @memberof FileSystem
      */
-    static signal_change(m) {
+    FileSystem.signal_change = function (m) {
         if (FileSystem._sig_server) {
             FileSystem._objects_to_send[m.model_id] = m;
             if (FileSystem._timer_chan != null) {
@@ -461,7 +544,7 @@ class FileSystem {
             }
             FileSystem._timer_chan = setTimeout(FileSystem._timeout_chan_func, 250);
         }
-    }
+    };
     /**
      * @static
      * @param {number} tmp_id
@@ -469,15 +552,15 @@ class FileSystem {
      * @return {*}  {void}
      * @memberof FileSystem
      */
-    static _tmp_id_to_real(tmp_id, res) {
-        const tmp = FileSystem._tmp_objects[tmp_id];
+    FileSystem._tmp_id_to_real = function (tmp_id, res) {
+        var tmp = FileSystem._tmp_objects[tmp_id];
         if (tmp == null) {
             console.log(tmp_id);
         }
         FileSystem._objects[res] = tmp;
         tmp._server_id = res;
         delete FileSystem._tmp_objects[tmp_id];
-        const ptr = FileSystem._ptr_to_update[tmp_id];
+        var ptr = FileSystem._ptr_to_update[tmp_id];
         if (ptr != null) {
             delete FileSystem._ptr_to_update[tmp_id];
             ptr.data.value = res;
@@ -485,17 +568,17 @@ class FileSystem {
         if (FileSystem._files_to_upload[tmp_id] != null && tmp.file != null) {
             delete FileSystem._files_to_upload[tmp_id];
             // send the file
-            const fs = FileSystem.get_inst();
-            let path = (0, getUrlPath_1.getUrlPath)(fs._url, fs._port, `?s=${fs._session_num}&p=${tmp._server_id}`);
-            const xhr_object = FileSystem._my_xml_http_request();
+            var fs = FileSystem.get_inst();
+            var path = (0, getUrlPath_1.getUrlPath)(fs._url, fs._port, "?s=".concat(fs._session_num, "&p=").concat(tmp._server_id));
+            var xhr_object = FileSystem._my_xml_http_request();
+            xhr_object.open('PUT', path, true);
             if (fs._accessToken)
                 xhr_object.setRequestHeader('x-access-token', fs._accessToken);
-            xhr_object.open('PUT', path, true);
             xhr_object.onreadystatechange = function () {
-                let _w;
+                var _w;
                 if (this.readyState === 4 && this.status === 200) {
                     _w = function (sid, obj) {
-                        const _obj = FileSystem._create_model_by_name(obj);
+                        var _obj = FileSystem._create_model_by_name(obj);
                         if (sid != null && _obj != null) {
                             _obj._server_id = sid;
                             return (FileSystem._objects[sid] = _obj);
@@ -508,8 +591,8 @@ class FileSystem {
             delete tmp.file;
         }
         return FileSystem.signal_change(FileSystem._objects[res]);
-    }
-    static _create_model_by_name(name) {
+    };
+    FileSystem._create_model_by_name = function (name) {
         if (typeof name !== 'string') {
             return name; // for old spinalcore version
         }
@@ -518,12 +601,12 @@ class FileSystem {
         }
         if (typeof ModelProcessManager_1.ModelProcessManager.spinal[name] === 'undefined') {
             if (FileSystem.debug === true) {
-                console.warn(`Got Model type \"${name}\" from hub but not registered.`);
+                console.warn("Got Model type \"".concat(name, "\" from hub but not registered."));
             }
-            ModelProcessManager_1.ModelProcessManager._def[name] = new Function(`return class ${name} extends ModelProcessManager._def[\"Model\"] {}`)();
+            ModelProcessManager_1.ModelProcessManager._def[name] = new Function("return class ".concat(name, " extends ModelProcessManager._def[\"Model\"] {}"))();
             return new ModelProcessManager_1.ModelProcessManager._def[name]();
         }
-    }
+    };
     /**
      * @deprecated
      * @static
@@ -532,44 +615,44 @@ class FileSystem {
      * @return {*}  {*}
      * @memberof FileSystem
      */
-    static extend(_child, _parent) {
+    FileSystem.extend = function (_child, _parent) {
         throw 'FileSystem.extend is a legacy function, do not use';
-    }
+    };
     /**
      * @private
      * @static
      * @return {*}  {number}
      * @memberof FileSystem
      */
-    static _get_new_tmp_server_id() {
+    FileSystem._get_new_tmp_server_id = function () {
         FileSystem._cur_tmp_server_id++;
         if (FileSystem._cur_tmp_server_id % 4 === 0) {
             FileSystem._cur_tmp_server_id++;
         }
         return FileSystem._cur_tmp_server_id;
-    }
+    };
     /**
      * send changes
      * @private
      * @static
      * @memberof FileSystem
      */
-    static _send_chan() {
-        const out = FileSystem._get_chan_data();
-        for (const f in FileSystem._insts) {
+    FileSystem._send_chan = function () {
+        var out = FileSystem._get_chan_data();
+        for (var f in FileSystem._insts) {
             FileSystem._insts[f].send(out);
         }
-    }
+    };
     /**
      * timeout for at least one changed object
      * @private
      * @static
      * @memberof FileSystem
      */
-    static _timeout_chan_func() {
+    FileSystem._timeout_chan_func = function () {
         FileSystem._send_chan();
         delete FileSystem._timer_chan;
-    }
+    };
     /**
      * get data of objects to send
      * @private
@@ -577,31 +660,31 @@ class FileSystem {
      * @return {*}  {string}
      * @memberof FileSystem
      */
-    static _get_chan_data() {
-        const out = {
+    FileSystem._get_chan_data = function () {
+        var out = {
             cre: '',
-            mod: '',
+            mod: ''
         };
-        for (const n in FileSystem._objects_to_send) {
+        for (var n in FileSystem._objects_to_send) {
             FileSystem._objects_to_send[n]._get_fs_data(out);
         }
         FileSystem._objects_to_send = {};
         return out.cre + out.mod;
-    }
+    };
     /**
      * @private
      * @static
      * @memberof FileSystem
      */
-    static _timeout_send_func() {
+    FileSystem._timeout_send_func = function () {
         // if some model have changed, we have to send the changes now
-        const out = FileSystem._get_chan_data();
-        for (const k in FileSystem._insts) {
+        var out = FileSystem._get_chan_data();
+        for (var k in FileSystem._insts) {
             FileSystem._insts[k]._data_to_send += out;
         }
         // send data
-        for (const k in FileSystem._insts) {
-            const fs = FileSystem._insts[k];
+        for (var k in FileSystem._insts) {
+            var fs = FileSystem._insts[k];
             if (!fs._data_to_send.length || fs._session_num === -1)
                 continue;
             // (@responseText will contain another call to @_timeout_send with the session id)
@@ -610,43 +693,75 @@ class FileSystem {
                 fs._session_num = -1;
             }
             else {
-                fs._data_to_send = `s ${fs._session_num} ${fs._data_to_send}`;
+                fs._data_to_send = "s ".concat(fs._session_num, " ").concat(fs._data_to_send);
             }
             // request
-            let path = (0, getUrlPath_1.getUrlPath)(fs._url, fs._port);
-            const xhr_object = FileSystem._my_xml_http_request();
+            var path = (0, getUrlPath_1.getUrlPath)(fs._url, fs._port);
+            var xhr_object = FileSystem._my_xml_http_request();
+            xhr_object.open('POST', path, true);
             if (fs._accessToken)
                 xhr_object.setRequestHeader('x-access-token', fs._accessToken);
-            xhr_object.open('POST', path, true);
             xhr_object.onreadystatechange = function () {
+                var e_3, _a, e_4, _b;
                 if (this.readyState === 4 && this.status === 200) {
                     if (FileSystem._disp) {
                         console.log('resp ->', this.responseText);
                     }
-                    const _c = []; // callbacks
-                    const created = [];
-                    function _w(sid, obj) {
-                        const _obj = FileSystem._create_model_by_name(obj);
+                    var _c = []; // callbacks
+                    var created_4 = [];
+                    var _w = function (sid, obj) {
+                        var e_5, _a;
+                        var _obj = FileSystem._create_model_by_name(obj);
                         if (sid != null && _obj != null) {
                             _obj._server_id = sid;
                             FileSystem._objects[sid] = _obj;
-                            for (const [type, cb] of FileSystem._type_callbacks) {
-                                const mod_R = ModelProcessManager_1.ModelProcessManager.spinal[type] ||
-                                    ModelProcessManager_1.ModelProcessManager._def[type];
-                                if (_obj instanceof mod_R) {
-                                    created.push({ cb, _obj });
+                            try {
+                                for (var _b = __values(FileSystem._type_callbacks), _d = _b.next(); !_d.done; _d = _b.next()) {
+                                    var _e = __read(_d.value, 2), type = _e[0], cb = _e[1];
+                                    var mod_R = ModelProcessManager_1.ModelProcessManager.spinal[type] ||
+                                        ModelProcessManager_1.ModelProcessManager._def[type];
+                                    if (_obj instanceof mod_R) {
+                                        created_4.push({ cb: cb, _obj: _obj });
+                                    }
                                 }
                             }
+                            catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                            finally {
+                                try {
+                                    if (_d && !_d.done && (_a = _b["return"])) _a.call(_b);
+                                }
+                                finally { if (e_5) throw e_5.error; }
+                            }
                         }
-                    }
+                    };
                     FileSystem._sig_server = false;
                     eval(this.responseText);
                     FileSystem._sig_server = true;
-                    for (const { cb, _obj } of created) {
-                        cb(_obj);
+                    try {
+                        for (var created_3 = __values(created_4), created_3_1 = created_3.next(); !created_3_1.done; created_3_1 = created_3.next()) {
+                            var _d = created_3_1.value, cb = _d.cb, _obj = _d._obj;
+                            cb(_obj);
+                        }
                     }
-                    for (const [nbCb, servId, error] of _c) {
-                        FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+                    catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                    finally {
+                        try {
+                            if (created_3_1 && !created_3_1.done && (_a = created_3["return"])) _a.call(created_3);
+                        }
+                        finally { if (e_3) throw e_3.error; }
+                    }
+                    try {
+                        for (var _c_1 = __values(_c), _c_1_1 = _c_1.next(); !_c_1_1.done; _c_1_1 = _c_1.next()) {
+                            var _e = __read(_c_1_1.value, 3), nbCb = _e[0], servId = _e[1], error = _e[2];
+                            FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+                        }
+                    }
+                    catch (e_4_1) { e_4 = { error: e_4_1 }; }
+                    finally {
+                        try {
+                            if (_c_1_1 && !_c_1_1.done && (_b = _c_1["return"])) _b.call(_c_1);
+                        }
+                        finally { if (e_4) throw e_4.error; }
                     }
                 }
                 else if (this.readyState === 4 &&
@@ -663,13 +778,13 @@ class FileSystem {
         }
         FileSystem._objects_to_send = {};
         delete FileSystem._timer_send;
-    }
+    };
     /**
      * @static
      * @return {*}  {*}
      * @memberof FileSystem
      */
-    static _my_xml_http_request() {
+    FileSystem._my_xml_http_request = function () {
         if (FileSystem.CONNECTOR_TYPE === 'Browser') {
             if (window.XMLHttpRequest) {
                 return new XMLHttpRequest();
@@ -685,165 +800,174 @@ class FileSystem {
         else {
             console.error('you must define CONNECTOR_TYPE');
         }
-    }
-}
+    };
+    FileSystem._constructorName = 'FileSystem';
+    // when object are saved, their _server_id is assigned to a tmp value
+    /**
+     *  set to true to get warning for creating unknown Model type
+     * @static
+     * @type {boolean}
+     * @memberof FileSystem
+     */
+    FileSystem.debug = false;
+    /**
+     * if true, print the IO with the server
+     * @static
+     * @type {boolean}
+     * @memberof FileSystem
+     */
+    FileSystem._disp = false;
+    /**
+     * @private
+     * @static
+     * @type {NewAlertMsg}
+     * @memberof FileSystem
+     */
+    FileSystem.popup = undefined;
+    /**
+     * @private
+     * @static
+     * @type {number}
+     * @memberof FileSystem
+     */
+    FileSystem._cur_tmp_server_id = 0;
+    /**
+     * if true, eval server response.
+     * @static
+     * @type {boolean}
+     * @memberof FileSystem
+     */
+    FileSystem._sig_server = true; // if changes has to be sent
+    /**
+     * @deprecated
+     * @readonly
+     * @static
+     * @type {(string | number)}
+     * @memberof FileSystem
+     */
+    FileSystem._userid = 644;
+    /**
+     * @static
+     * @type {number}
+     * @memberof FileSystem
+     */
+    FileSystem._timeout_reconnect = 30000;
+    /**
+     * @static
+     * @type {boolean}
+     * @memberof FileSystem
+     */
+    FileSystem.is_cordova = typeof document !== 'undefined'
+        ? document.URL.indexOf('http://') == -1 &&
+            document.URL.indexOf('https://') == -1
+        : false;
+    /**
+     * data are sent after a timeout (and are concatened before)
+     * @static
+     * @type {{ [serverId: number]: Model }}
+     * @memberof FileSystem
+     */
+    FileSystem._objects_to_send = {};
+    /**
+     * @static
+     * @type {ReturnType<typeof setTimeout>}
+     * @memberof FileSystem
+     */
+    FileSystem._timer_send = undefined;
+    /**
+     * @static
+     * @type {ReturnType<typeof setTimeout>}
+     * @memberof FileSystem
+     */
+    FileSystem._timer_chan = undefined;
+    /**
+     * functions to be called after an answer
+     * @static
+     * @type {number}
+     * @memberof FileSystem
+     */
+    FileSystem._nb_callbacks = 0;
+    /**
+     * @static
+     * @type {{ [id: number]: SpinalLoadCallBack<Model> }}
+     * @memberof FileSystem
+     */
+    FileSystem._callbacks = {};
+    /**
+     * @static
+     * @type {[string, SpinalLoadCallBack<Model>][]}
+     * @memberof FileSystem
+     */
+    FileSystem._type_callbacks = []; // list of callbacks associated to a type: [ [ "type", function ], ... ]
+    /**
+     * number of instances of FileSystem
+     * @private
+     * @static
+     * @type {number}
+     * @memberof FileSystem
+     */
+    FileSystem._nb_insts = 0;
+    /**
+     * @private
+     * @static
+     * @type {{ [idInstance: number]: FileSystem }}
+     * @memberof FileSystem
+     */
+    FileSystem._insts = {};
+    /**
+     * ref to Path waiting to be registered before sending data
+     * @static
+     * @type {{ [key: number]: Path }}
+     * @memberof FileSystem
+     */
+    FileSystem._files_to_upload = {};
+    /**
+     * Ptr objects that need an update, associated with FileSystem_tmp_objects
+     * @static
+     * @type {{ [key: number]: Model }}
+     * @memberof FileSystem
+     */
+    FileSystem._ptr_to_update = {};
+    /**
+     * objects waiting for a real _server_id
+     * @static
+     * @type {{ [key: number]: Model }}
+     * @memberof FileSystem
+     */
+    FileSystem._tmp_objects = {};
+    /**
+     * _server_id -> object
+     * @static
+     * @type {{ [key: number]: Model }}
+     * @memberof FileSystem
+     */
+    FileSystem._objects = {};
+    /**
+     * @static
+     * @type {string}
+     * @memberof FileSystem
+     */
+    FileSystem.url_com = '/sceen/_';
+    /**
+     * @static
+     * @type {string}
+     * @memberof FileSystem
+     */
+    FileSystem.url_upload = '/sceen/upload';
+    /**
+     * conector type : Browser or Node
+     * @static
+     * @type {('Node' | 'Browser')}
+     * @memberof FileSystem
+     */
+    FileSystem.CONNECTOR_TYPE = typeof globalThis.global != 'undefined' ? 'Node' : 'Browser';
+    /**
+     * to be refedifined to change the handleing for connections error
+     * @static
+     * @memberof FileSystem
+     */
+    FileSystem.onConnectionError = FileSystem._onConnectionError;
+    return FileSystem;
+}());
 exports.FileSystem = FileSystem;
-FileSystem._constructorName = 'FileSystem';
-// when object are saved, their _server_id is assigned to a tmp value
-/**
- *  set to true to get warning for creating unknown Model type
- * @static
- * @type {boolean}
- * @memberof FileSystem
- */
-FileSystem.debug = false;
-/**
- * if true, print the IO with the server
- * @static
- * @type {boolean}
- * @memberof FileSystem
- */
-FileSystem._disp = false;
-/**
- * @private
- * @static
- * @type {NewAlertMsg}
- * @memberof FileSystem
- */
-FileSystem.popup = undefined;
-/**
- * @private
- * @static
- * @type {number}
- * @memberof FileSystem
- */
-FileSystem._cur_tmp_server_id = 0;
-/**
- * if true, eval server response.
- * @static
- * @type {boolean}
- * @memberof FileSystem
- */
-FileSystem._sig_server = true; // if changes has to be sent
-/**
- * @static
- * @type {number}
- * @memberof FileSystem
- */
-FileSystem._timeout_reconnect = 30000;
-/**
- * @static
- * @type {boolean}
- * @memberof FileSystem
- */
-FileSystem.is_cordova = typeof document !== 'undefined'
-    ? document.URL.indexOf('http://') == -1 &&
-        document.URL.indexOf('https://') == -1
-    : false;
-/**
- * data are sent after a timeout (and are concatened before)
- * @static
- * @type {{ [serverId: number]: Model }}
- * @memberof FileSystem
- */
-FileSystem._objects_to_send = {};
-/**
- * @static
- * @type {ReturnType<typeof setTimeout>}
- * @memberof FileSystem
- */
-FileSystem._timer_send = undefined;
-/**
- * @static
- * @type {ReturnType<typeof setTimeout>}
- * @memberof FileSystem
- */
-FileSystem._timer_chan = undefined;
-/**
- * functions to be called after an answer
- * @static
- * @type {number}
- * @memberof FileSystem
- */
-FileSystem._nb_callbacks = 0;
-/**
- * @static
- * @type {{ [id: number]: SpinalLoadCallBack<Model> }}
- * @memberof FileSystem
- */
-FileSystem._callbacks = {};
-/**
- * @static
- * @type {[string, SpinalLoadCallBack<Model>][]}
- * @memberof FileSystem
- */
-FileSystem._type_callbacks = []; // list of callbacks associated to a type: [ [ "type", function ], ... ]
-/**
- * number of instances of FileSystem
- * @private
- * @static
- * @type {number}
- * @memberof FileSystem
- */
-FileSystem._nb_insts = 0;
-/**
- * @private
- * @static
- * @type {{ [idInstance: number]: FileSystem }}
- * @memberof FileSystem
- */
-FileSystem._insts = {};
-/**
- * ref to Path waiting to be registered before sending data
- * @static
- * @type {{ [key: number]: Path }}
- * @memberof FileSystem
- */
-FileSystem._files_to_upload = {};
-/**
- * Ptr objects that need an update, associated with FileSystem_tmp_objects
- * @static
- * @type {{ [key: number]: Model }}
- * @memberof FileSystem
- */
-FileSystem._ptr_to_update = {};
-/**
- * objects waiting for a real _server_id
- * @static
- * @type {{ [key: number]: Model }}
- * @memberof FileSystem
- */
-FileSystem._tmp_objects = {};
-/**
- * _server_id -> object
- * @static
- * @type {{ [key: number]: Model }}
- * @memberof FileSystem
- */
-FileSystem._objects = {};
-/**
- * @static
- * @type {string}
- * @memberof FileSystem
- */
-FileSystem.url_com = '/sceen/_';
-/**
- * @static
- * @type {string}
- * @memberof FileSystem
- */
-FileSystem.url_upload = '/sceen/upload';
-/**
- * conector type : Browser or Node
- * @static
- * @type {('Node' | 'Browser')}
- * @memberof FileSystem
- */
-FileSystem.CONNECTOR_TYPE = typeof globalThis.global != 'undefined' ? 'Node' : 'Browser';
-/**
- * to be refedifined to change the handleing for connections error
- * @static
- * @memberof FileSystem
- */
-FileSystem.onConnectionError = FileSystem._onConnectionError;
 //# sourceMappingURL=FileSystem.js.map

@@ -32,8 +32,20 @@ var __createBinding = (this && this.__createBinding) || (Object.create ? (functi
 var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const Spinalcore_1 = require("./Spinalcore");
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
+var e_1, _a;
+exports.__esModule = true;
+var Spinalcore_1 = require("./Spinalcore");
 __exportStar(require("./FileSystem/FileSystem"), exports);
 __exportStar(require("./FileSystem/Models/Directory"), exports);
 __exportStar(require("./FileSystem/Models/File"), exports);
@@ -85,35 +97,48 @@ __exportStar(require("./Utils/DomHelper"), exports);
 __exportStar(require("./Utils/getUrlPath"), exports);
 __exportStar(require("./Utils/isIterable"), exports);
 __exportStar(require("./Utils/sendXhr"), exports);
-// populate export with spinalCore for
-// compatiblity with old lib that use require
-for (const key of [
-    '_def',
-    'version',
-    'connect',
-    'connectWithSessionId',
-    'auth',
-    'authOrgan',
-    'createSession',
-    'store',
-    'register_models',
-    'loadPromise',
-    'load',
-    'load_type',
-    'load_right',
-    'load_directory',
-    'load_ptr',
-    'share_model',
-    'right_flag',
-    'extend',
-    'defaultCallbackError',
-]) {
+var _loop_1 = function (key) {
     Object.defineProperty(exports, key, {
         enumerable: true,
         get: function () {
             // @ts-ignore
             return Spinalcore_1.spinalCore[key];
-        },
+        }
     });
+};
+try {
+    // populate export with spinalCore for
+    // compatiblity with old lib that use require
+    for (var _b = __values([
+        '_def',
+        'version',
+        'connect',
+        'connectWithSessionId',
+        'auth',
+        'authOrgan',
+        'createSession',
+        'store',
+        'register_models',
+        'loadPromise',
+        'load',
+        'load_type',
+        'load_right',
+        'load_directory',
+        'load_ptr',
+        'share_model',
+        'right_flag',
+        'extend',
+        'defaultCallbackError',
+    ]), _c = _b.next(); !_c.done; _c = _b.next()) {
+        var key = _c.value;
+        _loop_1(key);
+    }
+}
+catch (e_1_1) { e_1 = { error: e_1_1 }; }
+finally {
+    try {
+        if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+    }
+    finally { if (e_1) throw e_1.error; }
 }
 //# sourceMappingURL=index.js.map

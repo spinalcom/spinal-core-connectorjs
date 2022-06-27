@@ -22,5 +22,5 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 //# sourceMappingURL=IFileInfoOption.js.map

@@ -22,10 +22,10 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 exports.spinalNewPopup = void 0;
-const newDomElement_1 = require("./newDomElement");
-let _index_current_popup = 10000;
+var newDomElement_1 = require("./newDomElement");
+var _index_current_popup = 10000;
 /**
  * make a popup window.
  * returns the creted "inside" div
@@ -36,9 +36,10 @@ let _index_current_popup = 10000;
  * @param {ISpinalNewPopupParam} [params={}]
  * @return {*}  {HTMLElement}
  */
-function spinalNewPopup(title, params = {}) {
-    let b;
-    let extention = 'px', width, height;
+function spinalNewPopup(title, params) {
+    if (params === void 0) { params = {}; }
+    var b;
+    var extention = 'px', width, height;
     if (params.popup_closer == null) {
         b = (0, newDomElement_1.newDomElement)({
             parentNode: document.body,
@@ -74,20 +75,20 @@ function spinalNewPopup(title, params = {}) {
                 right: 0,
                 background: params.fixed_opacity || '#000',
                 opacity: params.fixed_opacity || 0,
-                zIndex: _index_current_popup,
-            },
+                zIndex: _index_current_popup
+            }
         });
     }
-    const clientX = params.event != null && params.event.clientX
+    var clientX = params.event != null && params.event.clientX
         ? params.event.clientX
         : window.innerWidth / 2 - 10;
-    const clientY = params.event != null && params.event.clientY
+    var clientY = params.event != null && params.event.clientY
         ? params.event.clientY
         : window.innerHeight / 2 - 10;
-    let top_x = params.top_x || -1000;
-    let top_y = params.top_y || -1000;
-    let old_x = 0;
-    let old_y = 0;
+    var top_x = params.top_x || -1000;
+    var top_y = params.top_y || -1000;
+    var old_x = 0;
+    var old_y = 0;
     if (params.width != null) {
         width = params.width;
     }
@@ -138,7 +139,7 @@ function spinalNewPopup(title, params = {}) {
         setTimeout(repos, 5);
         extention = '%';
     }
-    const w = (0, newDomElement_1.newDomElement)({
+    var w = (0, newDomElement_1.newDomElement)({
         parentNode: document.body,
         className: 'Popup',
         style: {
@@ -152,8 +153,8 @@ function spinalNewPopup(title, params = {}) {
             background: '#e5e5e5',
             resize: 'both',
             overflow: 'auto',
-            paddingBottom: '8px',
-        },
+            paddingBottom: '8px'
+        }
     });
     _index_current_popup += 2;
     (0, newDomElement_1.newDomElement)({
@@ -164,7 +165,7 @@ function spinalNewPopup(title, params = {}) {
             float: 'right',
             marginRight: '4px',
             marginTop: '4px',
-            cursor: 'pointer',
+            cursor: 'pointer'
         },
         onmousedown: function (evt) {
             if (typeof params.onclose === 'function') {
@@ -174,7 +175,7 @@ function spinalNewPopup(title, params = {}) {
                 document.body.removeChild(b);
             }
             document.body.removeChild(w);
-        },
+        }
     });
     if (title) {
         (0, newDomElement_1.newDomElement)({
@@ -188,7 +189,7 @@ function spinalNewPopup(title, params = {}) {
                 fontSize: '12px',
                 borderBottom: 'thin solid black',
                 cursor: 'pointer',
-                color: 'white',
+                color: 'white'
             },
             onmousedown: function (evt) {
                 old_x = evt.clientX;
@@ -200,17 +201,17 @@ function spinalNewPopup(title, params = {}) {
                 return typeof evt.preventDefault === 'function'
                     ? evt.preventDefault()
                     : void 0;
-            },
+            }
         });
     }
-    const res = (0, newDomElement_1.newDomElement)({
+    var res = (0, newDomElement_1.newDomElement)({
         parentNode: w,
         className: 'PopupWindow',
         style: {
             padding: '6px',
             height: '100%',
-            color: '#262626',
-        },
+            color: '#262626'
+        }
     });
     if (params.child != null) {
         res.appendChild(params.child);

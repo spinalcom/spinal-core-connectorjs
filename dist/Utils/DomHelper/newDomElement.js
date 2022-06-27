@@ -22,7 +22,7 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 exports.newDomElement = void 0;
 /**
  * create a new dom element
@@ -36,18 +36,20 @@ exports.newDomElement = void 0;
  * @param {string} [nodeName='div']
  * @return {*}  {HTMLElement}
  */
-function newDomElement(params = {}, nodeName = 'div') {
-    const n = document.createElement(params.nodeName || nodeName);
-    for (const name in params) {
-        const val = params[name];
-        switch (name) {
+function newDomElement(params, nodeName) {
+    if (params === void 0) { params = {}; }
+    if (nodeName === void 0) { nodeName = 'div'; }
+    var n = document.createElement(params.nodeName || nodeName);
+    for (var name_1 in params) {
+        var val = params[name_1];
+        switch (name_1) {
             case 'parentNode':
                 val.appendChild(n);
                 break;
             case 'nodeName':
                 break;
             case 'style':
-                for (const k in val) {
+                for (var k in val) {
                     // @ts-ignore
                     n.style[k] = val[k];
                 }
@@ -57,7 +59,7 @@ function newDomElement(params = {}, nodeName = 'div') {
                 break;
             default:
                 // @ts-ignore
-                n[name] = val;
+                n[name_1] = val;
         }
     }
     return n;

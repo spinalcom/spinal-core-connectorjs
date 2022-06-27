@@ -22,19 +22,20 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 exports.getUrlPath = void 0;
-const FileSystem_1 = require("../FileSystem/FileSystem");
-function getUrlPath(url, port, searchQuery = '') {
-    let path = '';
+var FileSystem_1 = require("../FileSystem/FileSystem");
+function getUrlPath(url, port, searchQuery) {
+    if (searchQuery === void 0) { searchQuery = ''; }
+    var path = '';
     if (FileSystem_1.FileSystem.CONNECTOR_TYPE === 'Node' || FileSystem_1.FileSystem.is_cordova) {
-        path = `http://${url}`;
+        path = "http://".concat(url);
         if (port)
-            path += `:${port}`;
-        path += `${FileSystem_1.FileSystem.url_com}${searchQuery}`;
+            path += ":".concat(port);
+        path += "".concat(FileSystem_1.FileSystem.url_com).concat(searchQuery);
     }
     else if (FileSystem_1.FileSystem.CONNECTOR_TYPE === 'Browser') {
-        path = `${FileSystem_1.FileSystem.url_com}${searchQuery}`;
+        path = "".concat(FileSystem_1.FileSystem.url_com).concat(searchQuery);
     }
     return path;
 }

@@ -88,10 +88,7 @@ export class FileSystem {
    * @type {(string | number)}
    * @memberof FileSystem
    */
-  public static get _userid(): string | number {
-    console.warn('Using FileSystem._userid is deprecated.');
-    return 644;
-  }
+  public static readonly _userid: string | number = 644;
 
   /**
    * @static
@@ -579,9 +576,9 @@ export class FileSystem {
     const fs = FileSystem.get_inst();
     let path = getUrlPath(fs._url, fs._port, `?s=${this._session_num}`);
     const xhr_object = FileSystem._my_xml_http_request();
+    xhr_object.open('GET', path, true);
     if (fs._accessToken)
       xhr_object.setRequestHeader('x-access-token', fs._accessToken);
-    xhr_object.open('GET', path, true);
     xhr_object.onreadystatechange = function (): void {
       if (this.readyState === 4 && this.status === 200) {
         if (fs.make_channel_error_timer !== 0) {
@@ -592,7 +589,7 @@ export class FileSystem {
           console.log('chan ->', this.responseText);
         }
         const created: { cb: SpinalLoadCallBack<Model>; _obj: Model }[] = [];
-        function _w(sid: number, obj: string): void {
+        const _w = (sid: number, obj: string): void => {
           const _obj = FileSystem._create_model_by_name(obj);
           if (sid != null && _obj != null) {
             _obj._server_id = sid;
@@ -607,7 +604,7 @@ export class FileSystem {
               }
             }
           }
-        }
+        };
         FileSystem._sig_server = false;
         eval(this.responseText);
         FileSystem._sig_server = true;
@@ -798,9 +795,9 @@ export class FileSystem {
         `?s=${fs._session_num}&p=${tmp._server_id}`
       );
       const xhr_object = FileSystem._my_xml_http_request();
+      xhr_object.open('PUT', path, true);
       if (fs._accessToken)
         xhr_object.setRequestHeader('x-access-token', fs._accessToken);
-      xhr_object.open('PUT', path, true);
       xhr_object.onreadystatechange = function () {
         let _w;
         if (this.readyState === 4 && this.status === 200) {
@@ -933,9 +930,9 @@ export class FileSystem {
       // request
       let path = getUrlPath(fs._url, fs._port);
       const xhr_object = FileSystem._my_xml_http_request();
+      xhr_object.open('POST', path, true);
       if (fs._accessToken)
         xhr_object.setRequestHeader('x-access-token', fs._accessToken);
-      xhr_object.open('POST', path, true);
       xhr_object.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
           if (FileSystem._disp) {
@@ -943,7 +940,7 @@ export class FileSystem {
           }
           const _c: [nbCb: number, servId: number, error: boolean][] = []; // callbacks
           const created: { cb: SpinalLoadCallBack<Model>; _obj: Model }[] = [];
-          function _w(sid: number, obj: string): void {
+          const _w = (sid: number, obj: string): void => {
             const _obj = FileSystem._create_model_by_name(obj);
             if (sid != null && _obj != null) {
               _obj._server_id = sid;
@@ -957,7 +954,7 @@ export class FileSystem {
                 }
               }
             }
-          }
+          };
           FileSystem._sig_server = false;
           eval(this.responseText);
           FileSystem._sig_server = true;

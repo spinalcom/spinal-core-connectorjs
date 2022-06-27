@@ -22,11 +22,26 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
 exports.File = void 0;
-const ModelProcessManager_1 = require("../../ModelProcessManager");
-const Model_1 = require("../../Models/Model");
-const Ptr_1 = require("./Ptr");
+var ModelProcessManager_1 = require("../../ModelProcessManager");
+var Model_1 = require("../../Models/Model");
+var Ptr_1 = require("./Ptr");
 /**
  * representation of a virtual File
  * @export
@@ -34,7 +49,8 @@ const Ptr_1 = require("./Ptr");
  * @extends {Model}
  * @template T
  */
-class File extends Model_1.Model {
+var File = /** @class */ (function (_super) {
+    __extends(File, _super);
     /**
      * Creates an instance of File.
      * @param {string} [name='']
@@ -42,38 +58,44 @@ class File extends Model_1.Model {
      * @param {*} [info={}]
      * @memberof File
      */
-    constructor(name = '', ptr_or_model = 0, info = {}) {
+    function File(name, ptr_or_model, info) {
+        if (name === void 0) { name = ''; }
+        if (ptr_or_model === void 0) { ptr_or_model = 0; }
         var _a;
-        super();
-        const cp_info = {};
-        for (const key in info) {
+        var _this = _super.call(this) || this;
+        var cp_info = {};
+        if (!info)
+            info = {};
+        for (var key in info) {
             cp_info[key] = info[key];
         }
         if (ptr_or_model instanceof Model_1.Model) {
-            if ('model_type' in cp_info) {
+            if (!('model_type' in cp_info)) {
                 cp_info.model_type = ModelProcessManager_1.ModelProcessManager.get_object_class(ptr_or_model);
             }
             (_a = ptr_or_model.get_file_info) === null || _a === void 0 ? void 0 : _a.call(ptr_or_model, cp_info);
         }
-        this.add_attr({
+        _this.add_attr({
             name: name,
             _created_at: Date.now(),
             _ptr: new Ptr_1.Ptr(ptr_or_model),
-            _info: cp_info,
+            _info: cp_info
         });
+        return _this;
     }
-    load(callback) {
+    File.prototype.load = function (callback) {
         if (typeof callback === 'function')
             this._ptr.load(callback);
         else
             return this._ptr.load();
-    }
-}
+    };
+    /**
+     * @static
+     * @type {string}
+     * @memberof File
+     */
+    File._constructorName = 'File';
+    return File;
+}(Model_1.Model));
 exports.File = File;
-/**
- * @static
- * @type {string}
- * @memberof File
- */
-File._constructorName = 'File';
 //# sourceMappingURL=File.js.map
