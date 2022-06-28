@@ -22,18 +22,36 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
 exports.BindProcess = void 0;
-const Process_1 = require("./Process");
-class BindProcess extends Process_1.Process {
-    constructor(model, onchange_construction, f) {
-        super(model, onchange_construction);
-        this.f = f;
+var Process_1 = require("./Process");
+var BindProcess = /** @class */ (function (_super) {
+    __extends(BindProcess, _super);
+    function BindProcess(model, onchange_construction, f) {
+        var _this = _super.call(this, model, onchange_construction) || this;
+        _this.f = f;
+        return _this;
     }
-    onchange() {
+    BindProcess.prototype.onchange = function () {
         return this.f();
-    }
-}
+    };
+    BindProcess._constructorName = 'BindProcess';
+    return BindProcess;
+}(Process_1.Process));
 exports.BindProcess = BindProcess;
-BindProcess._constructorName = 'BindProcess';
 //# sourceMappingURL=BindProcess.js.map

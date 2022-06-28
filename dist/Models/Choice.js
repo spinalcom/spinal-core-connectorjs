@@ -22,97 +22,115 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
 exports.Choice = void 0;
-const Model_1 = require("./Model");
+var Model_1 = require("./Model");
 /**
  * @export
  * @class Choice
  * @extends {Model}
  */
-class Choice extends Model_1.Model {
+var Choice = /** @class */ (function (_super) {
+    __extends(Choice, _super);
     /**
      * Creates an instance of Choice.
      * @param {(Val | number)} [InitIdx]
      * @param {((string | Str)[])} [stringChoises]
      * @memberof Choice
      */
-    constructor(InitIdx, stringChoises) {
-        super();
+    function Choice(InitIdx, stringChoises) {
+        var _this = _super.call(this) || this;
         // default
-        this.add_attr({
+        _this.add_attr({
             num: 0,
-            lst: stringChoises,
+            lst: stringChoises
         });
         // init
         if (InitIdx != null) {
-            this.num.set(InitIdx);
+            _this.num.set(InitIdx);
         }
+        return _this;
     }
     /**
      * @return {*}  {boolean}
      * @memberof Choice
      */
-    filter() {
+    Choice.prototype.filter = function () {
         return true;
-    }
+    };
     /**
      * @return {*}  {Str} the seleected value
      * @memberof Choice
      */
-    item() {
+    Choice.prototype.item = function () {
         return this.lst[this.num.get()];
-    }
+    };
     /**
      * @return {*}  {string} the seleected value
      * @memberof Choice
      */
-    get() {
+    Choice.prototype.get = function () {
         var _a;
         return (_a = this.item()) === null || _a === void 0 ? void 0 : _a.get();
-    }
+    };
     /**
      * @return {*}  {string}
      * @memberof Choice
      */
-    toString() {
+    Choice.prototype.toString = function () {
         var _a;
         return (_a = this.item()) === null || _a === void 0 ? void 0 : _a.toString();
-    }
+    };
     /**
      * @param {(Choice | Str)} a
      * @return {*}  {boolean}
      * @memberof Choice
      */
-    equals(a) {
+    Choice.prototype.equals = function (a) {
         if (a instanceof Choice) {
-            return super.equals(a);
+            return _super.prototype.equals.call(this, a);
         }
         else {
             return this.item().equals(a);
         }
-    }
+    };
     /**
      * @protected
      * @param {(string | number)} value
      * @return {*}  {boolean}
      * @memberof Choice
      */
-    _set(value) {
-        for (let idx = 0; idx < this.lst.length; idx++) {
-            const itm = this.lst[idx];
+    Choice.prototype._set = function (value) {
+        for (var idx = 0; idx < this.lst.length; idx++) {
+            var itm = this.lst[idx];
             if (itm.equals(value)) {
                 return this.num.set(idx);
             }
         }
         return this.num.set(value);
-    }
-}
+    };
+    /**
+     * @static
+     * @type {string}
+     * @memberof Choice
+     */
+    Choice._constructorName = 'Choice';
+    return Choice;
+}(Model_1.Model));
 exports.Choice = Choice;
-/**
- * @static
- * @type {string}
- * @memberof Choice
- */
-Choice._constructorName = 'Choice';
 //# sourceMappingURL=Choice.js.map

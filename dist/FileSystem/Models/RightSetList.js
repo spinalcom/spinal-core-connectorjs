@@ -22,28 +22,45 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
 exports.RightSetList = void 0;
-const Lst_1 = require("../../Models/Lst");
+var Lst_1 = require("../../Models/Lst");
 /**
  * @export
  * @class RightSetList
  * @extends {Lst<RightsItem>}
  */
-class RightSetList extends Lst_1.Lst {
+var RightSetList = /** @class */ (function (_super) {
+    __extends(RightSetList, _super);
     /**
      * Creates an instance of RightSetList.
      * @memberof RightSetList
      */
-    constructor() {
-        super();
+    function RightSetList() {
+        return _super.call(this) || this;
     }
-}
+    /**
+     * @static
+     * @type {string}
+     * @memberof RightSetList
+     */
+    RightSetList._constructorName = 'RightSetList';
+    return RightSetList;
+}(Lst_1.Lst));
 exports.RightSetList = RightSetList;
-/**
- * @static
- * @type {string}
- * @memberof RightSetList
- */
-RightSetList._constructorName = 'RightSetList';
 //# sourceMappingURL=RightSetList.js.map

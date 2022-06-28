@@ -22,90 +22,108 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
 exports.Obj = void 0;
-const FileSystem_1 = require("../FileSystem/FileSystem");
-const Model_1 = require("./Model");
+var FileSystem_1 = require("../FileSystem/FileSystem");
+var Model_1 = require("./Model");
 /**
  * @export
  * @class Obj
  * @extends {Model}
  * @template T
  */
-class Obj extends Model_1.Model {
+var Obj = /** @class */ (function (_super) {
+    __extends(Obj, _super);
     /**
      * Creates an instance of Obj.
      * @param {*} [data]
      * @memberof Obj
      */
-    constructor(data) {
-        super();
+    function Obj(data) {
+        var _this = _super.call(this) || this;
         if (data != null) {
-            this._set(data);
+            _this._set(data);
         }
+        return _this;
     }
     /**
      * @return {*}  {string}
      * @memberof Obj
      */
-    toString() {
+    Obj.prototype.toString = function () {
         var _a;
         return (_a = this._data) === null || _a === void 0 ? void 0 : _a.toString();
-    }
+    };
     /**
      * @param {*} obj
      * @return {*}  {boolean}
      * @memberof Obj
      */
-    equals(obj) {
+    Obj.prototype.equals = function (obj) {
         return obj instanceof Obj ? this._data === obj._data : this._data === obj;
-    }
+    };
     /**
      * @return {*}  {*}
      * @memberof Obj
      */
-    get() {
+    Obj.prototype.get = function () {
         return this._data;
-    }
+    };
     /**
      * @param {IFsData} out
      * @memberof Obj
      */
-    _get_fs_data(out) {
+    Obj.prototype._get_fs_data = function (out) {
         FileSystem_1.FileSystem.set_server_id_if_necessary(out, this);
-        out.mod += `C ${this._server_id} ${this.toString()} `;
-    }
+        out.mod += "C ".concat(this._server_id, " ").concat(this.toString(), " ");
+    };
     /**
      * @protected
      * @param {T} value
      * @return {*}  {boolean}
      * @memberof Obj
      */
-    _set(value) {
+    Obj.prototype._set = function (value) {
         if (this._data !== value) {
             this._data = value;
             return true;
         }
         return false;
-    }
+    };
     /**
      * @@protected
      * @return {*}  {string}
      * @memberof Obj
      */
-    _get_state() {
+    Obj.prototype._get_state = function () {
         return this.toString();
-    }
+    };
     /**
      * @param {string} str
      * @param {unknown} _map
      * @return {*}  {boolean}
      * @memberof Obj
      */
-    _set_state(str, _map) {
+    Obj.prototype._set_state = function (str, _map) {
         return this.set(str);
-    }
-}
+    };
+    Obj._constructorName = 'Obj';
+    return Obj;
+}(Model_1.Model));
 exports.Obj = Obj;
-Obj._constructorName = 'Obj';
 //# sourceMappingURL=Obj.js.map

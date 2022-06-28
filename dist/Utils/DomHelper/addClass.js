@@ -22,7 +22,7 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 exports.addClass = void 0;
 /**
  * obj is a DOM object. src is a string or an array of
@@ -35,11 +35,11 @@ exports.addClass = void 0;
 function addClass(obj, src) {
     if (typeof src === 'string')
         return addClass(obj, src.split(' '));
-    const old = (obj.className || '').split(' ');
-    const p_1 = src.filter((x) => old.indexOf(x) < 0);
+    var old = (obj.className || '').split(' ');
+    var p_1 = src.filter(function (x) { return old.indexOf(x) < 0; });
     obj.className = old
         .concat(p_1)
-        .filter((x) => x)
+        .filter(function (x) { return x; })
         .join(' ');
 }
 exports.addClass = addClass;

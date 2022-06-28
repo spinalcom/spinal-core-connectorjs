@@ -1,5 +1,20 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
 exports.Bool = void 0;
 /*
  * Copyright 2022 SpinalCom - www.spinalcom.com
@@ -24,46 +39,49 @@ exports.Bool = void 0;
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-const FileSystem_1 = require("../FileSystem/FileSystem");
-const Obj_1 = require("./Obj");
+var FileSystem_1 = require("../FileSystem/FileSystem");
+var Obj_1 = require("./Obj");
 /**
  * Bese representation of a Boolean
  * @export
  * @class Bool
  * @extends {Obj<boolean>}
  */
-class Bool extends Obj_1.Obj {
+var Bool = /** @class */ (function (_super) {
+    __extends(Bool, _super);
     /**
      * Creates an instance of Bool.
      * @param {(boolean | Bool)} [data=false]
      * @memberof Bool
      */
-    constructor(data = false) {
-        super();
-        this._set(data);
+    function Bool(data) {
+        if (data === void 0) { data = false; }
+        var _this = _super.call(this) || this;
+        _this._set(data);
+        return _this;
     }
     /**
      * toggle true / false ( 1 / 0 )
      * @return {*}  {boolean}
      * @memberof Bool
      */
-    toggle() {
+    Bool.prototype.toggle = function () {
         return this.set(!this._data);
-    }
+    };
     /**
      * @return {*}  {boolean}
      * @memberof Bool
      */
-    toBoolean() {
+    Bool.prototype.toBoolean = function () {
         return this._data;
-    }
+    };
     /**
      * @return {*}  {Bool}
      * @memberof Bool
      */
-    deep_copy() {
+    Bool.prototype.deep_copy = function () {
         return new Bool(this._data);
-    }
+    };
     /**
      * we do not take _set from Obj because we want a conversion if value is not a boolean
      * @protected
@@ -71,8 +89,8 @@ class Bool extends Obj_1.Obj {
      * @return {*}  {boolean}
      * @memberof Bool
      */
-    _set(value) {
-        let n;
+    Bool.prototype._set = function (value) {
+        var n;
         if (value === 'false')
             n = false;
         else if (value === 'true')
@@ -86,21 +104,22 @@ class Bool extends Obj_1.Obj {
             return true;
         }
         return false;
-    }
+    };
     /**
      * @param {IFsData} out
      * @memberof Bool
      */
-    _get_fs_data(out) {
+    Bool.prototype._get_fs_data = function (out) {
         FileSystem_1.FileSystem.set_server_id_if_necessary(out, this);
-        out.mod += `C ${this._server_id} ${this._data ? 1 : 0} `;
-    }
-}
+        out.mod += "C ".concat(this._server_id, " ").concat(this._data ? 1 : 0, " ");
+    };
+    /**
+     * @static
+     * @type {string}
+     * @memberof Bool
+     */
+    Bool._constructorName = 'Bool';
+    return Bool;
+}(Obj_1.Obj));
 exports.Bool = Bool;
-/**
- * @static
- * @type {string}
- * @memberof Bool
- */
-Bool._constructorName = 'Bool';
 //# sourceMappingURL=Bool.js.map

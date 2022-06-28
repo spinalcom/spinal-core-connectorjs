@@ -10,12 +10,7 @@ import { Obj } from './Obj';
 export declare class Str extends Obj<string> {
     static _constructorName: string;
     _data: string;
-    /**
-     * @readonly
-     * @type {number}
-     * @memberof Str
-     */
-    get length(): number;
+    length: number;
     /**
      * Creates an instance of Str.
      * @param {(string | Str)} [data='']

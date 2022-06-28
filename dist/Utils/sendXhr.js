@@ -22,22 +22,22 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 exports.sendXhr = void 0;
-const FileSystem_1 = require("../FileSystem/FileSystem");
+var FileSystem_1 = require("../FileSystem/FileSystem");
 function sendXhr(options, command, httpMethod, header, body) {
-    let path = '';
-    const parsedOpt = typeof options === 'string' ? new URL(options) : options;
-    const url = parsedOpt.hostname;
-    const port = parsedOpt.port;
+    var path = '';
+    var parsedOpt = typeof options === 'string' ? new URL(options) : options;
+    var url = parsedOpt.hostname;
+    var port = parsedOpt.port;
     if (FileSystem_1.FileSystem.CONNECTOR_TYPE === 'Node' || FileSystem_1.FileSystem.is_cordova) {
-        path = `${parsedOpt.protocol}//${url}${port}` ? ':' + port : '' + command;
+        path = "".concat(parsedOpt.protocol, "//").concat(url).concat(port) ? ':' + port : '' + command;
     }
     else if (FileSystem_1.FileSystem.CONNECTOR_TYPE === 'Browser') {
         path = command;
     }
-    return new Promise((resolve, reject) => {
-        const xhr_object = FileSystem_1.FileSystem._my_xml_http_request();
+    return new Promise(function (resolve, reject) {
+        var xhr_object = FileSystem_1.FileSystem._my_xml_http_request();
         xhr_object.open(httpMethod, path, true);
         xhr_object.onreadystatechange = function () {
             if (this.readyState === 4 && this.status === 200) {
@@ -48,7 +48,7 @@ function sendXhr(options, command, httpMethod, header, body) {
             }
         };
         if (header) {
-            for (const key in header) {
+            for (var key in header) {
                 if (Object.prototype.hasOwnProperty.call(header, key)) {
                     xhr_object.setRequestHeader(key, header[key]);
                 }

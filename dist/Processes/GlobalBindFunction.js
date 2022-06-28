@@ -22,16 +22,39 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
+exports.__esModule = true;
 exports.bind = void 0;
-const Model_1 = require("../Models/Model");
-function bind(model, func, onchange_construction = true) {
+var Model_1 = require("../Models/Model");
+function bind(model, func, onchange_construction) {
+    var e_1, _a;
+    if (onchange_construction === void 0) { onchange_construction = true; }
     if (model instanceof Model_1.Model) {
         model.bind(func, onchange_construction);
     }
     else {
-        for (const m of model) {
-            return m.bind(func, onchange_construction);
+        try {
+            for (var model_1 = __values(model), model_1_1 = model_1.next(); !model_1_1.done; model_1_1 = model_1.next()) {
+                var m = model_1_1.value;
+                return m.bind(func, onchange_construction);
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (model_1_1 && !model_1_1.done && (_a = model_1["return"])) _a.call(model_1);
+            }
+            finally { if (e_1) throw e_1.error; }
         }
     }
 }

@@ -75,15 +75,16 @@ export class File<T extends Model = any> extends Model {
   public constructor(
     name: string = '',
     ptr_or_model: number | T = 0,
-    info: any = {}
+    info?: any
   ) {
     super();
     const cp_info: any = {};
+    if (!info) info = {};
     for (const key in info) {
       cp_info[key] = info[key];
     }
     if (ptr_or_model instanceof Model) {
-      if ('model_type' in cp_info) {
+      if (!('model_type' in cp_info)) {
         cp_info.model_type = ModelProcessManager.get_object_class(ptr_or_model);
       }
       ptr_or_model.get_file_info?.(cp_info);

@@ -22,34 +22,51 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+exports.__esModule = true;
 exports.TypedArray_Int32 = void 0;
-const TypedArray_1 = require("./TypedArray");
-class TypedArray_Int32 extends TypedArray_1.TypedArray {
+var TypedArray_1 = require("./TypedArray");
+var TypedArray_Int32 = /** @class */ (function (_super) {
+    __extends(TypedArray_Int32, _super);
     /**
      * Creates an instance of TypedArray_Int32.
      * @param {(number | number[])} [size]
      * @param {Int32Array} [data]
      * @memberof TypedArray_Int32
      */
-    constructor(size, data) {
-        super(size, data);
+    function TypedArray_Int32(size, data) {
+        return _super.call(this, size, data) || this;
     }
     /**
      * @return {*}  {typeof TypedArray_Int32}
      * @memberof TypedArray_Int32
      */
-    base_type() {
+    TypedArray_Int32.prototype.base_type = function () {
         return TypedArray_Int32;
-    }
+    };
     /**
      * @return {*}  {TypedArray_Int32}
      * @memberof TypedArray_Int32
      */
-    deep_copy() {
+    TypedArray_Int32.prototype.deep_copy = function () {
         return new TypedArray_Int32(this._size, this._data);
-    }
-}
+    };
+    TypedArray_Int32._constructorName = 'TypedArray_Int32';
+    return TypedArray_Int32;
+}(TypedArray_1.TypedArray));
 exports.TypedArray_Int32 = TypedArray_Int32;
-TypedArray_Int32._constructorName = 'TypedArray_Int32';
 //# sourceMappingURL=TypedArray_Int32.js.map

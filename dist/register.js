@@ -1,5 +1,5 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 /*
  * Copyright 2022 SpinalCom - www.spinalcom.com
  *
@@ -23,33 +23,33 @@ Object.defineProperty(exports, "__esModule", { value: true });
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
-const FileSystem_1 = require("./FileSystem/FileSystem");
-const Directory_1 = require("./FileSystem/Models/Directory");
-const File_1 = require("./FileSystem/Models/File");
-const Path_1 = require("./FileSystem/Models/Path");
-const Pbr_1 = require("./FileSystem/Models/Pbr");
-const Ptr_1 = require("./FileSystem/Models/Ptr");
-const RightSetList_1 = require("./FileSystem/Models/RightSetList");
-const RightsItem_1 = require("./FileSystem/Models/RightsItem");
-const SessionModel_1 = require("./FileSystem/Models/SessionModel");
-const TiffFile_1 = require("./FileSystem/Models/TiffFile");
-const User_1 = require("./FileSystem/Models/User");
-const UserRight_1 = require("./FileSystem/Models/UserRight");
-const ModelProcessManager_1 = require("./ModelProcessManager");
-const Bool_1 = require("./Models/Bool");
-const Choice_1 = require("./Models/Choice");
-const Lst_1 = require("./Models/Lst");
-const Model_1 = require("./Models/Model");
-const Obj_1 = require("./Models/Obj");
-const Str_1 = require("./Models/Str");
-const TypedArray_Float64_1 = require("./Models/TypedArray_Float64");
-const TypedArray_Int32_1 = require("./Models/TypedArray_Int32");
-const Val_1 = require("./Models/Val");
-const Vec_1 = require("./Models/Vec");
-const BindProcess_1 = require("./Processes/BindProcess");
-const Process_1 = require("./Processes/Process");
-const Spinalcore_1 = require("./Spinalcore");
-const SpinalUserManager_1 = require("./SpinalUserManager");
+var FileSystem_1 = require("./FileSystem/FileSystem");
+var Directory_1 = require("./FileSystem/Models/Directory");
+var File_1 = require("./FileSystem/Models/File");
+var Path_1 = require("./FileSystem/Models/Path");
+var Pbr_1 = require("./FileSystem/Models/Pbr");
+var Ptr_1 = require("./FileSystem/Models/Ptr");
+var RightSetList_1 = require("./FileSystem/Models/RightSetList");
+var RightsItem_1 = require("./FileSystem/Models/RightsItem");
+var SessionModel_1 = require("./FileSystem/Models/SessionModel");
+var TiffFile_1 = require("./FileSystem/Models/TiffFile");
+var User_1 = require("./FileSystem/Models/User");
+var UserRight_1 = require("./FileSystem/Models/UserRight");
+var ModelProcessManager_1 = require("./ModelProcessManager");
+var Bool_1 = require("./Models/Bool");
+var Choice_1 = require("./Models/Choice");
+var Lst_1 = require("./Models/Lst");
+var Model_1 = require("./Models/Model");
+var Obj_1 = require("./Models/Obj");
+var Str_1 = require("./Models/Str");
+var TypedArray_Float64_1 = require("./Models/TypedArray_Float64");
+var TypedArray_Int32_1 = require("./Models/TypedArray_Int32");
+var Val_1 = require("./Models/Val");
+var Vec_1 = require("./Models/Vec");
+var BindProcess_1 = require("./Processes/BindProcess");
+var Process_1 = require("./Processes/Process");
+var Spinalcore_1 = require("./Spinalcore");
+var SpinalUserManager_1 = require("./SpinalUserManager");
 if (!('spinal' in globalThis)) {
     globalThis.spinal = ModelProcessManager_1.ModelProcessManager.spinal;
 }
