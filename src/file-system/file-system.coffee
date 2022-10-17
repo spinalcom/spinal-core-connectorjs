@@ -216,7 +216,7 @@ class FileSystem
                         setTimeout(_fs.make_channel.bind(_fs), 1000)
                 else # timeout reached
                     _fs.onConnectionError(2)
-            else if @readyState == 4 && @status == 500
+            else if @readyState == 4 && @status >= 500 && @status < 600
                 FileSystem.get_inst().onConnectionError(3)
 
         xhr_object.send()
@@ -473,7 +473,7 @@ class FileSystem
 
                     for c in _c
                         FileSystem._callbacks[ c[ 0 ] ] FileSystem._objects[ c[ 1 ] ], c[ 2 ]
-                else if @readyState == 4 && (@status == 0 || @status == 500)
+                else if @readyState == 4 && (@status == 0 || (@status >= 500 && @status < 600))
                     FileSystem.get_inst().onConnectionError(4)
 
             if FileSystem._disp
