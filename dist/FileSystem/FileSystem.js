@@ -412,7 +412,9 @@ var FileSystem = /** @class */ (function () {
                     return FileSystem.onConnectionError(2);
                 }
             }
-            else if (this.readyState === 4 && this.status === 500) {
+            else if (this.readyState === 4 &&
+                this.status >= 500 &&
+                this.status < 600) {
                 FileSystem.onConnectionError(3);
             }
         };
@@ -765,7 +767,7 @@ var FileSystem = /** @class */ (function () {
                     }
                 }
                 else if (this.readyState === 4 &&
-                    (this.status === 0 || this.status === 500)) {
+                    (this.status === 0 || (this.status >= 500 && this.status < 600))) {
                     return FileSystem.onConnectionError(4);
                 }
             };
