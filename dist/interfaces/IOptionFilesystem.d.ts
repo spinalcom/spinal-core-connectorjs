@@ -3,6 +3,7 @@
  * @interface IOptionFileSystem
  */
 export interface IOptionFileSystem {
+    protocol: string;
     url: string;
     port?: string | number;
     userid?: string | number;
@@ -16,6 +17,7 @@ export interface IOptionFileSystem {
  * @interface IOptionFileSystemWithUser
  */
 export interface IOptionFileSystemWithUser {
+    protocol: string;
     url: string;
     port?: string | number;
     userid: string | number;
@@ -28,6 +30,7 @@ export interface IOptionFileSystemWithUser {
  * @interface IOptionFileSystemWithSessionId
  */
 export interface IOptionFileSystemWithSessionId {
+    protocol: string;
     url: string;
     port?: string | number;
     sessionId: number;

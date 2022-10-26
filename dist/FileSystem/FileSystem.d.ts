@@ -202,6 +202,7 @@ export declare class FileSystem {
      * @memberof FileSystem
      */
     static CONNECTOR_TYPE: 'Node' | 'Browser';
+    _protocol: string;
     _data_to_send: string;
     _session_num: number;
     _num_inst: number;
@@ -210,6 +211,7 @@ export declare class FileSystem {
     /**
      * Creates an instance of FileSystem.
      * @param {IOptionFileSystemWithSessionId} {
+     *     protocol,
      *     url,
      *     port,
      *     home_dir,
@@ -218,10 +220,11 @@ export declare class FileSystem {
      *   }
      * @memberof FileSystem
      */
-    constructor({ url, port, home_dir, sessionId, accessToken, }: IOptionFileSystemWithSessionId);
+    constructor({ protocol, url, port, home_dir, sessionId, accessToken, }: IOptionFileSystemWithSessionId);
     /**
      * Creates an instance of FileSystem.
      * @param {IOptionFileSystemWithUser} {
+     *     protocol,
      *     url,
      *     port,
      *     userid,
@@ -231,7 +234,7 @@ export declare class FileSystem {
      *   }
      * @memberof FileSystem
      */
-    constructor({ url, port, userid, password, home_dir, accessToken, }: IOptionFileSystemWithUser);
+    constructor({ protocol, url, port, userid, password, home_dir, accessToken, }: IOptionFileSystemWithUser);
     /**
      * load object in $path and call $callback with the corresponding model ref
      * @param {string} path

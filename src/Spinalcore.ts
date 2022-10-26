@@ -62,6 +62,7 @@ export class spinalCore {
       parsedOpt.pathname += '/';
     }
     const opt: IOptionFileSystemWithUser = {
+      protocol: parsedOpt.protocol,
       home_dir: parsedOpt.pathname,
       url: parsedOpt.hostname,
       port: parsedOpt.port,
@@ -90,6 +91,7 @@ export class spinalCore {
       parsedOpt.pathname += '/';
     }
     const opt: IOptionFileSystemWithSessionId = {
+      protocol: parsedOpt.protocol,
       home_dir: parsedOpt.pathname,
       url: parsedOpt.hostname,
       port: parsedOpt.port,

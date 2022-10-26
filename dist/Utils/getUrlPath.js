@@ -25,11 +25,11 @@
 exports.__esModule = true;
 exports.getUrlPath = void 0;
 var FileSystem_1 = require("../FileSystem/FileSystem");
-function getUrlPath(url, port, searchQuery) {
+function getUrlPath(protocol, url, port, searchQuery) {
     if (searchQuery === void 0) { searchQuery = ''; }
     var path = '';
     if (FileSystem_1.FileSystem.CONNECTOR_TYPE === 'Node' || FileSystem_1.FileSystem.is_cordova) {
-        path = "http://".concat(url);
+        path = "".concat(protocol, "//").concat(url);
         if (port)
             path += ":".concat(port);
         path += "".concat(FileSystem_1.FileSystem.url_com).concat(searchQuery);

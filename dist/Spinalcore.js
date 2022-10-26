@@ -79,6 +79,7 @@ var spinalCore = /** @class */ (function () {
             parsedOpt.pathname += '/';
         }
         var opt = {
+            protocol: parsedOpt.protocol,
             home_dir: parsedOpt.pathname,
             url: parsedOpt.hostname,
             port: parsedOpt.port,
@@ -102,6 +103,7 @@ var spinalCore = /** @class */ (function () {
             parsedOpt.pathname += '/';
         }
         var opt = {
+            protocol: parsedOpt.protocol,
             home_dir: parsedOpt.pathname,
             url: parsedOpt.hostname,
             port: parsedOpt.port,

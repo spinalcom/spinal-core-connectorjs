@@ -290,7 +290,7 @@ var ModelProcessManager = /** @class */ (function () {
     ModelProcessManager._force_m = false;
     ModelProcessManager._def = {};
     ModelProcessManager.spinal = {
-        version: '2.5.8'
+        version: '2.5.10'
     };
     return ModelProcessManager;
 }());

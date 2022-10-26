@@ -25,13 +25,14 @@
 import { FileSystem } from '../FileSystem/FileSystem';
 
 export function getUrlPath(
+  protocol: string,
   url: string,
   port: number | string,
   searchQuery: string = ''
 ): string {
   let path = '';
   if (FileSystem.CONNECTOR_TYPE === 'Node' || FileSystem.is_cordova) {
-    path = `http://${url}`;
+    path = `${protocol}//${url}`;
     if (port) path += `:${port}`;
     path += `${FileSystem.url_com}${searchQuery}`;
   } else if (FileSystem.CONNECTOR_TYPE === 'Browser') {

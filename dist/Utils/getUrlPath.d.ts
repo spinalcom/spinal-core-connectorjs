@@ -1,1 +1,1 @@
-export declare function getUrlPath(url: string, port: number | string, searchQuery?: string): string;
+export declare function getUrlPath(protocol: string, url: string, port: number | string, searchQuery?: string): string;

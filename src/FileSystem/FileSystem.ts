@@ -238,6 +238,7 @@ export class FileSystem {
   public static CONNECTOR_TYPE: 'Node' | 'Browser' =
     typeof globalThis.global != 'undefined' ? 'Node' : 'Browser';
 
+  _protocol: string; // 'http:' | 'https:';
   // default values
   public _data_to_send: string = '';
   public _session_num: number = -2;
@@ -248,6 +249,7 @@ export class FileSystem {
   /**
    * Creates an instance of FileSystem.
    * @param {IOptionFileSystemWithSessionId} {
+   *     protocol,
    *     url,
    *     port,
    *     home_dir,
@@ -257,6 +259,7 @@ export class FileSystem {
    * @memberof FileSystem
    */
   public constructor({
+    protocol,
     url,
     port,
     home_dir,
@@ -267,6 +270,7 @@ export class FileSystem {
   /**
    * Creates an instance of FileSystem.
    * @param {IOptionFileSystemWithUser} {
+   *     protocol,
    *     url,
    *     port,
    *     userid,
@@ -277,6 +281,7 @@ export class FileSystem {
    * @memberof FileSystem
    */
   public constructor({
+    protocol,
     url,
     port,
     userid,
@@ -286,6 +291,7 @@ export class FileSystem {
   }: IOptionFileSystemWithUser);
 
   public constructor({
+    protocol,
     url,
     port,
     home_dir,
@@ -294,6 +300,7 @@ export class FileSystem {
     sessionId,
     accessToken,
   }: IOptionFileSystem) {
+    this._protocol = protocol ? protocol : 'http:';
     this._url = url;
     this._port = port;
     this._home_dir = home_dir;
@@ -574,7 +581,12 @@ export class FileSystem {
    */
   private make_channel(): void {
     const fs = FileSystem.get_inst();
-    let path = getUrlPath(fs._url, fs._port, `?s=${this._session_num}`);
+    let path = getUrlPath(
+      fs._protocol,
+      fs._url,
+      fs._port,
+      `?s=${this._session_num}`
+    );
     const xhr_object = FileSystem._my_xml_http_request();
     xhr_object.open('GET', path, true);
     if (fs._accessToken)
@@ -794,6 +806,7 @@ export class FileSystem {
       // send the file
       const fs = FileSystem.get_inst();
       let path = getUrlPath(
+        fs._protocol,
         fs._url,
         fs._port,
         `?s=${fs._session_num}&p=${tmp._server_id}`
@@ -932,7 +945,7 @@ export class FileSystem {
         fs._data_to_send = `s ${fs._session_num} ${fs._data_to_send}`;
       }
       // request
-      let path = getUrlPath(fs._url, fs._port);
+      let path = getUrlPath(fs._protocol, fs._url, fs._port);
       const xhr_object = FileSystem._my_xml_http_request();
       xhr_object.open('POST', path, true);
       if (fs._accessToken)

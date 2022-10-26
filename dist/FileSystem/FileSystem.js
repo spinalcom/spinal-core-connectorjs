@@ -98,7 +98,7 @@ var Directory_1 = require("./Models/Directory");
  */
 var FileSystem = /** @class */ (function () {
     function FileSystem(_a) {
-        var url = _a.url, port = _a.port, home_dir = _a.home_dir, userid = _a.userid, password = _a.password, sessionId = _a.sessionId, accessToken = _a.accessToken;
+        var protocol = _a.protocol, url = _a.url, port = _a.port, home_dir = _a.home_dir, userid = _a.userid, password = _a.password, sessionId = _a.sessionId, accessToken = _a.accessToken;
         /**
          * @private
          * @type {string}
@@ -122,6 +122,7 @@ var FileSystem = /** @class */ (function () {
         this._session_num = -2;
         this._num_inst = FileSystem._nb_insts++;
         this.make_channel_error_timer = 0;
+        this._protocol = protocol ? protocol : 'http:';
         this._url = url;
         this._port = port;
         this._home_dir = home_dir;
@@ -335,7 +336,7 @@ var FileSystem = /** @class */ (function () {
      */
     FileSystem.prototype.make_channel = function () {
         var fs = FileSystem.get_inst();
-        var path = (0, getUrlPath_1.getUrlPath)(fs._url, fs._port, "?s=".concat(this._session_num));
+        var path = (0, getUrlPath_1.getUrlPath)(fs._protocol, fs._url, fs._port, "?s=".concat(this._session_num));
         var xhr_object = FileSystem._my_xml_http_request();
         xhr_object.open('GET', path, true);
         if (fs._accessToken)
@@ -571,7 +572,7 @@ var FileSystem = /** @class */ (function () {
             delete FileSystem._files_to_upload[tmp_id];
             // send the file
             var fs = FileSystem.get_inst();
-            var path = (0, getUrlPath_1.getUrlPath)(fs._url, fs._port, "?s=".concat(fs._session_num, "&p=").concat(tmp._server_id));
+            var path = (0, getUrlPath_1.getUrlPath)(fs._protocol, fs._url, fs._port, "?s=".concat(fs._session_num, "&p=").concat(tmp._server_id));
             var xhr_object = FileSystem._my_xml_http_request();
             xhr_object.open('PUT', path, true);
             if (fs._accessToken)
@@ -698,7 +699,7 @@ var FileSystem = /** @class */ (function () {
                 fs._data_to_send = "s ".concat(fs._session_num, " ").concat(fs._data_to_send);
             }
             // request
-            var path = (0, getUrlPath_1.getUrlPath)(fs._url, fs._port);
+            var path = (0, getUrlPath_1.getUrlPath)(fs._protocol, fs._url, fs._port);
             var xhr_object = FileSystem._my_xml_http_request();
             xhr_object.open('POST', path, true);
             if (fs._accessToken)

@@ -265,6 +265,6 @@ export class ModelProcessManager {
   }
 
   public static spinal: SpinalType = {
-    version: '2.5.8',
+    version: '2.5.10',
   };
 }
