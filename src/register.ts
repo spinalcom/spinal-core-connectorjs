@@ -64,8 +64,12 @@ ModelProcessManager.spinal.ModelProcessManager = ModelProcessManager;
 ModelProcessManager.spinal.SpinalUserManager = SpinalUserManager;
 (<any>globalThis).Process = Process;
 ModelProcessManager.spinal.Process = Process;
+// @ts-ignore
+ModelProcessManager.register_models(Process, 'Process');
 (<any>globalThis).BindProcess = BindProcess;
 ModelProcessManager.spinal.BindProcess = BindProcess;
+// @ts-ignore
+ModelProcessManager.register_models(BindProcess, 'BindProcess');
 
 (<any>globalThis).Model = Model;
 ModelProcessManager.spinal.Model = Model;

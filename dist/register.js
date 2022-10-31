@@ -63,8 +63,12 @@ globalThis.SpinalUserManager = SpinalUserManager_1.SpinalUserManager;
 ModelProcessManager_1.ModelProcessManager.spinal.SpinalUserManager = SpinalUserManager_1.SpinalUserManager;
 globalThis.Process = Process_1.Process;
 ModelProcessManager_1.ModelProcessManager.spinal.Process = Process_1.Process;
+// @ts-ignore
+ModelProcessManager_1.ModelProcessManager.register_models(Process_1.Process, 'Process');
 globalThis.BindProcess = BindProcess_1.BindProcess;
 ModelProcessManager_1.ModelProcessManager.spinal.BindProcess = BindProcess_1.BindProcess;
+// @ts-ignore
+ModelProcessManager_1.ModelProcessManager.register_models(BindProcess_1.BindProcess, 'BindProcess');
 globalThis.Model = Model_1.Model;
 ModelProcessManager_1.ModelProcessManager.spinal.Model = Model_1.Model;
 ModelProcessManager_1.ModelProcessManager.register_models(Model_1.Model, 'Model');

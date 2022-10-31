@@ -103,7 +103,7 @@ var Val = /** @class */ (function (_super) {
         if (typeof value === 'string' || typeof value === 'boolean') {
             n = Number(value);
             if (isNaN(n))
-                console.log("Don't know how to transform ".concat(value, " to a Val"));
+                console.log("Don't know how to transform " + value + " to a Val");
         }
         else if (value instanceof Val)
             n = value._data;

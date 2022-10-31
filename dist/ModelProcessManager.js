@@ -193,7 +193,7 @@ var ModelProcessManager = /** @class */ (function () {
                     : func.name;
         if (typeof ModelProcessManager._def[name] !== 'undefined' &&
             ModelProcessManager._def[name] !== func) {
-            console.error("trying to register \"".concat(name, "\" Model but was already defined"));
+            console.error("trying to register \"" + name + "\" Model but was already defined");
             console.error('old =', ModelProcessManager._def[name]);
             console.error('new =', func);
         }

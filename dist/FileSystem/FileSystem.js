@@ -138,9 +138,9 @@ var FileSystem = /** @class */ (function () {
         // first, we need a session id fom the server
         if (!sessionId) {
             if (userid != null) {
-                this.send("U ".concat(userid, " ").concat(password, " "));
+                this.send("U " + userid + " " + password + " ");
             }
-            this.send("S ".concat(this._num_inst, " "));
+            this.send("S " + this._num_inst + " ");
         }
         else {
             FileSystem._insts[this._num_inst]._session_num = sessionId;
@@ -152,7 +152,7 @@ var FileSystem = /** @class */ (function () {
         if (typeof callback === 'undefined') {
             return new Promise(function (resolve, reject) {
                 FileSystem._send_chan();
-                _this.send("L ".concat(FileSystem._nb_callbacks, " ").concat(encodeURI(path), " "));
+                _this.send("L " + FileSystem._nb_callbacks + " " + encodeURI(path) + " ");
                 FileSystem._callbacks[FileSystem._nb_callbacks] = function (model, isError) {
                     if (!model || isError)
                         reject(new Error('Error Load'));
@@ -162,7 +162,7 @@ var FileSystem = /** @class */ (function () {
             });
         }
         FileSystem._send_chan();
-        this.send("L ".concat(FileSystem._nb_callbacks, " ").concat(encodeURI(path), " "));
+        this.send("L " + FileSystem._nb_callbacks + " " + encodeURI(path) + " ");
         FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
         FileSystem._nb_callbacks++;
     };
@@ -175,7 +175,7 @@ var FileSystem = /** @class */ (function () {
      */
     FileSystem.prototype.load_type = function (type, callback) {
         FileSystem._send_chan();
-        this.send("R 0 ".concat(type, " "));
+        this.send("R 0 " + type + " ");
         FileSystem._type_callbacks.push([type, callback]);
     };
     FileSystem.prototype.load_or_make_dirProm = function (dir) {
@@ -266,7 +266,7 @@ var FileSystem = /** @class */ (function () {
             }
             return new Promise(function (resolve, reject) {
                 FileSystem._send_chan();
-                _this.send("l ".concat(FileSystem._nb_callbacks, " ").concat(ptr, " "));
+                _this.send("l " + FileSystem._nb_callbacks + " " + ptr + " ");
                 FileSystem._callbacks[FileSystem._nb_callbacks] = function (model, isError) {
                     if (!model || isError)
                         reject(new Error('Error Load ptr'));
@@ -282,7 +282,7 @@ var FileSystem = /** @class */ (function () {
         }
         else {
             FileSystem._send_chan();
-            this.send("l ".concat(FileSystem._nb_callbacks, " ").concat(ptr, " "));
+            this.send("l " + FileSystem._nb_callbacks + " " + ptr + " ");
             FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
             FileSystem._nb_callbacks++;
         }
@@ -292,7 +292,7 @@ var FileSystem = /** @class */ (function () {
         if (typeof callback === 'undefined') {
             return new Promise(function (resolve, reject) {
                 FileSystem._send_chan();
-                _this.send("r ".concat(ptr, " ").concat(FileSystem._nb_callbacks, " "));
+                _this.send("r " + ptr + " " + FileSystem._nb_callbacks + " ");
                 FileSystem._callbacks[FileSystem._nb_callbacks] = function (model) {
                     if (!model)
                         reject(new Error('Error load_right'));
@@ -302,7 +302,7 @@ var FileSystem = /** @class */ (function () {
             });
         }
         FileSystem._send_chan();
-        this.send("r ".concat(ptr, " ").concat(FileSystem._nb_callbacks, " "));
+        this.send("r " + ptr + " " + FileSystem._nb_callbacks + " ");
         FileSystem._callbacks[FileSystem._nb_callbacks] = callback;
         FileSystem._nb_callbacks++;
     };
@@ -315,7 +315,7 @@ var FileSystem = /** @class */ (function () {
      */
     FileSystem.prototype.share_model = function (ptr, file_name, share_type, targetName) {
         FileSystem._send_chan();
-        this.send("h ".concat(typeof ptr === 'number' ? ptr : ptr._server_id, " ").concat(share_type, " ").concat(encodeURI(targetName), " ").concat(encodeURI(file_name), " "));
+        this.send("h " + (typeof ptr === 'number' ? ptr : ptr._server_id) + " " + share_type + " " + encodeURI(targetName) + " " + encodeURI(file_name) + " ");
     };
     /**
      * explicitly send a command
@@ -336,7 +336,7 @@ var FileSystem = /** @class */ (function () {
      */
     FileSystem.prototype.make_channel = function () {
         var fs = FileSystem.get_inst();
-        var path = (0, getUrlPath_1.getUrlPath)(fs._protocol, fs._url, fs._port, "?s=".concat(this._session_num));
+        var path = (0, getUrlPath_1.getUrlPath)(fs._protocol, fs._url, fs._port, "?s=" + this._session_num);
         var xhr_object = FileSystem._my_xml_http_request();
         xhr_object.open('GET', path, true);
         if (fs._accessToken)
@@ -396,7 +396,7 @@ var FileSystem = /** @class */ (function () {
                 }
             }
             else if (this.readyState === 4 && this.status === 0) {
-                console.error("Disconnected from the server with request : ".concat(path, "."));
+                console.error("Disconnected from the server with request : " + path + ".");
                 if (fs.make_channel_error_timer === 0) {
                     //first disconnect
                     console.log('Trying to reconnect.');
@@ -525,10 +525,10 @@ var FileSystem = /** @class */ (function () {
             // new object
             var ncl = ModelProcessManager_1.ModelProcessManager.get_object_class(obj);
             if (obj._underlying_fs_type != null) {
-                out.mod += "T ".concat(obj._server_id, " ").concat(ncl, " ");
+                out.mod += "T " + obj._server_id + " " + ncl + " ";
                 ncl = obj._underlying_fs_type();
             }
-            out.cre += "N ".concat(obj._server_id, " ").concat(ncl, " ");
+            out.cre += "N " + obj._server_id + " " + ncl + " ";
             // data
             obj._get_fs_data(out);
         }
@@ -572,7 +572,7 @@ var FileSystem = /** @class */ (function () {
             delete FileSystem._files_to_upload[tmp_id];
             // send the file
             var fs = FileSystem.get_inst();
-            var path = (0, getUrlPath_1.getUrlPath)(fs._protocol, fs._url, fs._port, "?s=".concat(fs._session_num, "&p=").concat(tmp._server_id));
+            var path = (0, getUrlPath_1.getUrlPath)(fs._protocol, fs._url, fs._port, "?s=" + fs._session_num + "&p=" + tmp._server_id);
             var xhr_object = FileSystem._my_xml_http_request();
             xhr_object.open('PUT', path, true);
             if (fs._accessToken)
@@ -604,9 +604,9 @@ var FileSystem = /** @class */ (function () {
         }
         if (typeof ModelProcessManager_1.ModelProcessManager.spinal[name] === 'undefined') {
             if (FileSystem.debug === true) {
-                console.warn("Got Model type \"".concat(name, "\" from hub but not registered."));
+                console.warn("Got Model type \"" + name + "\" from hub but not registered.");
             }
-            ModelProcessManager_1.ModelProcessManager._def[name] = new Function("return class ".concat(name, " extends ModelProcessManager._def[\"Model\"] {}"))();
+            ModelProcessManager_1.ModelProcessManager._def[name] = new Function("return class " + name + " extends ModelProcessManager._def[\"Model\"] {}")();
             return new ModelProcessManager_1.ModelProcessManager._def[name]();
         }
     };
@@ -696,7 +696,7 @@ var FileSystem = /** @class */ (function () {
                 fs._session_num = -1;
             }
             else {
-                fs._data_to_send = "s ".concat(fs._session_num, " ").concat(fs._data_to_send);
+                fs._data_to_send = "s " + fs._session_num + " " + fs._data_to_send;
             }
             // request
             var path = (0, getUrlPath_1.getUrlPath)(fs._protocol, fs._url, fs._port);

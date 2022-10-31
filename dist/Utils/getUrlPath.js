@@ -29,13 +29,13 @@ function getUrlPath(protocol, url, port, searchQuery) {
     if (searchQuery === void 0) { searchQuery = ''; }
     var path = '';
     if (FileSystem_1.FileSystem.CONNECTOR_TYPE === 'Node' || FileSystem_1.FileSystem.is_cordova) {
-        path = "".concat(protocol, "//").concat(url);
+        path = protocol + "//" + url;
         if (port)
-            path += ":".concat(port);
-        path += "".concat(FileSystem_1.FileSystem.url_com).concat(searchQuery);
+            path += ":" + port;
+        path += "" + FileSystem_1.FileSystem.url_com + searchQuery;
     }
     else if (FileSystem_1.FileSystem.CONNECTOR_TYPE === 'Browser') {
-        path = "".concat(FileSystem_1.FileSystem.url_com).concat(searchQuery);
+        path = "" + FileSystem_1.FileSystem.url_com + searchQuery;
     }
     return path;
 }

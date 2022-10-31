@@ -229,7 +229,7 @@ var TypedArray = /** @class */ (function (_super) {
      */
     TypedArray.prototype._get_fs_data = function (out) {
         FileSystem_1.FileSystem.set_server_id_if_necessary(out, this);
-        out.mod += "C ".concat(this._server_id, " ").concat(this._get_state(), " ");
+        out.mod += "C " + this._server_id + " " + this._get_state() + " ";
     };
     /**
      * @protected
@@ -239,10 +239,10 @@ var TypedArray = /** @class */ (function (_super) {
     TypedArray.prototype._get_state = function () {
         var res = this._size.length.toString(10);
         for (var i = 0; i < this._size.length; i++) {
-            res += ", ".concat(this._size[i]);
+            res += ", " + this._size[i];
         }
         for (var i = 0; i < this._data.length; i++) {
-            res += ", ".concat(this._data[i]);
+            res += ", " + this._data[i];
         }
         return res;
     };

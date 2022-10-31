@@ -90,7 +90,7 @@ var Obj = /** @class */ (function (_super) {
      */
     Obj.prototype._get_fs_data = function (out) {
         FileSystem_1.FileSystem.set_server_id_if_necessary(out, this);
-        out.mod += "C ".concat(this._server_id, " ").concat(this.toString(), " ");
+        out.mod += "C " + this._server_id + " " + this.toString() + " ";
     };
     /**
      * @protected

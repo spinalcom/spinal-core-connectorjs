@@ -71,7 +71,7 @@ var SpinalUserManager = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        get_cmd = "/get_user_id?u=".concat(username, "&p=").concat(password);
+                        get_cmd = "/get_user_id?u=" + username + "&p=" + password;
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
@@ -100,7 +100,7 @@ var SpinalUserManager = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        get_cmd = "/get_admin_id?u=".concat(adminName, "&p=").concat(password);
+                        get_cmd = "/get_admin_id?u=" + adminName + "&p=" + password;
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
@@ -129,7 +129,7 @@ var SpinalUserManager = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        get_cmd = "/get_new_account?e=".concat(username, "&p=").concat(password, "&cp=").concat(password);
+                        get_cmd = "/get_new_account?e=" + username + "&p=" + password + "&cp=" + password;
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
@@ -158,7 +158,7 @@ var SpinalUserManager = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        get_cmd = "/get_change_user_password?e=".concat(user_id, "&op=").concat(password, "&np=").concat(newPassword, "&cp=").concat(newPassword);
+                        get_cmd = "/get_change_user_password?e=" + user_id + "&op=" + password + "&np=" + newPassword + "&cp=" + newPassword;
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
@@ -187,7 +187,7 @@ var SpinalUserManager = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        get_cmd = "/get_delete_account?e=".concat(userNameToDelete, "&i=").concat(userId, "&p=").concat(password);
+                        get_cmd = "/get_delete_account?e=" + userNameToDelete + "&i=" + userId + "&p=" + password;
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
@@ -216,7 +216,7 @@ var SpinalUserManager = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        get_cmd = "/get_change_user_password_by_admin?u=".concat(targetUsername, "&np=").concat(targetPassword, "&a=").concat(adminUserId, "&ap=").concat(adminPassword);
+                        get_cmd = "/get_change_user_password_by_admin?u=" + targetUsername + "&np=" + targetPassword + "&a=" + adminUserId + "&ap=" + adminPassword;
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
@@ -245,7 +245,7 @@ var SpinalUserManager = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        get_cmd = "/get_delete_account_by_admin?u=".concat(targetUsername, "&a=").concat(adminUserId, "&ap=").concat(adminPassword);
+                        get_cmd = "/get_delete_account_by_admin?u=" + targetUsername + "&a=" + adminUserId + "&ap=" + adminPassword;
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
@@ -274,7 +274,7 @@ var SpinalUserManager = /** @class */ (function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        get_cmd = "/get_change_account_rights_by_admin?u=".concat(targetUsername, "&ri=").concat(targetAcountRight, "&a=").concat(adminUserId, "&ap=").concat(adminPassword);
+                        get_cmd = "/get_change_account_rights_by_admin?u=" + targetUsername + "&ri=" + targetAcountRight + "&a=" + adminUserId + "&ap=" + adminPassword;
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);

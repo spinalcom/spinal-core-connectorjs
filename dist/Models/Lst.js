@@ -537,7 +537,7 @@ var Lst = /** @class */ (function (_super) {
         var change = Number(this.length != value.length);
         var s = this.static_length();
         if (s >= 0 && change) {
-            console.error("resizing a static array (type ".concat(ModelProcessManager_1.ModelProcessManager.get_object_class(this), ") is forbidden"));
+            console.error("resizing a static array (type " + ModelProcessManager_1.ModelProcessManager.get_object_class(this) + ") is forbidden");
         }
         for (var i = 0; i < value.length; i++) {
             // @ts-ignore
@@ -584,7 +584,7 @@ var Lst = /** @class */ (function (_super) {
             FileSystem_1.FileSystem.set_server_id_if_necessary(out, obj);
             res.push(obj._server_id);
         }
-        out.mod += "C ".concat(this._server_id, " ").concat(res.join(','), " ");
+        out.mod += "C " + this._server_id + " " + res.join(',') + " ";
     };
     /**
      * @protected
@@ -635,7 +635,7 @@ var Lst = /** @class */ (function (_super) {
     Lst.prototype._static_size_check = function (force) {
         if (this.static_length() >= 0 && !force) {
             console.error("resizing a static array (type " +
-                "".concat(ModelProcessManager_1.ModelProcessManager.get_object_class(this), ") is forbidden"));
+                (ModelProcessManager_1.ModelProcessManager.get_object_class(this) + ") is forbidden"));
             return true;
         }
         return false;
