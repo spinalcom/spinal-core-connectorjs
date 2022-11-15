@@ -94,7 +94,6 @@ var Lst = /** @class */ (function (_super) {
         if (s >= 0) {
             var d = _this.default_value();
             for (var i = 0; i <= s; i++) {
-                // @ts-ignore
                 _this.push(d, true);
             }
         }
@@ -474,8 +473,7 @@ var Lst = /** @class */ (function (_super) {
      */
     Lst.prototype.set_or_push = function (index, val) {
         if (index < this.length) {
-            // @ts-ignore
-            return this.mod_attr(index, val);
+            return this.mod_attr(index.toString(), val);
         }
         if (index === this.length) {
             this.push(val);

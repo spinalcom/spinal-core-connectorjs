@@ -63,7 +63,6 @@ export class Lst<T extends Model = any> extends Model {
     if (s >= 0) {
       const d = this.default_value();
       for (let i = 0; i <= s; i++) {
-        // @ts-ignore
         this.push(d, true);
       }
     }
@@ -447,8 +446,7 @@ export class Lst<T extends Model = any> extends Model {
    */
   public set_or_push(index: number, val: T | ReturnType<T['get']>): void {
     if (index < this.length) {
-      // @ts-ignore
-      return this.mod_attr(index, val);
+      return this.mod_attr(index.toString(), val);
     }
     if (index === this.length) {
       this.push(val);

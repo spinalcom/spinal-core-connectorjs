@@ -293,7 +293,7 @@ var Model = /** @class */ (function () {
     Model.prototype.add_attr = function (name, instanceOfModel, signal_change) {
         if (signal_change === void 0) { signal_change = true; }
         // name, model
-        if (typeof name === 'string') {
+        if (typeof name === 'string' || typeof name === 'number') {
             if (typeof instanceOfModel === 'function') {
                 this[name] = instanceOfModel;
             }

@@ -290,7 +290,7 @@ export class Model {
     signal_change: boolean = true
   ): void {
     // name, model
-    if (typeof name === 'string') {
+    if (typeof name === 'string' || typeof name === 'number') {
       if (typeof instanceOfModel === 'function') {
         this[name] = instanceOfModel;
       } else {
