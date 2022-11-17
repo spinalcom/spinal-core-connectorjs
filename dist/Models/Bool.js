@@ -111,7 +111,7 @@ var Bool = /** @class */ (function (_super) {
      */
     Bool.prototype._get_fs_data = function (out) {
         FileSystem_1.FileSystem.set_server_id_if_necessary(out, this);
-        out.mod += "C " + this._server_id + " " + (this._data ? 1 : 0) + " ";
+        out.mod += "C ".concat(this._server_id, " ").concat(this._data ? 1 : 0, " ");
     };
     /**
      * @static

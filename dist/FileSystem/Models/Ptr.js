@@ -81,7 +81,7 @@ var Ptr = /** @class */ (function (_super) {
         }
         else {
             if (this.data.value === 0)
-                console.error("Ptr " + this._server_id + " load with value 0.");
+                console.error("Ptr ".concat(this._server_id, " load with value 0."));
             if (typeof callback === 'function') {
                 (_a = FileSystem_1.FileSystem.get_inst()) === null || _a === void 0 ? void 0 : _a.load_ptr(this.data.value, callback);
             }
@@ -98,14 +98,14 @@ var Ptr = /** @class */ (function (_super) {
         FileSystem_1.FileSystem.set_server_id_if_necessary(out, this);
         if (this.data.model != null) {
             FileSystem_1.FileSystem.set_server_id_if_necessary(out, this.data.model);
-            out.mod += "C " + this._server_id + " " + this.data.model._server_id + " ";
+            out.mod += "C ".concat(this._server_id, " ").concat(this.data.model._server_id, " ");
             this.data.value = this.data.model._server_id;
             if (this.data.model._server_id & 3) {
                 FileSystem_1.FileSystem._ptr_to_update[this.data.model._server_id] = this;
             }
         }
         else {
-            out.mod += "C " + this._server_id + " " + this.data.value + " ";
+            out.mod += "C ".concat(this._server_id, " ").concat(this.data.value, " ");
         }
     };
     /**

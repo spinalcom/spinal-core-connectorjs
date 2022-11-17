@@ -31,7 +31,7 @@ function sendXhr(options, command, httpMethod, header, body) {
     var url = parsedOpt.hostname;
     var port = parsedOpt.port;
     if (FileSystem_1.FileSystem.CONNECTOR_TYPE === 'Node' || FileSystem_1.FileSystem.is_cordova) {
-        path = parsedOpt.protocol + "//" + url + port ? ':' + port : '' + command;
+        path = "".concat(parsedOpt.protocol, "//").concat(url).concat(port) ? ':' + port : '' + command;
     }
     else if (FileSystem_1.FileSystem.CONNECTOR_TYPE === 'Browser') {
         path = command;

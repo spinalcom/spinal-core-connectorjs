@@ -138,7 +138,7 @@ var Str = /** @class */ (function (_super) {
      */
     Str.prototype._get_fs_data = function (out) {
         FileSystem_1.FileSystem.set_server_id_if_necessary(out, this);
-        out.mod += "C " + this._server_id + " " + encodeURI(this._data) + " ";
+        out.mod += "C ".concat(this._server_id, " ").concat(encodeURI(this._data), " ");
     };
     /**
      * @protected

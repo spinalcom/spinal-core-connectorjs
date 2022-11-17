@@ -35,7 +35,7 @@ export declare class NewAlertMsg {
     private createContent;
     private createFooter;
 }
-declare const NewAlertMsgType: typeof NewAlertMsg;
+declare const NewAlertMsgType: typeof import("./NewAlertMsg").NewAlertMsg;
 declare global {
     var NewAlertMsg: typeof NewAlertMsgType;
     var new_alert_msg: typeof NewAlertMsgType;

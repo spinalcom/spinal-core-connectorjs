@@ -275,7 +275,7 @@ var Model = /** @class */ (function () {
         if (this._date_last_modification > date) {
             for (var id in fmm) {
                 var obj = fmm[id];
-                res += "\n" + obj.model_id + " " + ModelProcessManager_1.ModelProcessManager.get_object_class(obj) + " " + obj._get_state();
+                res += "\n".concat(obj.model_id, " ").concat(ModelProcessManager_1.ModelProcessManager.get_object_class(obj), " ").concat(obj._get_state());
             }
         }
         return res;
@@ -299,7 +299,7 @@ var Model = /** @class */ (function () {
             }
             else {
                 if (this[name] != null) {
-                    console.error("attribute " + name + " already exists in " + ModelProcessManager_1.ModelProcessManager.get_object_class(this));
+                    console.error("attribute ".concat(name, " already exists in ").concat(ModelProcessManager_1.ModelProcessManager.get_object_class(this)));
                 }
                 var model = ModelProcessManager_1.ModelProcessManager.conv(instanceOfModel);
                 if (model._parents.indexOf(this) < 0) {
@@ -536,7 +536,7 @@ var Model = /** @class */ (function () {
     Model.prototype._get_state = function () {
         var _this = this;
         return this._attribute_names
-            .map(function (attrName) { return attrName + ":" + _this[attrName].model_id; })
+            .map(function (attrName) { return "".concat(attrName, ":").concat(_this[attrName].model_id); })
             .join(',');
     };
     /**
@@ -555,7 +555,7 @@ var Model = /** @class */ (function () {
             return attrName + ':' + obj._server_id;
         })
             .join(',');
-        out.mod += "C " + this._server_id + " " + data + " ";
+        out.mod += "C ".concat(this._server_id, " ").concat(data, " ");
     };
     /**
      * may be redefined.

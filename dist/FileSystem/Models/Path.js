@@ -57,14 +57,12 @@ var Path = /** @class */ (function (_super) {
     function Path(file) {
         var _this = _super.call(this) || this;
         _this.file = file;
-        var size = _this.file != null
-            ? // @ts-ignore
-                _this.file.fileSize != null
-                    ? // @ts-ignore
-                        _this.file.fileSize
-                    : // @ts-ignore
-                        _this.file.size
-            : 0;
+        // @ts-ignore
+        var size = file === null || file === void 0 ? void 0 : file.fileSize;
+        if (file && typeof Buffer !== 'undefined' && file instanceof Buffer) {
+            size = file.length;
+        }
+        size = size || 0;
         _this.add_attr({
             remaining: size,
             to_upload: size

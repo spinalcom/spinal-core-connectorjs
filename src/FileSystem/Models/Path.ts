@@ -65,15 +65,13 @@ export class Path extends Model {
   public constructor(file?: File | Buffer) {
     super();
     this.file = file;
-    const size: number =
-      this.file != null
-        ? // @ts-ignore
-          this.file.fileSize != null
-          ? // @ts-ignore
-            this.file.fileSize
-          : // @ts-ignore
-            this.file.size
-        : 0;
+    // @ts-ignore
+    let size = file?.fileSize;
+    if (file && typeof Buffer !== 'undefined' && file instanceof Buffer) {
+      size = file.length;
+    }
+    size = size || 0;
+
     this.add_attr({
       remaining: size,
       to_upload: size,

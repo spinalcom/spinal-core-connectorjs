@@ -162,7 +162,7 @@ var NewAlertMsg = /** @class */ (function () {
                 var btn = _c.value;
                 var d = (0, newDomElement_1.newDomElement)({
                     style: {
-                        width: 100 / this.params.btn.length + "%",
+                        width: "".concat(100 / this.params.btn.length, "%"),
                         paddingRight: '5px',
                         paddingLeft: '5px',
                         float: 'left'

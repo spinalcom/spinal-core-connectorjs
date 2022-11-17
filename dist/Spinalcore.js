@@ -249,7 +249,7 @@ var spinalCore = /** @class */ (function () {
                             lst.splice(0, 1);
                         path = lst.join('/'); // Absolute paths are not allowed
                         home_dir = FileSystem_1.FileSystem.get_inst()._home_dir;
-                        return [4 /*yield*/, fs.load_or_make_dir("" + home_dir + path)];
+                        return [4 /*yield*/, fs.load_or_make_dir("".concat(home_dir).concat(path))];
                     case 1:
                         current_dir = _a.sent();
                         file = current_dir.detect(function (x) { return x.name.get() === file_name; });
@@ -272,7 +272,7 @@ var spinalCore = /** @class */ (function () {
             lst.splice(0, 1);
         path = lst.join('/'); // Absolute paths are not allowed
         var home_dir = FileSystem_1.FileSystem.get_inst()._home_dir;
-        fs.load_or_make_dir("" + home_dir + path, function (current_dir, err) {
+        fs.load_or_make_dir("".concat(home_dir).concat(path), function (current_dir, err) {
             if (err) {
                 return callback_error();
             }
