@@ -116,7 +116,7 @@ export class spinalCore {
   ): Promise<IAuthResponse> {
     const res = await sendXhr(
       options,
-      '/auth',
+      '/api/v1/auth',
       'POST',
       {},
       { userName: username, password: password }
@@ -141,7 +141,7 @@ export class spinalCore {
   ): Promise<IAuthResponse> {
     const res = await sendXhr(
       options,
-      '/authOrgan',
+      '/api/v1/authOrgan',
       'POST',
       {},
       { bosRegisterKey, organName, organType }
@@ -160,7 +160,7 @@ export class spinalCore {
     options: URL | string,
     token: string
   ): Promise<ICreateSessionResponse> {
-    const res = await sendXhr(options, '/createSession', 'GET', {
+    const res = await sendXhr(options, '/api/v1/createSession', 'GET', {
       authorization: token,
     });
     return JSON.parse(res);

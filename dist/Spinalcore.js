@@ -125,7 +125,7 @@ var spinalCore = /** @class */ (function () {
             var res;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, (0, sendXhr_1.sendXhr)(options, '/auth', 'POST', {}, { userName: username, password: password })];
+                    case 0: return [4 /*yield*/, (0, sendXhr_1.sendXhr)(options, '/api/v1/auth', 'POST', {}, { userName: username, password: password })];
                     case 1:
                         res = _a.sent();
                         return [2 /*return*/, JSON.parse(res)];
@@ -147,7 +147,7 @@ var spinalCore = /** @class */ (function () {
             var res;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, (0, sendXhr_1.sendXhr)(options, '/authOrgan', 'POST', {}, { bosRegisterKey: bosRegisterKey, organName: organName, organType: organType })];
+                    case 0: return [4 /*yield*/, (0, sendXhr_1.sendXhr)(options, '/api/v1/authOrgan', 'POST', {}, { bosRegisterKey: bosRegisterKey, organName: organName, organType: organType })];
                     case 1:
                         res = _a.sent();
                         return [2 /*return*/, JSON.parse(res)];
@@ -167,7 +167,7 @@ var spinalCore = /** @class */ (function () {
             var res;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, (0, sendXhr_1.sendXhr)(options, '/createSession', 'GET', {
+                    case 0: return [4 /*yield*/, (0, sendXhr_1.sendXhr)(options, '/api/v1/createSession', 'GET', {
                             authorization: token
                         })];
                     case 1:
