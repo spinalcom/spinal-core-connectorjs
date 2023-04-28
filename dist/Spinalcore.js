@@ -125,7 +125,7 @@ var spinalCore = /** @class */ (function () {
             var res;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, (0, sendXhr_1.sendXhr)(options, '/auth', 'POST', {}, { login: username, password: password })];
+                    case 0: return [4 /*yield*/, (0, sendXhr_1.sendXhr)(options, '/auth', 'POST', {}, { userName: username, password: password })];
                     case 1:
                         res = _a.sent();
                         return [2 /*return*/, JSON.parse(res)];

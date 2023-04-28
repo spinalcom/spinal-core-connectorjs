@@ -119,7 +119,7 @@ export class spinalCore {
       '/auth',
       'POST',
       {},
-      { login: username, password: password }
+      { userName: username, password: password }
     );
     return JSON.parse(res);
   }
@@ -253,19 +253,22 @@ export class spinalCore {
    */
   public static register_models(
     modelList:
-      | typeof Model[]
+      | (typeof Model)[]
       | {
           [key: string]: typeof Model;
         }
   ): void;
   public static register_models(
-    modelList: typeof Model | typeof Model[] | { [key: string]: typeof Model },
+    modelList:
+      | typeof Model
+      | (typeof Model)[]
+      | { [key: string]: typeof Model },
     name?: string
   ): void {
     if (name)
       return ModelProcessManager.register_models(<typeof Model>modelList, name);
     return ModelProcessManager.register_models(
-      <typeof Model[] | { [key: string]: typeof Model }>modelList
+      <(typeof Model)[] | { [key: string]: typeof Model }>modelList
     );
   }
 

@@ -170,13 +170,16 @@ export class ModelProcessManager {
    */
   public static register_models(
     modelList:
-      | typeof Model[]
+      | (typeof Model)[]
       | {
           [key: string]: typeof Model;
         }
   ): void;
   public static register_models(
-    modelList: typeof Model | typeof Model[] | { [key: string]: typeof Model },
+    modelList:
+      | typeof Model
+      | (typeof Model)[]
+      | { [key: string]: typeof Model },
     name?: string
   ): void {
     if (modelList) {
@@ -185,7 +188,7 @@ export class ModelProcessManager {
         ModelProcessManager._register_models_check(modelList, name);
       } else if (isIterable(modelList)) {
         // array
-        const l: typeof Model[] = <typeof Model[]>modelList;
+        const l: (typeof Model)[] = <(typeof Model)[]>modelList;
         for (const m of l) {
           ModelProcessManager.register_models(m);
         }
@@ -265,6 +268,6 @@ export class ModelProcessManager {
   }
 
   public static spinal: SpinalType = {
-    version: '2.5.13',
+    version: '2.5.14',
   };
 }

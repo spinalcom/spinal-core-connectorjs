@@ -94,7 +94,7 @@ export declare class spinalCore {
      *         })} modelList
      * @memberof spinalCore
      */
-    static register_models(modelList: typeof Model[] | {
+    static register_models(modelList: (typeof Model)[] | {
         [key: string]: typeof Model;
     }): void;
     /**

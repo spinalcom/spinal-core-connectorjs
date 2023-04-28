@@ -1,4 +1,4 @@
 export interface IAuthResponse {
     accessToken: string;
-    expires: number;
+    expieredToken: number;
 }

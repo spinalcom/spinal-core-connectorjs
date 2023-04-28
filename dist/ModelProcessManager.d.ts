@@ -71,7 +71,7 @@ export declare class ModelProcessManager {
      *           [key: string]: typeof Model;
      *         })} modelList
      */
-    static register_models(modelList: typeof Model[] | {
+    static register_models(modelList: (typeof Model)[] | {
         [key: string]: typeof Model;
     }): void;
     /**
