@@ -164,12 +164,14 @@ var spinalCore = /** @class */ (function () {
      */
     spinalCore.createSession = function (options, token) {
         return __awaiter(this, void 0, void 0, function () {
-            var res;
+            var accessToken, res;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, (0, sendXhr_1.sendXhr)(options, '/api/v1/createSession', 'GET', {
-                            authorization: token
-                        })];
+                    case 0:
+                        accessToken = token.startsWith('Bearer ') ? token : "Bearer ".concat(token);
+                        return [4 /*yield*/, (0, sendXhr_1.sendXhr)(options, '/api/v1/createSession', 'GET', {
+                                authorization: accessToken
+                            })];
                     case 1:
                         res = _a.sent();
                         return [2 /*return*/, JSON.parse(res)];

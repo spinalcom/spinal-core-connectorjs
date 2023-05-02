@@ -126,7 +126,12 @@ var FileSystem = /** @class */ (function () {
         this._url = url;
         this._port = port;
         this._home_dir = home_dir;
-        this._accessToken = accessToken;
+        if (typeof accessToken === 'string') {
+            var _accessToken = accessToken.startsWith('Bearer ')
+                ? accessToken
+                : "Bearer ".concat(accessToken);
+            this._accessToken = _accessToken;
+        }
         if (typeof global !== 'undefined') {
             var XMLHttpRequest_node = require('xhr2');
             FileSystem._XMLHttpRequest = XMLHttpRequest_node;
@@ -340,7 +345,7 @@ var FileSystem = /** @class */ (function () {
         var xhr_object = FileSystem._my_xml_http_request();
         xhr_object.open('GET', path, true);
         if (fs._accessToken)
-            xhr_object.setRequestHeader('x-access-token', fs._accessToken);
+            xhr_object.setRequestHeader('authorization', fs._accessToken);
         xhr_object.onreadystatechange = function () {
             var e_1, _a;
             if (this.readyState === 4 && this.status === 200) {
@@ -576,7 +581,7 @@ var FileSystem = /** @class */ (function () {
             var xhr_object = FileSystem._my_xml_http_request();
             xhr_object.open('PUT', path, true);
             if (fs._accessToken)
-                xhr_object.setRequestHeader('x-access-token', fs._accessToken);
+                xhr_object.setRequestHeader('authorization', fs._accessToken);
             xhr_object.onreadystatechange = function () {
                 var _w;
                 if (this.readyState === 4 && this.status === 200) {
@@ -703,7 +708,7 @@ var FileSystem = /** @class */ (function () {
             var xhr_object = FileSystem._my_xml_http_request();
             xhr_object.open('POST', path, true);
             if (fs._accessToken)
-                xhr_object.setRequestHeader('x-access-token', fs._accessToken);
+                xhr_object.setRequestHeader('authorization', fs._accessToken);
             xhr_object.onreadystatechange = function () {
                 var e_3, _a, e_4, _b;
                 if (this.readyState === 4 && this.status === 200) {

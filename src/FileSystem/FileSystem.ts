@@ -304,7 +304,12 @@ export class FileSystem {
     this._url = url;
     this._port = port;
     this._home_dir = home_dir;
-    this._accessToken = accessToken;
+    if (typeof accessToken === 'string') {
+      let _accessToken = accessToken.startsWith('Bearer ')
+        ? accessToken
+        : `Bearer ${accessToken}`;
+      this._accessToken = _accessToken;
+    }
 
     if (typeof global !== 'undefined') {
       const XMLHttpRequest_node = require('xhr2');
@@ -590,7 +595,7 @@ export class FileSystem {
     const xhr_object = FileSystem._my_xml_http_request();
     xhr_object.open('GET', path, true);
     if (fs._accessToken)
-      xhr_object.setRequestHeader('x-access-token', fs._accessToken);
+      xhr_object.setRequestHeader('authorization', fs._accessToken);
     xhr_object.onreadystatechange = function (): void {
       if (this.readyState === 4 && this.status === 200) {
         if (fs.make_channel_error_timer !== 0) {
@@ -814,7 +819,7 @@ export class FileSystem {
       const xhr_object = FileSystem._my_xml_http_request();
       xhr_object.open('PUT', path, true);
       if (fs._accessToken)
-        xhr_object.setRequestHeader('x-access-token', fs._accessToken);
+        xhr_object.setRequestHeader('authorization', fs._accessToken);
       xhr_object.onreadystatechange = function () {
         let _w;
         if (this.readyState === 4 && this.status === 200) {
@@ -949,7 +954,7 @@ export class FileSystem {
       const xhr_object = FileSystem._my_xml_http_request();
       xhr_object.open('POST', path, true);
       if (fs._accessToken)
-        xhr_object.setRequestHeader('x-access-token', fs._accessToken);
+        xhr_object.setRequestHeader('authorization', fs._accessToken);
       xhr_object.onreadystatechange = function () {
         if (this.readyState === 4 && this.status === 200) {
           if (FileSystem._disp) {

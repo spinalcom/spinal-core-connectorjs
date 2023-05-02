@@ -160,8 +160,9 @@ export class spinalCore {
     options: URL | string,
     token: string
   ): Promise<ICreateSessionResponse> {
+    let accessToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
     const res = await sendXhr(options, '/api/v1/createSession', 'GET', {
-      authorization: token,
+      authorization: accessToken,
     });
     return JSON.parse(res);
   }
