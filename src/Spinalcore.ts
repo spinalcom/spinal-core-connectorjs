@@ -118,8 +118,8 @@ export class spinalCore {
       options,
       '/api/v1/auth',
       'POST',
-      {},
-      { userName: username, password: password }
+      { 'Content-Type': 'application/json' },
+      JSON.stringify({ userName: username, password: password })
     );
     return JSON.parse(res);
   }
@@ -143,8 +143,8 @@ export class spinalCore {
       options,
       '/api/v1/authOrgan',
       'POST',
-      {},
-      { bosRegisterKey, organName, organType }
+      { 'Content-Type': 'application/json' },
+      JSON.stringify({ bosRegisterKey, organName, organType })
     );
     return JSON.parse(res);
   }
