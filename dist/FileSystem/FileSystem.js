@@ -758,10 +758,22 @@ var FileSystem = /** @class */ (function () {
                         }
                         finally { if (e_3) throw e_3.error; }
                     }
+                    var _loop_1 = function (nbCb, servId, error) {
+                        if (servId != 0 && typeof FileSystem._objects[servId] === "undefined") {
+                            var interval_1 = setInterval(function () {
+                                if (typeof FileSystem._objects[servId] !== "undefined") {
+                                    clearInterval(interval_1);
+                                    FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+                                }
+                            });
+                        }
+                        else
+                            FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+                    };
                     try {
                         for (var _c_1 = __values(_c), _c_1_1 = _c_1.next(); !_c_1_1.done; _c_1_1 = _c_1.next()) {
                             var _e = __read(_c_1_1.value, 3), nbCb = _e[0], servId = _e[1], error = _e[2];
-                            FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+                            _loop_1(nbCb, servId, error);
                         }
                     }
                     catch (e_4_1) { e_4 = { error: e_4_1 }; }

@@ -104,7 +104,7 @@ export class FileSystem {
   public static is_cordova: boolean =
     typeof document !== 'undefined'
       ? document.URL.indexOf('http://') == -1 &&
-        document.URL.indexOf('https://') == -1
+      document.URL.indexOf('https://') == -1
       : false;
 
   /**
@@ -560,8 +560,7 @@ export class FileSystem {
   ): void {
     FileSystem._send_chan();
     this.send(
-      `h ${
-        typeof ptr === 'number' ? ptr : ptr._server_id
+      `h ${typeof ptr === 'number' ? ptr : ptr._server_id
       } ${share_type} ${encodeURI(targetName)} ${encodeURI(file_name)} `
     );
   }
@@ -984,7 +983,15 @@ export class FileSystem {
             cb(_obj);
           }
           for (const [nbCb, servId, error] of _c) {
-            FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+            if (servId != 0 && typeof FileSystem._objects[servId] === "undefined") {
+              const interval = setInterval((): void => {
+                if (typeof FileSystem._objects[servId] !== "undefined") {
+                  clearInterval(interval);
+                  FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+                }
+              })
+            } else
+              FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
           }
         } else if (
           this.readyState === 4 &&
