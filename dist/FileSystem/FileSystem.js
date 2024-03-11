@@ -765,7 +765,7 @@ var FileSystem = /** @class */ (function () {
                                     clearInterval(interval_1);
                                     FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
                                 }
-                            });
+                            }, 200);
                         }
                         else
                             FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
