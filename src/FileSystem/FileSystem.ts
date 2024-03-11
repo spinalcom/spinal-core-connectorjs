@@ -989,7 +989,7 @@ export class FileSystem {
                   clearInterval(interval);
                   FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
                 }
-              })
+              }, 200)
             } else
               FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
           }
