@@ -246,6 +246,7 @@ export class FileSystem {
   public make_channel_error_timer: number = 0;
   static _XMLHttpRequest: any;
 
+  static _counter_sending = 0;
   /**
    * Creates an instance of FileSystem.
    * @param {IOptionFileSystemWithSessionId} {
@@ -577,6 +578,33 @@ export class FileSystem {
       FileSystem._timer_send = setTimeout(FileSystem._timeout_send_func, 1);
     }
   }
+  private make_channel_eval(responseText: string): void {
+    if (FileSystem._disp) {
+      console.log('chan ->', responseText);
+    }
+    const created: { cb: SpinalLoadCallBack<Model>; _obj: Model }[] = [];
+    const _w = (sid: number, obj: string): void => {
+      const _obj = FileSystem._create_model_by_name(obj);
+      if (sid != null && _obj != null) {
+        _obj._server_id = sid;
+        FileSystem._objects[sid] = _obj;
+        for (const [type, cb] of FileSystem._type_callbacks) {
+          // @ts-ignore
+          const mod_R =
+            ModelProcessManager._def[type] ||
+            ModelProcessManager.spinal[type];
+          if (_obj instanceof mod_R) {
+            created.push({ cb, _obj });
+          }
+        }
+      }
+    };
+    FileSystem._sig_server = false;
+    eval(responseText);
+    FileSystem._sig_server = true;
+    for (const { cb, _obj } of created) cb(_obj);
+
+  }
 
   /**
    * send a request for a "push" channel
@@ -601,30 +629,16 @@ export class FileSystem {
           FileSystem.onConnectionError(0);
         }
         fs.make_channel_error_timer = 0;
-        if (FileSystem._disp) {
-          console.log('chan ->', this.responseText);
-        }
-        const created: { cb: SpinalLoadCallBack<Model>; _obj: Model }[] = [];
-        const _w = (sid: number, obj: string): void => {
-          const _obj = FileSystem._create_model_by_name(obj);
-          if (sid != null && _obj != null) {
-            _obj._server_id = sid;
-            FileSystem._objects[sid] = _obj;
-            for (const [type, cb] of FileSystem._type_callbacks) {
-              // @ts-ignore
-              const mod_R =
-                ModelProcessManager._def[type] ||
-                ModelProcessManager.spinal[type];
-              if (_obj instanceof mod_R) {
-                created.push({ cb, _obj });
-              }
+        if (FileSystem._counter_sending === 0)
+          fs.make_channel_eval(this.responseText);
+        else {
+          const inter = setInterval(() => {
+            if (FileSystem._counter_sending === 0) {
+              clearInterval(inter);
+              fs.make_channel_eval(this.responseText);
             }
-          }
-        };
-        FileSystem._sig_server = false;
-        eval(this.responseText);
-        FileSystem._sig_server = true;
-        for (const { cb, _obj } of created) cb(_obj);
+          }, 50)
+        }
       } else if (this.readyState === 4 && this.status === 0) {
         console.error(`Disconnected from the server with request : ${path}.`);
         if (fs.make_channel_error_timer === 0) {
@@ -955,6 +969,7 @@ export class FileSystem {
       if (fs._accessToken)
         xhr_object.setRequestHeader('authorization', fs._accessToken);
       xhr_object.onreadystatechange = function () {
+        if (this.readyState === 4) FileSystem._counter_sending -= 1;
         if (this.readyState === 4 && this.status === 200) {
           if (FileSystem._disp) {
             console.log('resp ->', this.responseText);
@@ -1004,6 +1019,7 @@ export class FileSystem {
         console.log('sent ->', fs._data_to_send + 'E ');
       }
       xhr_object.setRequestHeader('Content-Type', 'text/plain');
+      FileSystem._counter_sending += 1;
       xhr_object.send(fs._data_to_send + 'E ');
       fs._data_to_send = '';
     }

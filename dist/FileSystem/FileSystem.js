@@ -334,6 +334,55 @@ var FileSystem = /** @class */ (function () {
             FileSystem._timer_send = setTimeout(FileSystem._timeout_send_func, 1);
         }
     };
+    FileSystem.prototype.make_channel_eval = function (responseText) {
+        var e_1, _a;
+        if (FileSystem._disp) {
+            console.log('chan ->', responseText);
+        }
+        var created = [];
+        var _w = function (sid, obj) {
+            var e_2, _a;
+            var _obj = FileSystem._create_model_by_name(obj);
+            if (sid != null && _obj != null) {
+                _obj._server_id = sid;
+                FileSystem._objects[sid] = _obj;
+                try {
+                    for (var _b = __values(FileSystem._type_callbacks), _d = _b.next(); !_d.done; _d = _b.next()) {
+                        var _e = __read(_d.value, 2), type = _e[0], cb = _e[1];
+                        // @ts-ignore
+                        var mod_R = ModelProcessManager_1.ModelProcessManager._def[type] ||
+                            ModelProcessManager_1.ModelProcessManager.spinal[type];
+                        if (_obj instanceof mod_R) {
+                            created.push({ cb: cb, _obj: _obj });
+                        }
+                    }
+                }
+                catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                finally {
+                    try {
+                        if (_d && !_d.done && (_a = _b["return"])) _a.call(_b);
+                    }
+                    finally { if (e_2) throw e_2.error; }
+                }
+            }
+        };
+        FileSystem._sig_server = false;
+        eval(responseText);
+        FileSystem._sig_server = true;
+        try {
+            for (var created_1 = __values(created), created_1_1 = created_1.next(); !created_1_1.done; created_1_1 = created_1.next()) {
+                var _b = created_1_1.value, cb = _b.cb, _obj = _b._obj;
+                cb(_obj);
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (created_1_1 && !created_1_1.done && (_a = created_1["return"])) _a.call(created_1);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+    };
     /**
      * send a request for a "push" channel
      * @private
@@ -347,57 +396,21 @@ var FileSystem = /** @class */ (function () {
         if (fs._accessToken)
             xhr_object.setRequestHeader('authorization', fs._accessToken);
         xhr_object.onreadystatechange = function () {
-            var e_1, _a;
+            var _this = this;
             if (this.readyState === 4 && this.status === 200) {
                 if (fs.make_channel_error_timer !== 0) {
                     FileSystem.onConnectionError(0);
                 }
                 fs.make_channel_error_timer = 0;
-                if (FileSystem._disp) {
-                    console.log('chan ->', this.responseText);
-                }
-                var created_2 = [];
-                var _w = function (sid, obj) {
-                    var e_2, _a;
-                    var _obj = FileSystem._create_model_by_name(obj);
-                    if (sid != null && _obj != null) {
-                        _obj._server_id = sid;
-                        FileSystem._objects[sid] = _obj;
-                        try {
-                            for (var _b = __values(FileSystem._type_callbacks), _d = _b.next(); !_d.done; _d = _b.next()) {
-                                var _e = __read(_d.value, 2), type = _e[0], cb = _e[1];
-                                // @ts-ignore
-                                var mod_R = ModelProcessManager_1.ModelProcessManager._def[type] ||
-                                    ModelProcessManager_1.ModelProcessManager.spinal[type];
-                                if (_obj instanceof mod_R) {
-                                    created_2.push({ cb: cb, _obj: _obj });
-                                }
-                            }
+                if (FileSystem._counter_sending === 0)
+                    fs.make_channel_eval(this.responseText);
+                else {
+                    var inter_1 = setInterval(function () {
+                        if (FileSystem._counter_sending === 0) {
+                            clearInterval(inter_1);
+                            fs.make_channel_eval(_this.responseText);
                         }
-                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
-                        finally {
-                            try {
-                                if (_d && !_d.done && (_a = _b["return"])) _a.call(_b);
-                            }
-                            finally { if (e_2) throw e_2.error; }
-                        }
-                    }
-                };
-                FileSystem._sig_server = false;
-                eval(this.responseText);
-                FileSystem._sig_server = true;
-                try {
-                    for (var created_1 = __values(created_2), created_1_1 = created_1.next(); !created_1_1.done; created_1_1 = created_1.next()) {
-                        var _b = created_1_1.value, cb = _b.cb, _obj = _b._obj;
-                        cb(_obj);
-                    }
-                }
-                catch (e_1_1) { e_1 = { error: e_1_1 }; }
-                finally {
-                    try {
-                        if (created_1_1 && !created_1_1.done && (_a = created_1["return"])) _a.call(created_1);
-                    }
-                    finally { if (e_1) throw e_1.error; }
+                    }, 50);
                 }
             }
             else if (this.readyState === 4 && this.status === 0) {
@@ -711,12 +724,14 @@ var FileSystem = /** @class */ (function () {
                 xhr_object.setRequestHeader('authorization', fs._accessToken);
             xhr_object.onreadystatechange = function () {
                 var e_3, _a, e_4, _b;
+                if (this.readyState === 4)
+                    FileSystem._counter_sending -= 1;
                 if (this.readyState === 4 && this.status === 200) {
                     if (FileSystem._disp) {
                         console.log('resp ->', this.responseText);
                     }
                     var _c = []; // callbacks
-                    var created_4 = [];
+                    var created_3 = [];
                     var _w = function (sid, obj) {
                         var e_5, _a;
                         var _obj = FileSystem._create_model_by_name(obj);
@@ -729,7 +744,7 @@ var FileSystem = /** @class */ (function () {
                                     var mod_R = ModelProcessManager_1.ModelProcessManager.spinal[type] ||
                                         ModelProcessManager_1.ModelProcessManager._def[type];
                                     if (_obj instanceof mod_R) {
-                                        created_4.push({ cb: cb, _obj: _obj });
+                                        created_3.push({ cb: cb, _obj: _obj });
                                     }
                                 }
                             }
@@ -746,15 +761,15 @@ var FileSystem = /** @class */ (function () {
                     eval(this.responseText);
                     FileSystem._sig_server = true;
                     try {
-                        for (var created_3 = __values(created_4), created_3_1 = created_3.next(); !created_3_1.done; created_3_1 = created_3.next()) {
-                            var _d = created_3_1.value, cb = _d.cb, _obj = _d._obj;
+                        for (var created_2 = __values(created_3), created_2_1 = created_2.next(); !created_2_1.done; created_2_1 = created_2.next()) {
+                            var _d = created_2_1.value, cb = _d.cb, _obj = _d._obj;
                             cb(_obj);
                         }
                     }
                     catch (e_3_1) { e_3 = { error: e_3_1 }; }
                     finally {
                         try {
-                            if (created_3_1 && !created_3_1.done && (_a = created_3["return"])) _a.call(created_3);
+                            if (created_2_1 && !created_2_1.done && (_a = created_2["return"])) _a.call(created_2);
                         }
                         finally { if (e_3) throw e_3.error; }
                     }
@@ -793,6 +808,7 @@ var FileSystem = /** @class */ (function () {
                 console.log('sent ->', fs._data_to_send + 'E ');
             }
             xhr_object.setRequestHeader('Content-Type', 'text/plain');
+            FileSystem._counter_sending += 1;
             xhr_object.send(fs._data_to_send + 'E ');
             fs._data_to_send = '';
         }
@@ -981,6 +997,7 @@ var FileSystem = /** @class */ (function () {
      * @memberof FileSystem
      */
     FileSystem.CONNECTOR_TYPE = typeof globalThis.global != 'undefined' ? 'Node' : 'Browser';
+    FileSystem._counter_sending = 0;
     /**
      * to be refedifined to change the handleing for connections error
      * @static

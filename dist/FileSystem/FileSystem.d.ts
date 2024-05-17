@@ -208,6 +208,7 @@ export declare class FileSystem {
     _num_inst: number;
     make_channel_error_timer: number;
     static _XMLHttpRequest: any;
+    static _counter_sending: number;
     /**
      * Creates an instance of FileSystem.
      * @param {IOptionFileSystemWithSessionId} {
@@ -308,6 +309,7 @@ export declare class FileSystem {
      * @memberof FileSystem
      */
     private send;
+    private make_channel_eval;
     /**
      * send a request for a "push" channel
      * @private
