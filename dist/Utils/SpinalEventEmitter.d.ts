@@ -1,3 +1,8 @@
+/**
+ * SpinalEventEmitter is a singleton class that allows to emit and listen to events
+ * @export
+ * @class SpinalEventEmitter
+ */
 export declare class SpinalEventEmitter {
     private constructor();
     private static instance;

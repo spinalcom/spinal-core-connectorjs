@@ -24,13 +24,17 @@
  */
 exports.__esModule = true;
 exports.SpinalEventEmitter = void 0;
+/**
+ * SpinalEventEmitter is a singleton class that allows to emit and listen to events
+ * @export
+ * @class SpinalEventEmitter
+ */
 var SpinalEventEmitter = /** @class */ (function () {
     function SpinalEventEmitter() {
         this.emitter = mitt();
         this.on = this.emitter.on;
         this.off = this.emitter.off;
         this.emit = this.emitter.emit;
-        this.emitter.on('*', function (type) { return console.log('Event : ', type); });
     }
     SpinalEventEmitter.getInstance = function () {
         if (!SpinalEventEmitter.instance)

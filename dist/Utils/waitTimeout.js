@@ -24,6 +24,12 @@
  */
 exports.__esModule = true;
 exports.waitTimeout = void 0;
+/**
+ * Wait for a timeout
+ * @export
+ * @param {number} ms
+ * @return {*}  {Promise<void>}
+ */
 function waitTimeout(ms) {
     return new Promise(function (resolve) {
         setTimeout(resolve, ms);

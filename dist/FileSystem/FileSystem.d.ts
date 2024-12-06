@@ -77,18 +77,6 @@ export declare class FileSystem {
      */
     static _objects_to_send: Map<number, Model>;
     /**
-     * @static
-     * @type {ReturnType<typeof setTimeout>}
-     * @memberof FileSystem
-     */
-    static _timer_send: ReturnType<typeof setTimeout>;
-    /**
-     * @static
-     * @type {ReturnType<typeof setTimeout>}
-     * @memberof FileSystem
-     */
-    static _timer_chan: ReturnType<typeof setTimeout>;
-    /**
      * functions to be called after an answer
      * @static
      * @type {number}
@@ -206,16 +194,23 @@ export declare class FileSystem {
     _data_to_send: string;
     _session_num: number;
     _num_inst: number;
-    make_channel_error_timer: number;
-    static _make_channel_waiting_stop_send: boolean;
     static _in_mk_chan_eval: boolean;
-    _axiosInstance_Mk_chan: AxiosInstance;
+    _axiosInst: AxiosInstance;
     static _sending_data: boolean;
     static _XMLHttpRequest: any;
+    /**
+     * debounce from set
+     * @static
+     * @memberof FileSystem
+     */
     static _have_model_changed_debounced: import("lodash").DebouncedFunc<typeof FileSystem._model_changed_func>;
+    /**
+     * debounce from send
+     * @static
+     * @memberof FileSystem
+     */
     static _send_data_to_hub_debounced: import("lodash").DebouncedFunc<typeof FileSystem._send_data_to_hub_func>;
     static send_model_limit: number;
-    static _counter_sending: number;
     /**
      * Creates an instance of FileSystem.
      * @param {IOptionFileSystemWithSessionId} {
@@ -316,7 +311,20 @@ export declare class FileSystem {
      * @memberof FileSystem
      */
     private send;
+    /**
+     * debounced function to send data to the server
+     * @private
+     * @static
+     * @return {*}
+     * @memberof FileSystem
+     */
     private static _send_data_to_hub_func;
+    /**
+     * send the data to the server
+     * @private
+     * @return {*}
+     * @memberof FileSystem
+     */
     private _send_data_to_hub_instance;
     private send_data_eval;
     private make_channel_eval;
@@ -328,6 +336,7 @@ export declare class FileSystem {
      * Called in the server response
      * @private
      * @memberof FileSystem
+     * @deprecated
      */
     private make_channel;
     /**
@@ -416,6 +425,7 @@ export declare class FileSystem {
      * @private
      * @static
      * @memberof FileSystem
+     * @deprecated
      * do not remove used in eval
      */
     private static _timeout_send_func;
