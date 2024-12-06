@@ -5,6 +5,7 @@ import type { Model } from '../Models/Model';
 import { Directory } from './Models/Directory';
 import type { Path } from './Models/Path';
 import type { RightsItem } from './Models/RightsItem';
+import { AxiosInstance } from 'axios';
 /**
  * intance of the connection to an server
  * @export
@@ -58,6 +59,7 @@ export declare class FileSystem {
     /**
      * @static
      * @type {number}
+     * @default 30000
      * @memberof FileSystem
      */
     static _timeout_reconnect: number;
@@ -70,12 +72,10 @@ export declare class FileSystem {
     /**
      * data are sent after a timeout (and are concatened before)
      * @static
-     * @type {{ [serverId: number]: Model }}
+     * @type Map<number, Model>
      * @memberof FileSystem
      */
-    static _objects_to_send: {
-        [serverId: number]: Model;
-    };
+    static _objects_to_send: Map<number, Model>;
     /**
      * @static
      * @type {ReturnType<typeof setTimeout>}
@@ -207,7 +207,14 @@ export declare class FileSystem {
     _session_num: number;
     _num_inst: number;
     make_channel_error_timer: number;
+    static _make_channel_waiting_stop_send: boolean;
+    static _in_mk_chan_eval: boolean;
+    _axiosInstance_Mk_chan: AxiosInstance;
+    static _sending_data: boolean;
     static _XMLHttpRequest: any;
+    static _have_model_changed_debounced: import("lodash").DebouncedFunc<typeof FileSystem._model_changed_func>;
+    static _send_data_to_hub_debounced: import("lodash").DebouncedFunc<typeof FileSystem._send_data_to_hub_func>;
+    static send_model_limit: number;
     static _counter_sending: number;
     /**
      * Creates an instance of FileSystem.
@@ -309,9 +316,16 @@ export declare class FileSystem {
      * @memberof FileSystem
      */
     private send;
+    private static _send_data_to_hub_func;
+    private _send_data_to_hub_instance;
+    private send_data_eval;
     private make_channel_eval;
+    private make_channel_loop;
+    private _send_make_channel;
+    static _model_changed_func(): Promise<void>;
     /**
-     * send a request for a "push" channel
+     * send a request for a "push" channel.
+     * Called in the server response
      * @private
      * @memberof FileSystem
      */
@@ -365,7 +379,7 @@ export declare class FileSystem {
      * @return {*}  {void}
      * @memberof FileSystem
      */
-    static _tmp_id_to_real(tmp_id: number, res: number): void;
+    static _tmp_id_to_real(tmp_id: number, res: number): Promise<void>;
     private static _create_model_by_name;
     /**
      * @deprecated
@@ -391,13 +405,6 @@ export declare class FileSystem {
      */
     private static _send_chan;
     /**
-     * timeout for at least one changed object
-     * @private
-     * @static
-     * @memberof FileSystem
-     */
-    private static _timeout_chan_func;
-    /**
      * get data of objects to send
      * @private
      * @static
@@ -409,6 +416,7 @@ export declare class FileSystem {
      * @private
      * @static
      * @memberof FileSystem
+     * do not remove used in eval
      */
     private static _timeout_send_func;
     /**

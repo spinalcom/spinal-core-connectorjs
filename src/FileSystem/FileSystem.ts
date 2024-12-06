@@ -33,9 +33,19 @@ import { ModelProcessManager } from '../ModelProcessManager';
 import type { Model } from '../Models/Model';
 import { NewAlertMsg } from '../Utils/DomHelper/NewAlertMsg';
 import { getUrlPath } from '../Utils/getUrlPath';
+import { waitTimeout } from '../Utils/waitTimeout';
 import { Directory } from './Models/Directory';
 import type { Path } from './Models/Path';
 import type { RightsItem } from './Models/RightsItem';
+
+import axios, { AxiosInstance } from 'axios';
+import { SpinalEventEmitter } from '../Utils/SpinalEventEmitter';
+import debounce = require('lodash.debounce');
+
+enum EventConnectorJS {
+  SEND_RESPONSE_END = 'spinalhub:send:response:end',
+  SUBCRIBE_RESPONSE_END = 'spinalhub:subscribe:response:end',
+}
 
 /**
  * intance of the connection to an server
@@ -93,6 +103,7 @@ export class FileSystem {
   /**
    * @static
    * @type {number}
+   * @default 30000
    * @memberof FileSystem
    */
   public static _timeout_reconnect: number = 30000;
@@ -104,28 +115,16 @@ export class FileSystem {
   public static is_cordova: boolean =
     typeof document !== 'undefined'
       ? document.URL.indexOf('http://') == -1 &&
-      document.URL.indexOf('https://') == -1
+        document.URL.indexOf('https://') == -1
       : false;
 
   /**
    * data are sent after a timeout (and are concatened before)
    * @static
-   * @type {{ [serverId: number]: Model }}
+   * @type Map<number, Model>
    * @memberof FileSystem
    */
-  public static _objects_to_send: { [serverId: number]: Model } = {};
-  /**
-   * @static
-   * @type {ReturnType<typeof setTimeout>}
-   * @memberof FileSystem
-   */
-  public static _timer_send: ReturnType<typeof setTimeout> = undefined;
-  /**
-   * @static
-   * @type {ReturnType<typeof setTimeout>}
-   * @memberof FileSystem
-   */
-  public static _timer_chan: ReturnType<typeof setTimeout> = undefined;
+  public static _objects_to_send = new Map<number, Model>();
 
   /**
    * functions to be called after an answer
@@ -242,11 +241,33 @@ export class FileSystem {
   // default values
   public _data_to_send: string = '';
   public _session_num: number = -2;
-  public _num_inst: number = FileSystem._nb_insts++;
-  public make_channel_error_timer: number = 0;
+  public _num_inst: number;
+  static _in_mk_chan_eval = false;
+  _axiosInst: AxiosInstance;
+  static _sending_data: boolean = false;
   static _XMLHttpRequest: any;
+  /**
+   * debounce from set
+   * @static
+   * @memberof FileSystem
+   */
+  static _have_model_changed_debounced = debounce(
+    FileSystem._model_changed_func,
+    250,
+    { leading: false }
+  );
+  /**
+   * debounce from send
+   * @static
+   * @memberof FileSystem
+   */
+  static _send_data_to_hub_debounced = debounce(
+    FileSystem._send_data_to_hub_func,
+    20,
+    { leading: false }
+  );
+  static send_model_limit = 250;
 
-  static _counter_sending = 0;
   /**
    * Creates an instance of FileSystem.
    * @param {IOptionFileSystemWithSessionId} {
@@ -311,13 +332,7 @@ export class FileSystem {
         : `Bearer ${accessToken}`;
       this._accessToken = _accessToken;
     }
-
-    if (typeof global !== 'undefined') {
-      const XMLHttpRequest_node = require('xhr2');
-      FileSystem._XMLHttpRequest = XMLHttpRequest_node;
-    }
     this._num_inst = FileSystem._nb_insts++;
-    this.make_channel_error_timer = 0;
     // register this in FileSystem instances
     FileSystem._insts[this._num_inst] = this;
     // first, we need a session id fom the server
@@ -329,8 +344,15 @@ export class FileSystem {
       this.send(`S ${this._num_inst} `);
     } else {
       FileSystem._insts[this._num_inst]._session_num = sessionId;
-      FileSystem._insts[this._num_inst].make_channel();
     }
+
+    this._axiosInst = axios.create({
+      headers: {
+        authorization: this._accessToken,
+      },
+    });
+
+    this.make_channel_loop();
   }
 
   /**
@@ -561,7 +583,8 @@ export class FileSystem {
   ): void {
     FileSystem._send_chan();
     this.send(
-      `h ${typeof ptr === 'number' ? ptr : ptr._server_id
+      `h ${
+        typeof ptr === 'number' ? ptr : ptr._server_id
       } ${share_type} ${encodeURI(targetName)} ${encodeURI(file_name)} `
     );
   }
@@ -574,10 +597,119 @@ export class FileSystem {
    */
   private send(data: string): void {
     this._data_to_send += data;
-    if (FileSystem._timer_send == null) {
-      FileSystem._timer_send = setTimeout(FileSystem._timeout_send_func, 1);
+    FileSystem._send_data_to_hub_debounced();
+  }
+
+  /**
+   * debounced function to send data to the server
+   * @private
+   * @static
+   * @return {*}
+   * @memberof FileSystem
+   */
+  private static async _send_data_to_hub_func() {
+    if (FileSystem._sending_data === true) {
+      FileSystem._send_data_to_hub_debounced();
+      return;
+    }
+    const map_prom = [];
+    for (const k in FileSystem._insts) {
+      map_prom.push(FileSystem._insts[k]._send_data_to_hub_instance());
+    }
+    try {
+      await Promise.all(map_prom);
+    } catch (error) {
+      console.log(error);
+      return FileSystem.onConnectionError(4);
+    }
+    FileSystem._sending_data = false;
+    if (FileSystem._objects_to_send.size !== 0) {
+      this._send_chan();
+    } else {
+      SpinalEventEmitter.getInstance().emit(EventConnectorJS.SEND_RESPONSE_END);
     }
   }
+
+  /**
+   * send the data to the server
+   * @private
+   * @return {*}
+   * @memberof FileSystem
+   */
+  private async _send_data_to_hub_instance() {
+    if (this._data_to_send.length === 0 || this._session_num === -1) return;
+    FileSystem._sending_data = true;
+    if (this._session_num === -2) {
+      this._session_num = -1;
+    } else {
+      this._data_to_send = `s ${this._session_num} ${this._data_to_send}`;
+    }
+    const tmp_data = this._data_to_send + 'E ';
+    this._data_to_send = '';
+    let path = getUrlPath(this._protocol, this._url, this._port);
+    if (FileSystem._disp) console.log('sent ->', tmp_data);
+    try {
+      const response = await this._axiosInst.post<string>(path, tmp_data, {
+        headers: {
+          'Content-Type': 'text/plain',
+          authorization: this._accessToken,
+        },
+      });
+      this.send_data_eval(response.data);
+    } catch (error) {
+      if (
+        error.response &&
+        (error.response.status === 0 ||
+          (error.response.status >= 400 && error.response.status < 600))
+      ) {
+        console.error(
+          'Error sending data to the server, status=',
+          error.response?.status,
+          'data=',
+          error.response?.data
+        );
+        FileSystem.onConnectionError(4);
+      } else {
+        console.error('Error sending data to the server', error);
+      }
+    }
+  }
+  private send_data_eval(responseText: string): void {
+    if (FileSystem._disp) console.log('resp ->', responseText);
+    const _c: [nbCb: number, servId: number, error: boolean][] = []; // callbacks
+    const created: { cb: SpinalLoadCallBack<Model>; _obj: Model }[] = [];
+    const _w = (sid: number, className: string): void => {
+      const _obj = FileSystem._create_model_by_name(className);
+      if (sid != null && _obj != null) {
+        _obj._server_id = sid;
+        FileSystem._objects[sid] = _obj;
+        for (const [type, cb] of FileSystem._type_callbacks) {
+          const mod_R: typeof Model =
+            ModelProcessManager.spinal[type] || ModelProcessManager._def[type];
+          if (_obj instanceof mod_R) {
+            created.push({ cb, _obj });
+          }
+        }
+      }
+    };
+    FileSystem._sig_server = false;
+    eval(responseText);
+    FileSystem._sig_server = true;
+    for (const { cb, _obj } of created) {
+      cb(_obj);
+    }
+    for (const [nbCb, servId, error] of _c) {
+      if (servId != 0 && typeof FileSystem._objects[servId] === 'undefined') {
+        const interval = setInterval((): void => {
+          if (typeof FileSystem._objects[servId] !== 'undefined') {
+            clearInterval(interval);
+            FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+          }
+        }, 200);
+      } else FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+    }
+  }
+
   private make_channel_eval(responseText: string): void {
     if (FileSystem._disp) {
       console.log('chan ->', responseText);
@@ -591,8 +723,7 @@ export class FileSystem {
         for (const [type, cb] of FileSystem._type_callbacks) {
           // @ts-ignore
           const mod_R =
-            ModelProcessManager._def[type] ||
-            ModelProcessManager.spinal[type];
+            ModelProcessManager._def[type] || ModelProcessManager.spinal[type];
           if (_obj instanceof mod_R) {
             created.push({ cb, _obj });
           }
@@ -603,68 +734,82 @@ export class FileSystem {
     eval(responseText);
     FileSystem._sig_server = true;
     for (const { cb, _obj } of created) cb(_obj);
+  }
 
+  private async make_channel_loop(): Promise<void> {
+    if (this._session_num <= 0) {
+      // wait for the end of the 1st response from the server
+      await SpinalEventEmitter.getInstance().waitEvt(
+        EventConnectorJS.SEND_RESPONSE_END
+      );
+    }
+    while (true) {
+      const data = await this._send_make_channel();
+      FileSystem._in_mk_chan_eval = true;
+      if (FileSystem._sending_data === true) {
+        await SpinalEventEmitter.getInstance().waitEvt(
+          EventConnectorJS.SEND_RESPONSE_END
+        );
+      }
+      this.make_channel_eval(data);
+      FileSystem._in_mk_chan_eval = false;
+      SpinalEventEmitter.getInstance().emit(
+        EventConnectorJS.SUBCRIBE_RESPONSE_END
+      );
+    }
+  }
+
+  private async _send_make_channel(): Promise<string> {
+    let startDate = Date.now();
+    while (true) {
+      if (Date.now() - startDate > FileSystem._timeout_reconnect) {
+        FileSystem.onConnectionError(2);
+        return;
+      }
+      try {
+        const res = await this._axiosInst.get(
+          getUrlPath(
+            this._protocol,
+            this._url,
+            this._port,
+            '?s=' + this._session_num
+          )
+        );
+        return res.data;
+      } catch (error) {
+        if (!error.response)
+          console.error('Error sending data to the server', error);
+        else if (
+          error.response.status === 401 ||
+          (error.response.status >= 500 && error.response.status < 600)
+        )
+          throw FileSystem.onConnectionError(3);
+        console.log('Trying to reconnect.');
+        FileSystem.onConnectionError(1);
+        await waitTimeout(1000);
+      }
+    }
+  }
+
+  static async _model_changed_func(): Promise<void> {
+    if (FileSystem._in_mk_chan_eval === true) {
+      await SpinalEventEmitter.getInstance().waitEvt(
+        EventConnectorJS.SUBCRIBE_RESPONSE_END
+      );
+    }
+    FileSystem._send_chan();
   }
 
   /**
-   * send a request for a "push" channel
+   * send a request for a "push" channel.
+   * Called in the server response
    * @private
    * @memberof FileSystem
+   * @deprecated
    */
   private make_channel(): void {
-    const fs = FileSystem.get_inst();
-    let path = getUrlPath(
-      fs._protocol,
-      fs._url,
-      fs._port,
-      `?s=${this._session_num}`
-    );
-    const xhr_object = FileSystem._my_xml_http_request();
-    xhr_object.open('GET', path, true);
-    if (fs._accessToken)
-      xhr_object.setRequestHeader('authorization', fs._accessToken);
-    xhr_object.onreadystatechange = function (): void {
-      if (this.readyState === 4 && this.status === 200) {
-        if (fs.make_channel_error_timer !== 0) {
-          FileSystem.onConnectionError(0);
-        }
-        fs.make_channel_error_timer = 0;
-        if (FileSystem._counter_sending === 0)
-          fs.make_channel_eval(this.responseText);
-        else {
-          const inter = setInterval(() => {
-            if (FileSystem._counter_sending === 0) {
-              clearInterval(inter);
-              fs.make_channel_eval(this.responseText);
-            }
-          }, 50)
-        }
-      } else if (this.readyState === 4 && this.status === 0) {
-        console.error(`Disconnected from the server with request : ${path}.`);
-        if (fs.make_channel_error_timer === 0) {
-          //first disconnect
-          console.log('Trying to reconnect.');
-          fs.make_channel_error_timer = Date.now();
-          setTimeout(fs.make_channel.bind(fs), 1000);
-          return FileSystem.onConnectionError(1);
-        } else if (
-          Date.now() - fs.make_channel_error_timer <
-          FileSystem._timeout_reconnect
-        ) {
-          // under timeout
-          setTimeout(fs.make_channel.bind(fs), 1000); // timeout reached
-        } else {
-          return FileSystem.onConnectionError(2);
-        }
-      } else if (
-        this.readyState === 4 &&
-        this.status >= 500 &&
-        this.status < 600
-      ) {
-        FileSystem.onConnectionError(3);
-      }
-    };
-    xhr_object.send();
+    // Called in the server response
+    // leave empty
   }
 
   /**
@@ -790,11 +935,8 @@ export class FileSystem {
    */
   static signal_change(m: Model): void {
     if (FileSystem._sig_server) {
-      FileSystem._objects_to_send[m.model_id] = m;
-      if (FileSystem._timer_chan != null) {
-        clearTimeout(FileSystem._timer_chan);
-      }
-      FileSystem._timer_chan = setTimeout(FileSystem._timeout_chan_func, 250);
+      FileSystem._objects_to_send.set(m.model_id, m);
+      this._have_model_changed_debounced();
     }
   }
 
@@ -805,11 +947,8 @@ export class FileSystem {
    * @return {*}  {void}
    * @memberof FileSystem
    */
-  static _tmp_id_to_real(tmp_id: number, res: number): void {
+  static async _tmp_id_to_real(tmp_id: number, res: number): Promise<void> {
     const tmp = FileSystem._tmp_objects[tmp_id];
-    if (tmp == null) {
-      console.log(tmp_id);
-    }
     FileSystem._objects[res] = tmp;
     tmp._server_id = res;
     delete FileSystem._tmp_objects[tmp_id];
@@ -819,6 +958,7 @@ export class FileSystem {
       delete FileSystem._ptr_to_update[tmp_id];
       ptr.data.value = res;
     }
+    FileSystem.signal_change(FileSystem._objects[res]);
     if (FileSystem._files_to_upload[tmp_id] != null && tmp.file != null) {
       delete FileSystem._files_to_upload[tmp_id];
       // send the file
@@ -829,27 +969,12 @@ export class FileSystem {
         fs._port,
         `?s=${fs._session_num}&p=${tmp._server_id}`
       );
-      const xhr_object = FileSystem._my_xml_http_request();
-      xhr_object.open('PUT', path, true);
-      if (fs._accessToken)
-        xhr_object.setRequestHeader('authorization', fs._accessToken);
-      xhr_object.onreadystatechange = function () {
-        let _w;
-        if (this.readyState === 4 && this.status === 200) {
-          _w = function (sid: number, obj: string): Model {
-            const _obj: Model = FileSystem._create_model_by_name(obj);
-            if (sid != null && _obj != null) {
-              _obj._server_id = sid;
-              return (FileSystem._objects[sid] = _obj);
-            }
-          };
-          return eval(this.responseText);
-        }
-      };
-      xhr_object.send(tmp.file);
-      delete tmp.file;
+      try {
+        await fs._axiosInst.put(path, tmp.file);
+      } catch (error) {
+        console.error('Error sending file', error.response);
+      }
     }
-    return FileSystem.signal_change(FileSystem._objects[res]);
   }
 
   private static _create_model_by_name(name: string): any {
@@ -863,11 +988,12 @@ export class FileSystem {
       if (FileSystem.debug === true) {
         console.warn(`Got Model type \"${name}\" from hub but not registered.`);
       }
-      ModelProcessManager._def[name] = new Function(
+      ModelProcessManager.spinal[name] = new Function(
         `return class ${name} extends ModelProcessManager._def[\"Model\"] {}`
       )();
-      return new ModelProcessManager._def[name]();
+      return new ModelProcessManager.spinal[name]();
     }
+    return new ModelProcessManager.spinal[name]();
   }
 
   /**
@@ -910,17 +1036,6 @@ export class FileSystem {
   }
 
   /**
-   * timeout for at least one changed object
-   * @private
-   * @static
-   * @memberof FileSystem
-   */
-  private static _timeout_chan_func(): void {
-    FileSystem._send_chan();
-    delete FileSystem._timer_chan;
-  }
-
-  /**
    * get data of objects to send
    * @private
    * @static
@@ -932,10 +1047,13 @@ export class FileSystem {
       cre: '',
       mod: '',
     };
-    for (const n in FileSystem._objects_to_send) {
-      FileSystem._objects_to_send[n]._get_fs_data(out);
+    let nb_model = 0;
+    for (const [id, model] of FileSystem._objects_to_send) {
+      nb_model++;
+      if (nb_model > FileSystem.send_model_limit) break;
+      model._get_fs_data(out);
+      FileSystem._objects_to_send.delete(id);
     }
-    FileSystem._objects_to_send = {};
     return out.cre + out.mod;
   }
 
@@ -943,90 +1061,10 @@ export class FileSystem {
    * @private
    * @static
    * @memberof FileSystem
+   * @deprecated
+   * do not remove used in eval
    */
-  private static _timeout_send_func(): void {
-    // if some model have changed, we have to send the changes now
-    const out = FileSystem._get_chan_data();
-
-    for (const k in FileSystem._insts) {
-      FileSystem._insts[k]._data_to_send += out;
-    }
-    // send data
-    for (const k in FileSystem._insts) {
-      const fs = FileSystem._insts[k];
-      if (!fs._data_to_send.length || fs._session_num === -1) continue;
-      // (@responseText will contain another call to @_timeout_send with the session id)
-      // for first call, do not add the session id (but say that we are waiting for one)
-      if (fs._session_num === -2) {
-        fs._session_num = -1;
-      } else {
-        fs._data_to_send = `s ${fs._session_num} ${fs._data_to_send}`;
-      }
-      // request
-      let path = getUrlPath(fs._protocol, fs._url, fs._port);
-      const xhr_object = FileSystem._my_xml_http_request();
-      xhr_object.open('POST', path, true);
-      if (fs._accessToken)
-        xhr_object.setRequestHeader('authorization', fs._accessToken);
-      xhr_object.onreadystatechange = function () {
-        if (this.readyState === 4) FileSystem._counter_sending -= 1;
-        if (this.readyState === 4 && this.status === 200) {
-          if (FileSystem._disp) {
-            console.log('resp ->', this.responseText);
-          }
-          const _c: [nbCb: number, servId: number, error: boolean][] = []; // callbacks
-          const created: { cb: SpinalLoadCallBack<Model>; _obj: Model }[] = [];
-          const _w = (sid: number, obj: string): void => {
-            const _obj = FileSystem._create_model_by_name(obj);
-            if (sid != null && _obj != null) {
-              _obj._server_id = sid;
-              FileSystem._objects[sid] = _obj;
-              for (const [type, cb] of FileSystem._type_callbacks) {
-                const mod_R: typeof Model =
-                  ModelProcessManager.spinal[type] ||
-                  ModelProcessManager._def[type];
-                if (_obj instanceof mod_R) {
-                  created.push({ cb, _obj });
-                }
-              }
-            }
-          };
-          FileSystem._sig_server = false;
-          eval(this.responseText);
-          FileSystem._sig_server = true;
-          for (const { cb, _obj } of created) {
-            cb(_obj);
-          }
-          for (const [nbCb, servId, error] of _c) {
-            if (servId != 0 && typeof FileSystem._objects[servId] === "undefined") {
-              const interval = setInterval((): void => {
-                if (typeof FileSystem._objects[servId] !== "undefined") {
-                  clearInterval(interval);
-                  FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
-                }
-              }, 200)
-            } else
-              FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
-          }
-        } else if (
-          this.readyState === 4 &&
-          (this.status === 0 || (this.status >= 500 && this.status < 600))
-        ) {
-          return FileSystem.onConnectionError(4);
-        }
-      };
-      if (FileSystem._disp) {
-        console.log('sent ->', fs._data_to_send + 'E ');
-      }
-      xhr_object.setRequestHeader('Content-Type', 'text/plain');
-      FileSystem._counter_sending += 1;
-      xhr_object.send(fs._data_to_send + 'E ');
-      fs._data_to_send = '';
-    }
-
-    FileSystem._objects_to_send = {};
-    delete FileSystem._timer_send;
-  }
+  private static _timeout_send_func(): void {}
 
   /**
    * @static
@@ -1045,6 +1083,10 @@ export class FileSystem {
         'Your browser does not seem to support XMLHTTPRequest objects...'
       );
     } else if (FileSystem.CONNECTOR_TYPE === 'Node') {
+      if (!FileSystem._XMLHttpRequest) {
+        const XMLHttpRequest_node = require('xhr2');
+        FileSystem._XMLHttpRequest = XMLHttpRequest_node;
+      }
       return new FileSystem._XMLHttpRequest();
     } else {
       console.error('you must define CONNECTOR_TYPE');
