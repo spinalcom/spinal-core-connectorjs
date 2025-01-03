@@ -61,8 +61,9 @@ var File = /** @class */ (function (_super) {
     function File(name, ptr_or_model, info) {
         if (name === void 0) { name = ''; }
         if (ptr_or_model === void 0) { ptr_or_model = 0; }
+        var _this = this;
         var _a;
-        var _this = _super.call(this) || this;
+        _this = _super.call(this) || this;
         var cp_info = {};
         if (!info)
             info = {};

@@ -75,6 +75,8 @@ export * from './Utils/DomHelper';
 export * from './Utils/getUrlPath';
 export * from './Utils/isIterable';
 export * from './Utils/sendXhr';
+export * from './Utils/waitTimeout';
+export * from './Utils/SpinalEventEmitter';
 
 // populate export with spinalCore for
 // compatiblity with old lib that use require

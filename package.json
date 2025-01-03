@@ -1,6 +1,6 @@
 {
   "name": "spinal-core-connectorjs",
-  "version": "2.5.17",
+  "version": "2.5.18",
   "description": "Fog middleware that enables data virtualization and interoperability for the Internet of Things",
   "source": "src/index.ts",
   "types": "dist/index.d.ts",
@@ -15,12 +15,15 @@
   "author": "SpinalCom",
   "license": "SpinalCom Free Software License Agreement",
   "devDependencies": {
+    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^17.0.19",
     "typedoc": "^0.22.13",
     "typedoc-plugin-rename-defaults": "^0.4.0",
-    "typescript": "^4.5.5"
+    "typescript": "^4.7.4"
   },
   "dependencies": {
+    "axios": "^1.7.8",
+    "lodash.debounce": "^4.0.8",
     "xhr2": "^0.2.1"
   }
 }
