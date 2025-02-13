@@ -971,6 +971,8 @@ export class FileSystem {
       );
       try {
         await fs._axiosInst.put(path, tmp.file);
+        delete tmp.file;
+        tmp.remaining.set(0);
       } catch (error) {
         console.error('Error sending file', error.response);
       }

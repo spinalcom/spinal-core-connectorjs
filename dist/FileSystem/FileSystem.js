@@ -820,6 +820,8 @@ var FileSystem = /** @class */ (function () {
                         return [4 /*yield*/, fs._axiosInst.put(path, tmp.file)];
                     case 2:
                         _a.sent();
+                        delete tmp.file;
+                        tmp.remaining.set(0);
                         return [3 /*break*/, 4];
                     case 3:
                         error_6 = _a.sent();

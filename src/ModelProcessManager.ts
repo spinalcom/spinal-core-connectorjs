@@ -172,8 +172,8 @@ export class ModelProcessManager {
     modelList:
       | (typeof Model)[]
       | {
-        [key: string]: typeof Model;
-      }
+          [key: string]: typeof Model;
+        }
   ): void;
   public static register_models(
     modelList:
@@ -196,7 +196,7 @@ export class ModelProcessManager {
         // obj
         const obj: { [key: string]: typeof Model } = <
           { [key: string]: typeof Model }
-          >modelList;
+        >modelList;
         for (const key in obj) {
           if (Object.prototype.hasOwnProperty.call(obj, key)) {
             ModelProcessManager._register_models_check(obj[key], key);
@@ -268,6 +268,6 @@ export class ModelProcessManager {
   }
 
   public static spinal: SpinalType = {
-    version: '2.5.18',
+    version: '2.5.19',
   };
 }
