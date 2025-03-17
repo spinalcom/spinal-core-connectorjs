@@ -350,6 +350,8 @@ export class FileSystem {
       headers: {
         authorization: this._accessToken,
       },
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
     });
 
     this.make_channel_loop();

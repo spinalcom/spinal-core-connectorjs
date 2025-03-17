@@ -155,7 +155,9 @@ var FileSystem = /** @class */ (function () {
         this._axiosInst = axios_1["default"].create({
             headers: {
                 authorization: this._accessToken
-            }
+            },
+            maxBodyLength: Infinity,
+            maxContentLength: Infinity
         });
         this.make_channel_loop();
     }
