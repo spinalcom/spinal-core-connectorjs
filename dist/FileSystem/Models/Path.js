@@ -54,9 +54,10 @@ var Path = /** @class */ (function (_super) {
      * @param {(File | Buffer)} [file]
      * @memberof Path
      */
-    function Path(file) {
+    function Path(file, mimeType) {
         var _this = _super.call(this) || this;
         _this.file = file;
+        _this.mimeType = mimeType;
         // @ts-ignore
         var size = file === null || file === void 0 ? void 0 : file.fileSize;
         if (file && typeof Buffer !== 'undefined' && file instanceof Buffer) {

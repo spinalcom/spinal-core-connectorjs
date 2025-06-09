@@ -962,6 +962,7 @@ export class FileSystem {
     }
     FileSystem.signal_change(FileSystem._objects[res]);
     if (FileSystem._files_to_upload[tmp_id] != null && tmp.file != null) {
+      const p = FileSystem._files_to_upload[tmp_id];
       delete FileSystem._files_to_upload[tmp_id];
       // send the file
       const fs = FileSystem.get_inst();
@@ -969,10 +970,17 @@ export class FileSystem {
         fs._protocol,
         fs._url,
         fs._port,
-        `?s=${fs._session_num}&p=${tmp._server_id}`
+        `?s=${fs._session_num}&p=${p._server_id}`
       );
       try {
-        await fs._axiosInst.put(path, tmp.file);
+        const contentType = p.mimeType
+          ? p.mimeType
+          : 'application/octet-stream';
+        await fs._axiosInst.put(path, tmp.file, {
+          headers: {
+            'Content-Type': contentType,
+          },
+        });
         delete tmp.file;
         tmp.remaining.set(0);
       } catch (error) {

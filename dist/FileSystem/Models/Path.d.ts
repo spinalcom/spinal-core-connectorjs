@@ -21,6 +21,11 @@ export declare class Path extends Model {
      */
     file?: File | Buffer;
     /**
+     * @type {string}
+     * @memberof Path
+     */
+    mimeType?: string;
+    /**
      * @type {Val}
      * @memberof Path
      */
@@ -35,7 +40,7 @@ export declare class Path extends Model {
      * @param {(File | Buffer)} [file]
      * @memberof Path
      */
-    constructor(file?: File | Buffer);
+    constructor(file?: File | Buffer, mimeType?: string);
     /**
      * @param {{ remaining: Val; to_upload: Val }} info
      * @memberof Path

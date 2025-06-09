@@ -46,6 +46,13 @@ export class Path extends Model {
    * @memberof Path
    */
   public file?: File | Buffer;
+
+  /**
+   * @type {string}
+   * @memberof Path
+   */
+  public mimeType?: string;
+
   /**
    * @type {Val}
    * @memberof Path
@@ -62,9 +69,10 @@ export class Path extends Model {
    * @param {(File | Buffer)} [file]
    * @memberof Path
    */
-  public constructor(file?: File | Buffer) {
+  public constructor(file?: File | Buffer, mimeType?: string) {
     super();
     this.file = file;
+    this.mimeType = mimeType;
     // @ts-ignore
     let size = file?.fileSize;
     if (file && typeof Buffer !== 'undefined' && file instanceof Buffer) {

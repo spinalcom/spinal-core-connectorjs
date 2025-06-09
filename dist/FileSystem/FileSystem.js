@@ -798,7 +798,7 @@ var FileSystem = /** @class */ (function () {
      */
     FileSystem._tmp_id_to_real = function (tmp_id, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var tmp, ptr, fs, path, error_6;
+            var tmp, ptr, p, fs, path, contentType, error_6;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -813,13 +813,21 @@ var FileSystem = /** @class */ (function () {
                         }
                         FileSystem.signal_change(FileSystem._objects[res]);
                         if (!(FileSystem._files_to_upload[tmp_id] != null && tmp.file != null)) return [3 /*break*/, 4];
+                        p = FileSystem._files_to_upload[tmp_id];
                         delete FileSystem._files_to_upload[tmp_id];
                         fs = FileSystem.get_inst();
-                        path = (0, getUrlPath_1.getUrlPath)(fs._protocol, fs._url, fs._port, "?s=".concat(fs._session_num, "&p=").concat(tmp._server_id));
+                        path = (0, getUrlPath_1.getUrlPath)(fs._protocol, fs._url, fs._port, "?s=".concat(fs._session_num, "&p=").concat(p._server_id));
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, fs._axiosInst.put(path, tmp.file)];
+                        contentType = p.mimeType
+                            ? p.mimeType
+                            : 'application/octet-stream';
+                        return [4 /*yield*/, fs._axiosInst.put(path, tmp.file, {
+                                headers: {
+                                    'Content-Type': contentType
+                                }
+                            })];
                     case 2:
                         _a.sent();
                         delete tmp.file;
