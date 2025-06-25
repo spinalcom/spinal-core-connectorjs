@@ -1,6 +1,6 @@
 {
   "name": "spinal-core-connectorjs",
-  "version": "2.5.21",
+  "version": "2.5.22",
   "description": "Fog middleware that enables data virtualization and interoperability for the Internet of Things",
   "source": "src/index.ts",
   "types": "dist/index.d.ts",

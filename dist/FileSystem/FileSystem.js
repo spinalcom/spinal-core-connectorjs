@@ -825,7 +825,7 @@ var FileSystem = /** @class */ (function () {
                             : 'application/octet-stream';
                         return [4 /*yield*/, fs._axiosInst.put(path, tmp.file, {
                                 headers: {
-                                    'Content-Type': contentType
+                                    'X-Content-Type': contentType
                                 }
                             })];
                     case 2:

@@ -978,7 +978,7 @@ export class FileSystem {
           : 'application/octet-stream';
         await fs._axiosInst.put(path, tmp.file, {
           headers: {
-            'Content-Type': contentType,
+            'X-Content-Type': contentType,
           },
         });
         delete tmp.file;
