@@ -93,7 +93,8 @@ export class Val extends Obj<number> {
       if (isNaN(n))
         console.log(`Don't know how to transform ${value} to a Val`);
     } else if (value instanceof Val) n = value._data;
-    else n = value;
+    else if (typeof value === 'number') n = value;
+    else throw new Error(`Don't know how to transform ${value} to a Val`);
     if (this._data !== n) {
       this._data = n;
       return true;
