@@ -22,6 +22,17 @@
  * with this file. If not, see
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -152,15 +163,41 @@ var FileSystem = /** @class */ (function () {
         else {
             FileSystem._insts[this._num_inst]._session_num = sessionId;
         }
-        this._axiosInst = axios_1["default"].create({
-            headers: {
+        this._axiosInst = axios_1["default"].create(__assign({ headers: {
                 authorization: this._accessToken
-            },
-            maxBodyLength: Infinity,
-            maxContentLength: Infinity
-        });
+            }, maxBodyLength: Infinity, maxContentLength: Infinity }, FileSystem._get_keep_alive_agents()));
         this.make_channel_loop();
     }
+    /**
+     * Build (once) the Node http/https keep-alive agents. In the browser axios
+     * ignores these, so we return nothing there.
+     * @private
+     * @static
+     * @return {{ httpAgent?: any; httpsAgent?: any }}
+     * @memberof FileSystem
+     */
+    FileSystem._get_keep_alive_agents = function () {
+        if (FileSystem.CONNECTOR_TYPE !== 'Node')
+            return {};
+        if (!FileSystem._httpAgent) {
+            // the long-poll holds one socket for ~30s, so keep the pool generous to
+            // avoid head-of-line blocking between the channel GET and write POSTs.
+            var agentOpts = {
+                keepAlive: true,
+                keepAliveMsecs: 30000,
+                maxSockets: 64,
+                maxFreeSockets: 16
+            };
+            var http = require('http');
+            var https = require('https');
+            FileSystem._httpAgent = new http.Agent(agentOpts);
+            FileSystem._httpsAgent = new https.Agent(agentOpts);
+        }
+        return {
+            httpAgent: FileSystem._httpAgent,
+            httpsAgent: FileSystem._httpsAgent
+        };
+    };
     FileSystem.prototype.load = function (path, callback) {
         var _this = this;
         if (typeof callback === 'undefined') {
@@ -395,21 +432,23 @@ var FileSystem = /** @class */ (function () {
     FileSystem.prototype._send_data_to_hub_instance = function () {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
-            var tmp_data, path, response, error_4;
+            var raw_batch, established, tmp_data, path, response, error_4;
             return __generator(this, function (_d) {
                 switch (_d.label) {
                     case 0:
                         if (this._data_to_send.length === 0 || this._session_num === -1)
                             return [2 /*return*/];
                         FileSystem._sending_data = true;
-                        if (this._session_num === -2) {
+                        raw_batch = this._data_to_send;
+                        this._data_to_send = '';
+                        established = this._session_num !== -2;
+                        if (!established) {
                             this._session_num = -1;
+                            tmp_data = raw_batch + 'E ';
                         }
                         else {
-                            this._data_to_send = "s ".concat(this._session_num, " ").concat(this._data_to_send);
+                            tmp_data = "s ".concat(this._session_num, " ").concat(raw_batch, "E ");
                         }
-                        tmp_data = this._data_to_send + 'E ';
-                        this._data_to_send = '';
                         path = (0, getUrlPath_1.getUrlPath)(this._protocol, this._url, this._port);
                         if (FileSystem._disp)
                             console.log('sent ->', tmp_data);
@@ -435,7 +474,16 @@ var FileSystem = /** @class */ (function () {
                             FileSystem.onConnectionError(4);
                         }
                         else {
-                            console.error('Error sending data to the server', error_4);
+                            // transient network error (no HTTP response) : the hub never processed
+                            // this batch, so re-queue it instead of dropping the writes silently.
+                            // Only once the session is established (otherwise _session_num is stuck
+                            // at -1 and nothing could flush it). A delayed retry avoids a tight
+                            // resend loop while the hub is unreachable.
+                            console.error('Error sending data to the server:', (error_4 === null || error_4 === void 0 ? void 0 : error_4.code) || (error_4 === null || error_4 === void 0 ? void 0 : error_4.message) || error_4);
+                            if (established) {
+                                this._data_to_send = raw_batch + this._data_to_send;
+                                setTimeout(function () { return FileSystem._send_data_to_hub_debounced(); }, FileSystem._send_retry_delay);
+                            }
                         }
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
@@ -474,8 +522,15 @@ var FileSystem = /** @class */ (function () {
             }
         };
         FileSystem._sig_server = false;
-        eval(responseText);
-        FileSystem._sig_server = true;
+        // restore _sig_server no matter what : if the eval (or a bind callback it
+        // triggers) throws and this stays false, every later local change silently
+        // stops being sent to the hub for the whole process lifetime.
+        try {
+            eval(responseText);
+        }
+        finally {
+            FileSystem._sig_server = true;
+        }
         try {
             for (var created_1 = __values(created), created_1_1 = created_1.next(); !created_1_1.done; created_1_1 = created_1.next()) {
                 var _d = created_1_1.value, cb = _d.cb, _obj = _d._obj;
@@ -491,10 +546,19 @@ var FileSystem = /** @class */ (function () {
         }
         var _loop_1 = function (nbCb, servId, error) {
             if (servId != 0 && typeof FileSystem._objects[servId] === 'undefined') {
+                // the referenced object may not be materialised yet ; wait for it, but
+                // give up after a bounded time so a never-arriving server_id neither
+                // leaks the timer nor hangs the awaiting callback forever.
+                var waited_1 = 0;
                 var interval_1 = setInterval(function () {
                     if (typeof FileSystem._objects[servId] !== 'undefined') {
                         clearInterval(interval_1);
                         FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+                    }
+                    else if ((waited_1 += 200) >= FileSystem._callback_wait_timeout) {
+                        clearInterval(interval_1);
+                        // signal the error so the awaiting promise rejects instead of hanging
+                        FileSystem._callbacks[nbCb](FileSystem._objects[servId], true);
                     }
                 }, 200);
             }
@@ -547,8 +611,12 @@ var FileSystem = /** @class */ (function () {
             }
         };
         FileSystem._sig_server = false;
-        eval(responseText);
-        FileSystem._sig_server = true;
+        try {
+            eval(responseText);
+        }
+        finally {
+            FileSystem._sig_server = true;
+        }
         try {
             for (var created_2 = __values(created), created_2_1 = created_2.next(); !created_2_1.done; created_2_1 = created_2.next()) {
                 var _b = created_2_1.value, cb = _b.cb, _obj = _b._obj;
@@ -581,6 +649,10 @@ var FileSystem = /** @class */ (function () {
                         return [4 /*yield*/, this._send_make_channel()];
                     case 3:
                         data = _a.sent();
+                        // a timed-out channel poll yields no data ; skip the eval and re-open the
+                        // channel instead of eval(undefined)-ing on every reconnect cycle.
+                        if (!data)
+                            return [3 /*break*/, 2];
                         FileSystem._in_mk_chan_eval = true;
                         if (!(FileSystem._sending_data === true)) return [3 /*break*/, 5];
                         return [4 /*yield*/, SpinalEventEmitter_1.SpinalEventEmitter.getInstance().waitEvt(EventConnectorJS.SEND_RESPONSE_END)];
@@ -1125,6 +1197,21 @@ var FileSystem = /** @class */ (function () {
      */
     FileSystem._send_data_to_hub_debounced = debounce(FileSystem._send_data_to_hub_func, 20, { leading: false });
     FileSystem.send_model_limit = 250;
+    /**
+     * max time (ms) send_data_eval waits for a referenced server_id to
+     * materialise before giving up, so a never-arriving object can neither leak
+     * its polling timer nor hang the awaiting callback forever.
+     * @static
+     * @memberof FileSystem
+     */
+    FileSystem._callback_wait_timeout = 30000;
+    /**
+     * delay (ms) before retrying a batch that failed to reach the hub with a
+     * transient network error, to avoid a tight resend loop while it is down.
+     * @static
+     * @memberof FileSystem
+     */
+    FileSystem._send_retry_delay = 500;
     /**
      * to be refedifined to change the handleing for connections error
      * @static

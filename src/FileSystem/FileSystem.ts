@@ -269,6 +269,30 @@ export class FileSystem {
   static send_model_limit = 250;
 
   /**
+   * max time (ms) send_data_eval waits for a referenced server_id to
+   * materialise before giving up, so a never-arriving object can neither leak
+   * its polling timer nor hang the awaiting callback forever.
+   * @static
+   * @memberof FileSystem
+   */
+  static _callback_wait_timeout = 30000;
+  /**
+   * delay (ms) before retrying a batch that failed to reach the hub with a
+   * transient network error, to avoid a tight resend loop while it is down.
+   * @static
+   * @memberof FileSystem
+   */
+  static _send_retry_delay = 500;
+  /**
+   * keep-alive agents (Node only) so the TCP connection to the hub is reused
+   * across the debounced write POSTs and the long-poll GETs instead of paying
+   * a new handshake each time.
+   * @static
+   */
+  static _httpAgent: any;
+  static _httpsAgent: any;
+
+  /**
    * Creates an instance of FileSystem.
    * @param {IOptionFileSystemWithSessionId} {
    *     protocol,
@@ -352,9 +376,43 @@ export class FileSystem {
       },
       maxBodyLength: Infinity,
       maxContentLength: Infinity,
+      ...FileSystem._get_keep_alive_agents(),
     });
 
     this.make_channel_loop();
+  }
+
+  /**
+   * Build (once) the Node http/https keep-alive agents. In the browser axios
+   * ignores these, so we return nothing there.
+   * @private
+   * @static
+   * @return {{ httpAgent?: any; httpsAgent?: any }}
+   * @memberof FileSystem
+   */
+  private static _get_keep_alive_agents(): {
+    httpAgent?: any;
+    httpsAgent?: any;
+  } {
+    if (FileSystem.CONNECTOR_TYPE !== 'Node') return {};
+    if (!FileSystem._httpAgent) {
+      // the long-poll holds one socket for ~30s, so keep the pool generous to
+      // avoid head-of-line blocking between the channel GET and write POSTs.
+      const agentOpts = {
+        keepAlive: true,
+        keepAliveMsecs: 30000,
+        maxSockets: 64,
+        maxFreeSockets: 16,
+      };
+      const http = require('http');
+      const https = require('https');
+      FileSystem._httpAgent = new http.Agent(agentOpts);
+      FileSystem._httpsAgent = new https.Agent(agentOpts);
+    }
+    return {
+      httpAgent: FileSystem._httpAgent,
+      httpsAgent: FileSystem._httpsAgent,
+    };
   }
 
   /**
@@ -641,13 +699,18 @@ export class FileSystem {
   private async _send_data_to_hub_instance() {
     if (this._data_to_send.length === 0 || this._session_num === -1) return;
     FileSystem._sending_data = true;
-    if (this._session_num === -2) {
-      this._session_num = -1;
-    } else {
-      this._data_to_send = `s ${this._session_num} ${this._data_to_send}`;
-    }
-    const tmp_data = this._data_to_send + 'E ';
+    // keep the un-prefixed batch so it can be re-queued verbatim if the send
+    // fails (re-adding the "s <session>" prefix here would double it).
+    const raw_batch = this._data_to_send;
     this._data_to_send = '';
+    const established = this._session_num !== -2;
+    let tmp_data: string;
+    if (!established) {
+      this._session_num = -1;
+      tmp_data = raw_batch + 'E ';
+    } else {
+      tmp_data = `s ${this._session_num} ${raw_batch}E `;
+    }
     let path = getUrlPath(this._protocol, this._url, this._port);
     if (FileSystem._disp) console.log('sent ->', tmp_data);
     try {
@@ -672,7 +735,22 @@ export class FileSystem {
         );
         FileSystem.onConnectionError(4);
       } else {
-        console.error('Error sending data to the server', error);
+        // transient network error (no HTTP response) : the hub never processed
+        // this batch, so re-queue it instead of dropping the writes silently.
+        // Only once the session is established (otherwise _session_num is stuck
+        // at -1 and nothing could flush it). A delayed retry avoids a tight
+        // resend loop while the hub is unreachable.
+        console.error(
+          'Error sending data to the server:',
+          error?.code || error?.message || error
+        );
+        if (established) {
+          this._data_to_send = raw_batch + this._data_to_send;
+          setTimeout(
+            () => FileSystem._send_data_to_hub_debounced(),
+            FileSystem._send_retry_delay
+          );
+        }
       }
     }
   }
@@ -695,17 +773,31 @@ export class FileSystem {
       }
     };
     FileSystem._sig_server = false;
-    eval(responseText);
-    FileSystem._sig_server = true;
+    // restore _sig_server no matter what : if the eval (or a bind callback it
+    // triggers) throws and this stays false, every later local change silently
+    // stops being sent to the hub for the whole process lifetime.
+    try {
+      eval(responseText);
+    } finally {
+      FileSystem._sig_server = true;
+    }
     for (const { cb, _obj } of created) {
       cb(_obj);
     }
     for (const [nbCb, servId, error] of _c) {
       if (servId != 0 && typeof FileSystem._objects[servId] === 'undefined') {
+        // the referenced object may not be materialised yet ; wait for it, but
+        // give up after a bounded time so a never-arriving server_id neither
+        // leaks the timer nor hangs the awaiting callback forever.
+        let waited = 0;
         const interval = setInterval((): void => {
           if (typeof FileSystem._objects[servId] !== 'undefined') {
             clearInterval(interval);
             FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+          } else if ((waited += 200) >= FileSystem._callback_wait_timeout) {
+            clearInterval(interval);
+            // signal the error so the awaiting promise rejects instead of hanging
+            FileSystem._callbacks[nbCb](FileSystem._objects[servId], true);
           }
         }, 200);
       } else FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
@@ -733,8 +825,11 @@ export class FileSystem {
       }
     };
     FileSystem._sig_server = false;
-    eval(responseText);
-    FileSystem._sig_server = true;
+    try {
+      eval(responseText);
+    } finally {
+      FileSystem._sig_server = true;
+    }
     for (const { cb, _obj } of created) cb(_obj);
   }
 
@@ -747,6 +842,9 @@ export class FileSystem {
     }
     while (true) {
       const data = await this._send_make_channel();
+      // a timed-out channel poll yields no data ; skip the eval and re-open the
+      // channel instead of eval(undefined)-ing on every reconnect cycle.
+      if (!data) continue;
       FileSystem._in_mk_chan_eval = true;
       if (FileSystem._sending_data === true) {
         await SpinalEventEmitter.getInstance().waitEvt(

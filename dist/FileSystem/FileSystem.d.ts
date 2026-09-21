@@ -212,6 +212,29 @@ export declare class FileSystem {
     static _send_data_to_hub_debounced: import("lodash").DebouncedFunc<typeof FileSystem._send_data_to_hub_func>;
     static send_model_limit: number;
     /**
+     * max time (ms) send_data_eval waits for a referenced server_id to
+     * materialise before giving up, so a never-arriving object can neither leak
+     * its polling timer nor hang the awaiting callback forever.
+     * @static
+     * @memberof FileSystem
+     */
+    static _callback_wait_timeout: number;
+    /**
+     * delay (ms) before retrying a batch that failed to reach the hub with a
+     * transient network error, to avoid a tight resend loop while it is down.
+     * @static
+     * @memberof FileSystem
+     */
+    static _send_retry_delay: number;
+    /**
+     * keep-alive agents (Node only) so the TCP connection to the hub is reused
+     * across the debounced write POSTs and the long-poll GETs instead of paying
+     * a new handshake each time.
+     * @static
+     */
+    static _httpAgent: any;
+    static _httpsAgent: any;
+    /**
      * Creates an instance of FileSystem.
      * @param {IOptionFileSystemWithSessionId} {
      *     protocol,
@@ -238,6 +261,15 @@ export declare class FileSystem {
      * @memberof FileSystem
      */
     constructor({ protocol, url, port, userid, password, home_dir, accessToken, }: IOptionFileSystemWithUser);
+    /**
+     * Build (once) the Node http/https keep-alive agents. In the browser axios
+     * ignores these, so we return nothing there.
+     * @private
+     * @static
+     * @return {{ httpAgent?: any; httpsAgent?: any }}
+     * @memberof FileSystem
+     */
+    private static _get_keep_alive_agents;
     /**
      * load object in $path and call $callback with the corresponding model ref
      * @param {string} path

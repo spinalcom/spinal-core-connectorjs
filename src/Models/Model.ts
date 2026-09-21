@@ -156,8 +156,13 @@ export class Model {
    */
   public unbind(f: Process | BindProcess | Function): void {
     if (f instanceof Process) {
-      this._processes.splice(this._processes.indexOf(f), 1);
-      f._models.splice(f._models.indexOf(this), 1);
+      // guard the indices : indexOf can return -1 for a process that was never
+      // bound to this model, and splice(-1, 1) would silently drop the *last*
+      // (unrelated) process instead of doing nothing.
+      const pi = this._processes.indexOf(f);
+      if (pi >= 0) this._processes.splice(pi, 1);
+      const mi = f._models.indexOf(this);
+      if (mi >= 0) f._models.splice(mi, 1);
     } else {
       for (const process of this._processes) {
         if (process instanceof BindProcess && process.f === f)

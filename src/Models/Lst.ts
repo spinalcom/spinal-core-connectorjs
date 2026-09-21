@@ -218,8 +218,11 @@ export class Lst<T extends Model = any> extends Model {
    * @memberof Lst
    */
   public shift(): T {
+    if (this.length === 0) return undefined;
     const res = this[0];
-    this.slice(0, 1);
+    // NB: slice() returns a *copy* and does not mutate ; splice() is what
+    // actually removes the first element and shifts the rest down.
+    this.splice(0, 1);
     return res;
   }
 

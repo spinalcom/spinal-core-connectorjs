@@ -248,8 +248,12 @@ var Lst = /** @class */ (function (_super) {
      * @memberof Lst
      */
     Lst.prototype.shift = function () {
+        if (this.length === 0)
+            return undefined;
         var res = this[0];
-        this.slice(0, 1);
+        // NB: slice() returns a *copy* and does not mutate ; splice() is what
+        // actually removes the first element and shifts the rest down.
+        this.splice(0, 1);
         return res;
     };
     /**

@@ -160,8 +160,15 @@ var Model = /** @class */ (function () {
     Model.prototype.unbind = function (f) {
         var e_1, _a;
         if (f instanceof Process_1.Process) {
-            this._processes.splice(this._processes.indexOf(f), 1);
-            f._models.splice(f._models.indexOf(this), 1);
+            // guard the indices : indexOf can return -1 for a process that was never
+            // bound to this model, and splice(-1, 1) would silently drop the *last*
+            // (unrelated) process instead of doing nothing.
+            var pi = this._processes.indexOf(f);
+            if (pi >= 0)
+                this._processes.splice(pi, 1);
+            var mi = f._models.indexOf(this);
+            if (mi >= 0)
+                f._models.splice(mi, 1);
         }
         else {
             try {
