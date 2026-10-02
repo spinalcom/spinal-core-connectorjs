@@ -63,6 +63,7 @@ __exportStar(require("./FileSystem/Models/TiffFile"), exports);
 __exportStar(require("./FileSystem/Models/User"), exports);
 __exportStar(require("./FileSystem/Models/UserRight"), exports);
 __exportStar(require("./interfaces/IAuthResponse"), exports);
+__exportStar(require("./interfaces/IConnectionStatus"), exports);
 __exportStar(require("./interfaces/ICreateSessionResponse"), exports);
 __exportStar(require("./interfaces/IFileInfo"), exports);
 __exportStar(require("./interfaces/IFileInfoOption"), exports);

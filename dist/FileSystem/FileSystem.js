@@ -101,8 +101,8 @@ exports.FileSystem = void 0;
 var ModelProcessManager_1 = require("../ModelProcessManager");
 var NewAlertMsg_1 = require("../Utils/DomHelper/NewAlertMsg");
 var getUrlPath_1 = require("../Utils/getUrlPath");
-var waitTimeout_1 = require("../Utils/waitTimeout");
 var Directory_1 = require("./Models/Directory");
+var HubConnection_1 = require("./HubConnection");
 var axios_1 = require("axios");
 var SpinalEventEmitter_1 = require("../Utils/SpinalEventEmitter");
 var debounce = require("lodash.debounce");
@@ -166,6 +166,8 @@ var FileSystem = /** @class */ (function () {
         this._axiosInst = axios_1["default"].create(__assign({ headers: {
                 authorization: this._accessToken
             }, maxBodyLength: Infinity, maxContentLength: Infinity }, FileSystem._get_keep_alive_agents()));
+        // the credentials open a new session when the hub restarts
+        this._hub = new HubConnection_1.HubConnection(this, userid, password);
         this.make_channel_loop();
     }
     /**
@@ -197,6 +199,22 @@ var FileSystem = /** @class */ (function () {
             httpAgent: FileSystem._httpAgent,
             httpsAgent: FileSystem._httpsAgent
         };
+    };
+    /**
+     * the state of the connection to the hub
+     * @return {*}  {IConnectionStatus}
+     * @memberof FileSystem
+     */
+    FileSystem.prototype.getConnectionStatus = function () {
+        return this._hub.getStatus();
+    };
+    /**
+     * stops the connection : no request leaves anymore
+     * @memberof FileSystem
+     */
+    FileSystem.prototype.close = function () {
+        this._hub.close();
+        delete FileSystem._insts[this._num_inst];
     };
     FileSystem.prototype.load = function (path, callback) {
         var _this = this;
@@ -430,75 +448,44 @@ var FileSystem = /** @class */ (function () {
      * @memberof FileSystem
      */
     FileSystem.prototype._send_data_to_hub_instance = function () {
-        var _a, _b;
-        return __awaiter(this, void 0, void 0, function () {
-            var raw_batch, established, tmp_data, path, response, error_4;
-            return __generator(this, function (_d) {
-                switch (_d.label) {
-                    case 0:
-                        if (this._data_to_send.length === 0 || this._session_num === -1)
-                            return [2 /*return*/];
-                        FileSystem._sending_data = true;
-                        raw_batch = this._data_to_send;
-                        this._data_to_send = '';
-                        established = this._session_num !== -2;
-                        if (!established) {
-                            this._session_num = -1;
-                            tmp_data = raw_batch + 'E ';
-                        }
-                        else {
-                            tmp_data = "s ".concat(this._session_num, " ").concat(raw_batch, "E ");
-                        }
-                        path = (0, getUrlPath_1.getUrlPath)(this._protocol, this._url, this._port);
-                        if (FileSystem._disp)
-                            console.log('sent ->', tmp_data);
-                        _d.label = 1;
-                    case 1:
-                        _d.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, this._axiosInst.post(path, tmp_data, {
-                                headers: {
-                                    'Content-Type': 'text/plain',
-                                    authorization: this._accessToken
-                                }
-                            })];
-                    case 2:
-                        response = _d.sent();
-                        this.send_data_eval(response.data);
-                        return [3 /*break*/, 4];
-                    case 3:
-                        error_4 = _d.sent();
-                        if (error_4.response &&
-                            (error_4.response.status === 0 ||
-                                (error_4.response.status >= 400 && error_4.response.status < 600))) {
-                            console.error('Error sending data to the server, status=', (_a = error_4.response) === null || _a === void 0 ? void 0 : _a.status, 'data=', (_b = error_4.response) === null || _b === void 0 ? void 0 : _b.data);
-                            FileSystem.onConnectionError(4);
-                        }
-                        else {
-                            // transient network error (no HTTP response) : the hub never processed
-                            // this batch, so re-queue it instead of dropping the writes silently.
-                            // Only once the session is established (otherwise _session_num is stuck
-                            // at -1 and nothing could flush it). A delayed retry avoids a tight
-                            // resend loop while the hub is unreachable.
-                            console.error('Error sending data to the server:', (error_4 === null || error_4 === void 0 ? void 0 : error_4.code) || (error_4 === null || error_4 === void 0 ? void 0 : error_4.message) || error_4);
-                            if (established) {
-                                this._data_to_send = raw_batch + this._data_to_send;
-                                setTimeout(function () { return FileSystem._send_data_to_hub_debounced(); }, FileSystem._send_retry_delay);
-                            }
-                        }
-                        return [3 /*break*/, 4];
-                    case 4: return [2 /*return*/];
-                }
-            });
-        });
+        return this._hub.sendQueuedData();
     };
-    FileSystem.prototype.send_data_eval = function (responseText) {
-        var e_1, _a, e_2, _b;
+    /**
+     * apply an answer of the hub to the models
+     * @param {string} responseText
+     * @param {() => void} [afterEval] called once the models are updated,
+     * before the load callbacks run
+     * @memberof FileSystem
+     */
+    FileSystem.prototype.send_data_eval = function (responseText, afterEval) {
         if (FileSystem._disp)
             console.log('resp ->', responseText);
+        this._eval_hub_answer(responseText, true, afterEval);
+    };
+    FileSystem.prototype.make_channel_eval = function (responseText) {
+        if (FileSystem._disp)
+            console.log('chan ->', responseText);
+        this._eval_hub_answer(responseText, false);
+    };
+    /**
+     * evaluate the javascript the hub answers with. A model the hub sends again,
+     * to a new session after it restarted, keeps its instance : the graph, the
+     * caches and the binds of the program reference it.
+     * @private
+     * @memberof FileSystem
+     */
+    FileSystem.prototype._eval_hub_answer = function (responseText, withCallbacks, afterEval) {
+        var e_1, _a, e_2, _b;
+        if (!responseText)
+            return;
         var _c = []; // callbacks
         var created = [];
         var _w = function (sid, className) {
             var e_3, _a;
+            var known = FileSystem._objects[sid];
+            if (known !== undefined && FileSystem._is_instance_of(known, className)) {
+                return;
+            }
             var _obj = FileSystem._create_model_by_name(className);
             if (sid != null && _obj != null) {
                 _obj._server_id = sid;
@@ -507,7 +494,7 @@ var FileSystem = /** @class */ (function () {
                     for (var _b = __values(FileSystem._type_callbacks), _d = _b.next(); !_d.done; _d = _b.next()) {
                         var _e = __read(_d.value, 2), type = _e[0], cb = _e[1];
                         var mod_R = ModelProcessManager_1.ModelProcessManager.spinal[type] || ModelProcessManager_1.ModelProcessManager._def[type];
-                        if (_obj instanceof mod_R) {
+                        if (mod_R && _obj instanceof mod_R) {
                             created.push({ cb: cb, _obj: _obj });
                         }
                     }
@@ -522,19 +509,25 @@ var FileSystem = /** @class */ (function () {
             }
         };
         FileSystem._sig_server = false;
-        // restore _sig_server no matter what : if the eval (or a bind callback it
-        // triggers) throws and this stays false, every later local change silently
-        // stops being sent to the hub for the whole process lifetime.
         try {
             eval(responseText);
         }
+        catch (error) {
+            console.error('[hub] error while applying an answer of the hub', error);
+        }
         finally {
+            // otherwise no local change would be sent anymore
             FileSystem._sig_server = true;
         }
+        if (afterEval)
+            FileSystem._safely(afterEval);
+        var _loop_1 = function (cb, _obj) {
+            FileSystem._safely(function () { return cb(_obj); });
+        };
         try {
             for (var created_1 = __values(created), created_1_1 = created_1.next(); !created_1_1.done; created_1_1 = created_1.next()) {
                 var _d = created_1_1.value, cb = _d.cb, _obj = _d._obj;
-                cb(_obj);
+                _loop_1(cb, _obj);
             }
         }
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
@@ -544,31 +537,35 @@ var FileSystem = /** @class */ (function () {
             }
             finally { if (e_1) throw e_1.error; }
         }
-        var _loop_1 = function (nbCb, servId, error) {
+        if (!withCallbacks)
+            return;
+        var _loop_2 = function (nbCb, servId, error) {
+            var callback = FileSystem._callbacks[nbCb];
+            if (typeof callback !== 'function')
+                return "continue";
             if (servId != 0 && typeof FileSystem._objects[servId] === 'undefined') {
-                // the referenced object may not be materialised yet ; wait for it, but
-                // give up after a bounded time so a never-arriving server_id neither
-                // leaks the timer nor hangs the awaiting callback forever.
-                var waited_1 = 0;
+                // the model comes with a push of the channel not applied yet ; give
+                // up after a while, so that the awaiting load does not hang forever
+                var startedAt_1 = Date.now();
                 var interval_1 = setInterval(function () {
                     if (typeof FileSystem._objects[servId] !== 'undefined') {
                         clearInterval(interval_1);
-                        FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+                        FileSystem._safely(function () { return callback(FileSystem._objects[servId], error); });
                     }
-                    else if ((waited_1 += 200) >= FileSystem._callback_wait_timeout) {
+                    else if (Date.now() - startedAt_1 > FileSystem._callback_wait_timeout) {
                         clearInterval(interval_1);
-                        // signal the error so the awaiting promise rejects instead of hanging
-                        FileSystem._callbacks[nbCb](FileSystem._objects[servId], true);
+                        FileSystem._safely(function () { return callback(undefined, true); });
                     }
                 }, 200);
             }
-            else
-                FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+            else {
+                FileSystem._safely(function () { return callback(FileSystem._objects[servId], error); });
+            }
         };
         try {
             for (var _c_1 = __values(_c), _c_1_1 = _c_1.next(); !_c_1_1.done; _c_1_1 = _c_1.next()) {
                 var _e = __read(_c_1_1.value, 3), nbCb = _e[0], servId = _e[1], error = _e[2];
-                _loop_1(nbCb, servId, error);
+                _loop_2(nbCb, servId, error);
             }
         }
         catch (e_2_1) { e_2 = { error: e_2_1 }; }
@@ -579,56 +576,19 @@ var FileSystem = /** @class */ (function () {
             finally { if (e_2) throw e_2.error; }
         }
     };
-    FileSystem.prototype.make_channel_eval = function (responseText) {
-        var e_4, _a;
-        if (FileSystem._disp) {
-            console.log('chan ->', responseText);
-        }
-        var created = [];
-        var _w = function (sid, obj) {
-            var e_5, _a;
-            var _obj = FileSystem._create_model_by_name(obj);
-            if (sid != null && _obj != null) {
-                _obj._server_id = sid;
-                FileSystem._objects[sid] = _obj;
-                try {
-                    for (var _b = __values(FileSystem._type_callbacks), _d = _b.next(); !_d.done; _d = _b.next()) {
-                        var _e = __read(_d.value, 2), type = _e[0], cb = _e[1];
-                        // @ts-ignore
-                        var mod_R = ModelProcessManager_1.ModelProcessManager._def[type] || ModelProcessManager_1.ModelProcessManager.spinal[type];
-                        if (_obj instanceof mod_R) {
-                            created.push({ cb: cb, _obj: _obj });
-                        }
-                    }
-                }
-                catch (e_5_1) { e_5 = { error: e_5_1 }; }
-                finally {
-                    try {
-                        if (_d && !_d.done && (_a = _b["return"])) _a.call(_b);
-                    }
-                    finally { if (e_5) throw e_5.error; }
-                }
-            }
-        };
-        FileSystem._sig_server = false;
+    FileSystem._is_instance_of = function (model, className) {
+        var ctor = ModelProcessManager_1.ModelProcessManager._def[className] || ModelProcessManager_1.ModelProcessManager.spinal[className];
+        if (ctor !== undefined && model.constructor === ctor)
+            return true;
+        return ModelProcessManager_1.ModelProcessManager.get_object_class(model) === className;
+    };
+    /** an error in a callback of the program must not stop the connection */
+    FileSystem._safely = function (fn) {
         try {
-            eval(responseText);
+            fn();
         }
-        finally {
-            FileSystem._sig_server = true;
-        }
-        try {
-            for (var created_2 = __values(created), created_2_1 = created_2.next(); !created_2_1.done; created_2_1 = created_2.next()) {
-                var _b = created_2_1.value, cb = _b.cb, _obj = _b._obj;
-                cb(_obj);
-            }
-        }
-        catch (e_4_1) { e_4 = { error: e_4_1 }; }
-        finally {
-            try {
-                if (created_2_1 && !created_2_1.done && (_a = created_2["return"])) _a.call(created_2);
-            }
-            finally { if (e_4) throw e_4.error; }
+        catch (error) {
+            console.error('[hub] error in a callback', error);
         }
     };
     FileSystem.prototype.make_channel_loop = function () {
@@ -670,44 +630,7 @@ var FileSystem = /** @class */ (function () {
         });
     };
     FileSystem.prototype._send_make_channel = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var startDate, res, error_5;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        startDate = Date.now();
-                        _a.label = 1;
-                    case 1:
-                        if (!true) return [3 /*break*/, 7];
-                        if (Date.now() - startDate > FileSystem._timeout_reconnect) {
-                            FileSystem.onConnectionError(2);
-                            return [2 /*return*/];
-                        }
-                        _a.label = 2;
-                    case 2:
-                        _a.trys.push([2, 4, , 6]);
-                        return [4 /*yield*/, this._axiosInst.get((0, getUrlPath_1.getUrlPath)(this._protocol, this._url, this._port, '?s=' + this._session_num))];
-                    case 3:
-                        res = _a.sent();
-                        return [2 /*return*/, res.data];
-                    case 4:
-                        error_5 = _a.sent();
-                        if (!error_5.response)
-                            console.error('Error sending data to the server', error_5);
-                        else if (error_5.response.status === 401 ||
-                            (error_5.response.status >= 500 && error_5.response.status < 600))
-                            throw FileSystem.onConnectionError(3);
-                        console.log('Trying to reconnect.');
-                        FileSystem.onConnectionError(1);
-                        return [4 /*yield*/, (0, waitTimeout_1.waitTimeout)(1000)];
-                    case 5:
-                        _a.sent();
-                        return [3 /*break*/, 6];
-                    case 6: return [3 /*break*/, 1];
-                    case 7: return [2 /*return*/];
-                }
-            });
-        });
+        return this._hub.pollChannel();
     };
     FileSystem._model_changed_func = function () {
         return __awaiter(this, void 0, void 0, function () {
@@ -737,6 +660,16 @@ var FileSystem = /** @class */ (function () {
         // Called in the server response
         // leave empty
     };
+    FileSystem._onConnectionStateChange = function (status) {
+        if (FileSystem.CONNECTOR_TYPE !== 'Browser' && !FileSystem.is_cordova)
+            return;
+        if (status.state === 'disconnected' || status.state === 'reconnecting') {
+            FileSystem._onConnectionError(1);
+        }
+        else if (status.state === 'connected' || status.state === 'resyncing') {
+            FileSystem._onConnectionError(0);
+        }
+    };
     /**
      * default callback on make_channel error after the timeout disconnected reached
      * This method can be surcharged.
@@ -756,7 +689,8 @@ var FileSystem = /** @class */ (function () {
         if (error_code === 0) {
             // Error resolved
             if (FileSystem.CONNECTOR_TYPE === 'Browser' || FileSystem.is_cordova) {
-                FileSystem.popup.hide();
+                if (FileSystem.popup)
+                    FileSystem.popup.hide();
             }
             else {
                 console.log('Reconnected to the server.');
@@ -857,6 +791,11 @@ var FileSystem = /** @class */ (function () {
      */
     FileSystem.signal_change = function (m) {
         if (FileSystem._sig_server) {
+            for (var k in FileSystem._insts) {
+                var hub = FileSystem._insts[k]._hub;
+                if (hub)
+                    hub.onLocalChange(m);
+            }
             FileSystem._objects_to_send.set(m.model_id, m);
             this._have_model_changed_debounced();
         }
@@ -870,7 +809,7 @@ var FileSystem = /** @class */ (function () {
      */
     FileSystem._tmp_id_to_real = function (tmp_id, res) {
         return __awaiter(this, void 0, void 0, function () {
-            var tmp, ptr, p, fs, path, contentType, error_6;
+            var tmp, ptr, p, fs, path, contentType, error_4;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -906,8 +845,8 @@ var FileSystem = /** @class */ (function () {
                         tmp.remaining.set(0);
                         return [3 /*break*/, 4];
                     case 3:
-                        error_6 = _a.sent();
-                        console.error('Error sending file', error_6.response);
+                        error_4 = _a.sent();
+                        console.error('Error sending file', error_4.response);
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
                 }
@@ -974,7 +913,7 @@ var FileSystem = /** @class */ (function () {
      * @memberof FileSystem
      */
     FileSystem._get_chan_data = function () {
-        var e_6, _a;
+        var e_4, _a;
         var out = {
             cre: '',
             mod: ''
@@ -990,12 +929,12 @@ var FileSystem = /** @class */ (function () {
                 FileSystem._objects_to_send["delete"](id);
             }
         }
-        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
         finally {
             try {
                 if (_d && !_d.done && (_a = _b["return"])) _a.call(_b);
             }
-            finally { if (e_6) throw e_6.error; }
+            finally { if (e_4) throw e_4.error; }
         }
         return out.cre + out.mod;
     };
@@ -1079,12 +1018,66 @@ var FileSystem = /** @class */ (function () {
      */
     FileSystem._userid = 644;
     /**
+     * with auto_reconnect off, ms without an answer of the hub before giving up
      * @static
      * @type {number}
      * @default 30000
      * @memberof FileSystem
      */
     FileSystem._timeout_reconnect = 30000;
+    /**
+     * when the hub restarts or stops answering, keep the connection : retry, and
+     * open a new session when the hub forgot the previous one. When false, the
+     * connection gives up (see onConnectionError) like before.
+     * @static
+     * @type {boolean}
+     * @default true
+     * @memberof FileSystem
+     */
+    FileSystem.auto_reconnect = true;
+    /**
+     * ms a long poll may stay unanswered before the hub is considered
+     * unreachable, the hub answers them every 30s
+     * @static
+     * @type {number}
+     * @default 120000
+     * @memberof FileSystem
+     */
+    FileSystem.poll_timeout = 120000;
+    /**
+     * ms a request sending data may stay unanswered, 0 to wait forever
+     * @static
+     * @type {number}
+     * @default 600000
+     * @memberof FileSystem
+     */
+    FileSystem.send_timeout = 600000;
+    /**
+     * longest wait, in ms, between two attempts to reach the hub
+     * @static
+     * @type {number}
+     * @default 10000
+     * @memberof FileSystem
+     */
+    FileSystem.reconnect_max_delay = 10000;
+    /**
+     * number of models loaded back per request once a new session is open
+     * @static
+     * @type {number}
+     * @default 1000
+     * @memberof FileSystem
+     */
+    FileSystem.resync_batch_size = 1000;
+    /**
+     * ms : the models a program changed during the last replay_window before the
+     * hub restarted are sent again, a restarting hub drops the changes it
+     * acknowledged during its last seconds. 0 disables it.
+     * @static
+     * @type {number}
+     * @default 10000
+     * @memberof FileSystem
+     */
+    FileSystem.replay_window = 10000;
     /**
      * @static
      * @type {boolean}
@@ -1206,18 +1199,24 @@ var FileSystem = /** @class */ (function () {
      */
     FileSystem._callback_wait_timeout = 30000;
     /**
-     * delay (ms) before retrying a batch that failed to reach the hub with a
-     * transient network error, to avoid a tight resend loop while it is down.
-     * @static
-     * @memberof FileSystem
-     */
-    FileSystem._send_retry_delay = 500;
-    /**
-     * to be refedifined to change the handleing for connections error
+     * to be redefined to change the handling of a connection that gave up :
+     * called only when the connection cannot be kept anymore (auto_reconnect off,
+     * or no credentials to open a new session), the default handler exits the
+     * process in Node. An outage the connection recovers from goes to
+     * onConnectionStateChange.
      * @static
      * @memberof FileSystem
      */
     FileSystem.onConnectionError = FileSystem._onConnectionError;
+    /**
+     * to be redefined to follow the connection to the hub : called on every
+     * change of state (connecting, connected, disconnected, reconnecting,
+     * resyncing, closed). The default handler shows the popup in a browser and
+     * does nothing in Node, the connection logs its events itself.
+     * @static
+     * @memberof FileSystem
+     */
+    FileSystem.onConnectionStateChange = FileSystem._onConnectionStateChange;
     return FileSystem;
 }());
 exports.FileSystem = FileSystem;

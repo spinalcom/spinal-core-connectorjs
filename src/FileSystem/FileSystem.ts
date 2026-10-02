@@ -22,6 +22,7 @@
  * <http://resources.spinalcom.com/licenses.pdf>.
  */
 
+import type { IConnectionStatus } from '../interfaces/IConnectionStatus';
 import type { IFsData } from '../interfaces/IFsData';
 import type {
   IOptionFileSystem,
@@ -33,10 +34,10 @@ import { ModelProcessManager } from '../ModelProcessManager';
 import type { Model } from '../Models/Model';
 import { NewAlertMsg } from '../Utils/DomHelper/NewAlertMsg';
 import { getUrlPath } from '../Utils/getUrlPath';
-import { waitTimeout } from '../Utils/waitTimeout';
 import { Directory } from './Models/Directory';
 import type { Path } from './Models/Path';
 import type { RightsItem } from './Models/RightsItem';
+import { HubConnection } from './HubConnection';
 
 import axios, { AxiosInstance } from 'axios';
 import { SpinalEventEmitter } from '../Utils/SpinalEventEmitter';
@@ -101,12 +102,66 @@ export class FileSystem {
   public static readonly _userid: string | number = 644;
 
   /**
+   * with auto_reconnect off, ms without an answer of the hub before giving up
    * @static
    * @type {number}
    * @default 30000
    * @memberof FileSystem
    */
   public static _timeout_reconnect: number = 30000;
+  /**
+   * when the hub restarts or stops answering, keep the connection : retry, and
+   * open a new session when the hub forgot the previous one. When false, the
+   * connection gives up (see onConnectionError) like before.
+   * @static
+   * @type {boolean}
+   * @default true
+   * @memberof FileSystem
+   */
+  public static auto_reconnect: boolean = true;
+  /**
+   * ms a long poll may stay unanswered before the hub is considered
+   * unreachable, the hub answers them every 30s
+   * @static
+   * @type {number}
+   * @default 120000
+   * @memberof FileSystem
+   */
+  public static poll_timeout: number = 120000;
+  /**
+   * ms a request sending data may stay unanswered, 0 to wait forever
+   * @static
+   * @type {number}
+   * @default 600000
+   * @memberof FileSystem
+   */
+  public static send_timeout: number = 600000;
+  /**
+   * longest wait, in ms, between two attempts to reach the hub
+   * @static
+   * @type {number}
+   * @default 10000
+   * @memberof FileSystem
+   */
+  public static reconnect_max_delay: number = 10000;
+  /**
+   * number of models loaded back per request once a new session is open
+   * @static
+   * @type {number}
+   * @default 1000
+   * @memberof FileSystem
+   */
+  public static resync_batch_size: number = 1000;
+  /**
+   * ms : the models a program changed during the last replay_window before the
+   * hub restarted are sent again, a restarting hub drops the changes it
+   * acknowledged during its last seconds. 0 disables it.
+   * @static
+   * @type {number}
+   * @default 10000
+   * @memberof FileSystem
+   */
+  public static replay_window: number = 10000;
   /**
    * @static
    * @type {boolean}
@@ -196,13 +251,13 @@ export class FileSystem {
    * @type {string}
    * @memberof FileSystem
    */
-  private _url: string = '127.0.0.1';
+  _url: string = '127.0.0.1';
   /**
    * @private
    * @type {(string | number)}
    * @memberof FileSystem
    */
-  private _port: string | number = '8888';
+  _port: string | number = '8888';
   /**
    * @type {string}
    * @memberof FileSystem
@@ -213,7 +268,7 @@ export class FileSystem {
    * @type {string}
    * @memberof FileSystem
    */
-  private _accessToken: string = null;
+  _accessToken: string = null;
 
   /**
    * @static
@@ -244,6 +299,12 @@ export class FileSystem {
   public _num_inst: number;
   static _in_mk_chan_eval = false;
   _axiosInst: AxiosInstance;
+  /**
+   * the connection to the hub : sending, long poll, reconnection
+   * @type {HubConnection}
+   * @memberof FileSystem
+   */
+  _hub: HubConnection;
   static _sending_data: boolean = false;
   static _XMLHttpRequest: any;
   /**
@@ -276,13 +337,6 @@ export class FileSystem {
    * @memberof FileSystem
    */
   static _callback_wait_timeout = 30000;
-  /**
-   * delay (ms) before retrying a batch that failed to reach the hub with a
-   * transient network error, to avoid a tight resend loop while it is down.
-   * @static
-   * @memberof FileSystem
-   */
-  static _send_retry_delay = 500;
   /**
    * keep-alive agents (Node only) so the TCP connection to the hub is reused
    * across the debounced write POSTs and the long-poll GETs instead of paying
@@ -378,6 +432,8 @@ export class FileSystem {
       maxContentLength: Infinity,
       ...FileSystem._get_keep_alive_agents(),
     });
+    // the credentials open a new session when the hub restarts
+    this._hub = new HubConnection(this, userid, password);
 
     this.make_channel_loop();
   }
@@ -413,6 +469,24 @@ export class FileSystem {
       httpAgent: FileSystem._httpAgent,
       httpsAgent: FileSystem._httpsAgent,
     };
+  }
+
+  /**
+   * the state of the connection to the hub
+   * @return {*}  {IConnectionStatus}
+   * @memberof FileSystem
+   */
+  public getConnectionStatus(): IConnectionStatus {
+    return this._hub.getStatus();
+  }
+
+  /**
+   * stops the connection : no request leaves anymore
+   * @memberof FileSystem
+   */
+  public close(): void {
+    this._hub.close();
+    delete FileSystem._insts[this._num_inst];
   }
 
   /**
@@ -655,7 +729,7 @@ export class FileSystem {
    * @param {string} data
    * @memberof FileSystem
    */
-  private send(data: string): void {
+  send(data: string): void {
     this._data_to_send += data;
     FileSystem._send_data_to_hub_debounced();
   }
@@ -696,69 +770,47 @@ export class FileSystem {
    * @return {*}
    * @memberof FileSystem
    */
-  private async _send_data_to_hub_instance() {
-    if (this._data_to_send.length === 0 || this._session_num === -1) return;
-    FileSystem._sending_data = true;
-    // keep the un-prefixed batch so it can be re-queued verbatim if the send
-    // fails (re-adding the "s <session>" prefix here would double it).
-    const raw_batch = this._data_to_send;
-    this._data_to_send = '';
-    const established = this._session_num !== -2;
-    let tmp_data: string;
-    if (!established) {
-      this._session_num = -1;
-      tmp_data = raw_batch + 'E ';
-    } else {
-      tmp_data = `s ${this._session_num} ${raw_batch}E `;
-    }
-    let path = getUrlPath(this._protocol, this._url, this._port);
-    if (FileSystem._disp) console.log('sent ->', tmp_data);
-    try {
-      const response = await this._axiosInst.post<string>(path, tmp_data, {
-        headers: {
-          'Content-Type': 'text/plain',
-          authorization: this._accessToken,
-        },
-      });
-      this.send_data_eval(response.data);
-    } catch (error) {
-      if (
-        error.response &&
-        (error.response.status === 0 ||
-          (error.response.status >= 400 && error.response.status < 600))
-      ) {
-        console.error(
-          'Error sending data to the server, status=',
-          error.response?.status,
-          'data=',
-          error.response?.data
-        );
-        FileSystem.onConnectionError(4);
-      } else {
-        // transient network error (no HTTP response) : the hub never processed
-        // this batch, so re-queue it instead of dropping the writes silently.
-        // Only once the session is established (otherwise _session_num is stuck
-        // at -1 and nothing could flush it). A delayed retry avoids a tight
-        // resend loop while the hub is unreachable.
-        console.error(
-          'Error sending data to the server:',
-          error?.code || error?.message || error
-        );
-        if (established) {
-          this._data_to_send = raw_batch + this._data_to_send;
-          setTimeout(
-            () => FileSystem._send_data_to_hub_debounced(),
-            FileSystem._send_retry_delay
-          );
-        }
-      }
-    }
+  private _send_data_to_hub_instance(): Promise<void> {
+    return this._hub.sendQueuedData();
   }
-  private send_data_eval(responseText: string): void {
+
+  /**
+   * apply an answer of the hub to the models
+   * @param {string} responseText
+   * @param {() => void} [afterEval] called once the models are updated,
+   * before the load callbacks run
+   * @memberof FileSystem
+   */
+  send_data_eval(responseText: string, afterEval?: () => void): void {
     if (FileSystem._disp) console.log('resp ->', responseText);
+    this._eval_hub_answer(responseText, true, afterEval);
+  }
+
+  private make_channel_eval(responseText: string): void {
+    if (FileSystem._disp) console.log('chan ->', responseText);
+    this._eval_hub_answer(responseText, false);
+  }
+
+  /**
+   * evaluate the javascript the hub answers with. A model the hub sends again,
+   * to a new session after it restarted, keeps its instance : the graph, the
+   * caches and the binds of the program reference it.
+   * @private
+   * @memberof FileSystem
+   */
+  private _eval_hub_answer(
+    responseText: string,
+    withCallbacks: boolean,
+    afterEval?: () => void
+  ): void {
+    if (!responseText) return;
     const _c: [nbCb: number, servId: number, error: boolean][] = []; // callbacks
     const created: { cb: SpinalLoadCallBack<Model>; _obj: Model }[] = [];
     const _w = (sid: number, className: string): void => {
+      const known = FileSystem._objects[sid];
+      if (known !== undefined && FileSystem._is_instance_of(known, className)) {
+        return;
+      }
       const _obj = FileSystem._create_model_by_name(className);
       if (sid != null && _obj != null) {
         _obj._server_id = sid;
@@ -766,71 +818,60 @@ export class FileSystem {
         for (const [type, cb] of FileSystem._type_callbacks) {
           const mod_R: typeof Model =
             ModelProcessManager.spinal[type] || ModelProcessManager._def[type];
-          if (_obj instanceof mod_R) {
+          if (mod_R && _obj instanceof mod_R) {
             created.push({ cb, _obj });
           }
         }
       }
     };
     FileSystem._sig_server = false;
-    // restore _sig_server no matter what : if the eval (or a bind callback it
-    // triggers) throws and this stays false, every later local change silently
-    // stops being sent to the hub for the whole process lifetime.
     try {
       eval(responseText);
+    } catch (error) {
+      console.error('[hub] error while applying an answer of the hub', error);
     } finally {
+      // otherwise no local change would be sent anymore
       FileSystem._sig_server = true;
     }
-    for (const { cb, _obj } of created) {
-      cb(_obj);
-    }
+    if (afterEval) FileSystem._safely(afterEval);
+    for (const { cb, _obj } of created) FileSystem._safely(() => cb(_obj));
+    if (!withCallbacks) return;
     for (const [nbCb, servId, error] of _c) {
+      const callback = FileSystem._callbacks[nbCb];
+      if (typeof callback !== 'function') continue;
       if (servId != 0 && typeof FileSystem._objects[servId] === 'undefined') {
-        // the referenced object may not be materialised yet ; wait for it, but
-        // give up after a bounded time so a never-arriving server_id neither
-        // leaks the timer nor hangs the awaiting callback forever.
-        let waited = 0;
+        // the model comes with a push of the channel not applied yet ; give
+        // up after a while, so that the awaiting load does not hang forever
+        const startedAt = Date.now();
         const interval = setInterval((): void => {
           if (typeof FileSystem._objects[servId] !== 'undefined') {
             clearInterval(interval);
-            FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
-          } else if ((waited += 200) >= FileSystem._callback_wait_timeout) {
+            FileSystem._safely(() => callback(FileSystem._objects[servId], error));
+          } else if (Date.now() - startedAt > FileSystem._callback_wait_timeout) {
             clearInterval(interval);
-            // signal the error so the awaiting promise rejects instead of hanging
-            FileSystem._callbacks[nbCb](FileSystem._objects[servId], true);
+            FileSystem._safely(() => callback(undefined, true));
           }
         }, 200);
-      } else FileSystem._callbacks[nbCb](FileSystem._objects[servId], error);
+      } else {
+        FileSystem._safely(() => callback(FileSystem._objects[servId], error));
+      }
     }
   }
 
-  private make_channel_eval(responseText: string): void {
-    if (FileSystem._disp) {
-      console.log('chan ->', responseText);
-    }
-    const created: { cb: SpinalLoadCallBack<Model>; _obj: Model }[] = [];
-    const _w = (sid: number, obj: string): void => {
-      const _obj = FileSystem._create_model_by_name(obj);
-      if (sid != null && _obj != null) {
-        _obj._server_id = sid;
-        FileSystem._objects[sid] = _obj;
-        for (const [type, cb] of FileSystem._type_callbacks) {
-          // @ts-ignore
-          const mod_R =
-            ModelProcessManager._def[type] || ModelProcessManager.spinal[type];
-          if (_obj instanceof mod_R) {
-            created.push({ cb, _obj });
-          }
-        }
-      }
-    };
-    FileSystem._sig_server = false;
+  private static _is_instance_of(model: Model, className: string): boolean {
+    const ctor =
+      ModelProcessManager._def[className] || ModelProcessManager.spinal[className];
+    if (ctor !== undefined && model.constructor === ctor) return true;
+    return ModelProcessManager.get_object_class(model) === className;
+  }
+
+  /** an error in a callback of the program must not stop the connection */
+  private static _safely(fn: () => void): void {
     try {
-      eval(responseText);
-    } finally {
-      FileSystem._sig_server = true;
+      fn();
+    } catch (error) {
+      console.error('[hub] error in a callback', error);
     }
-    for (const { cb, _obj } of created) cb(_obj);
   }
 
   private async make_channel_loop(): Promise<void> {
@@ -859,36 +900,8 @@ export class FileSystem {
     }
   }
 
-  private async _send_make_channel(): Promise<string> {
-    let startDate = Date.now();
-    while (true) {
-      if (Date.now() - startDate > FileSystem._timeout_reconnect) {
-        FileSystem.onConnectionError(2);
-        return;
-      }
-      try {
-        const res = await this._axiosInst.get(
-          getUrlPath(
-            this._protocol,
-            this._url,
-            this._port,
-            '?s=' + this._session_num
-          )
-        );
-        return res.data;
-      } catch (error) {
-        if (!error.response)
-          console.error('Error sending data to the server', error);
-        else if (
-          error.response.status === 401 ||
-          (error.response.status >= 500 && error.response.status < 600)
-        )
-          throw FileSystem.onConnectionError(3);
-        console.log('Trying to reconnect.');
-        FileSystem.onConnectionError(1);
-        await waitTimeout(1000);
-      }
-    }
+  private _send_make_channel(): Promise<string> {
+    return this._hub.pollChannel();
   }
 
   static async _model_changed_func(): Promise<void> {
@@ -913,12 +926,38 @@ export class FileSystem {
   }
 
   /**
-   * to be refedifined to change the handleing for connections error
+   * to be redefined to change the handling of a connection that gave up :
+   * called only when the connection cannot be kept anymore (auto_reconnect off,
+   * or no credentials to open a new session), the default handler exits the
+   * process in Node. An outage the connection recovers from goes to
+   * onConnectionStateChange.
    * @static
    * @memberof FileSystem
    */
   public static onConnectionError: (error_code: number) => void =
     FileSystem._onConnectionError;
+
+  /**
+   * to be redefined to follow the connection to the hub : called on every
+   * change of state (connecting, connected, disconnected, reconnecting,
+   * resyncing, closed). The default handler shows the popup in a browser and
+   * does nothing in Node, the connection logs its events itself.
+   * @static
+   * @memberof FileSystem
+   */
+  public static onConnectionStateChange: (
+    status: IConnectionStatus,
+    fs: FileSystem
+  ) => void = FileSystem._onConnectionStateChange;
+
+  private static _onConnectionStateChange(status: IConnectionStatus): void {
+    if (FileSystem.CONNECTOR_TYPE !== 'Browser' && !FileSystem.is_cordova) return;
+    if (status.state === 'disconnected' || status.state === 'reconnecting') {
+      FileSystem._onConnectionError(1);
+    } else if (status.state === 'connected' || status.state === 'resyncing') {
+      FileSystem._onConnectionError(0);
+    }
+  }
 
   /**
    * default callback on make_channel error after the timeout disconnected reached
@@ -939,7 +978,7 @@ export class FileSystem {
     if (error_code === 0) {
       // Error resolved
       if (FileSystem.CONNECTOR_TYPE === 'Browser' || FileSystem.is_cordova) {
-        FileSystem.popup.hide();
+        if (FileSystem.popup) FileSystem.popup.hide();
       } else {
         console.log('Reconnected to the server.');
       }
@@ -1035,6 +1074,10 @@ export class FileSystem {
    */
   static signal_change(m: Model): void {
     if (FileSystem._sig_server) {
+      for (const k in FileSystem._insts) {
+        const hub = FileSystem._insts[k]._hub;
+        if (hub) hub.onLocalChange(m);
+      }
       FileSystem._objects_to_send.set(m.model_id, m);
       this._have_model_changed_debounced();
     }
@@ -1138,7 +1181,7 @@ export class FileSystem {
    * @static
    * @memberof FileSystem
    */
-  private static _send_chan(): void {
+  static _send_chan(): void {
     const out = FileSystem._get_chan_data();
     for (const f in FileSystem._insts) {
       FileSystem._insts[f].send(out);

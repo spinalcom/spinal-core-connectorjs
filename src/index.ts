@@ -37,6 +37,7 @@ export * from './FileSystem/Models/TiffFile';
 export * from './FileSystem/Models/User';
 export * from './FileSystem/Models/UserRight';
 export * from './interfaces/IAuthResponse';
+export * from './interfaces/IConnectionStatus';
 export * from './interfaces/ICreateSessionResponse';
 export * from './interfaces/IFileInfo';
 export * from './interfaces/IFileInfoOption';

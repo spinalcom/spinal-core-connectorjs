@@ -10,6 +10,7 @@
     "watch": "parcel watch --no-optimize",
     "clean": "rm -rf dist declarations .parcel-cache .env",
     "build": "npm run clean && tsc",
+    "test": "node --test test/hubConnection.test.js",
     "docs": "rm -rf docs && typedoc --readme README.md src"
   },
   "author": "SpinalCom",

@@ -1,3 +1,4 @@
+import type { IConnectionStatus } from '../interfaces/IConnectionStatus';
 import type { IFsData } from '../interfaces/IFsData';
 import type { IOptionFileSystemWithSessionId, IOptionFileSystemWithUser } from '../interfaces/IOptionFilesystem';
 import type { SpinalLoadCallBack } from '../interfaces/SpinalLoadCallBack';
@@ -5,6 +6,7 @@ import type { Model } from '../Models/Model';
 import { Directory } from './Models/Directory';
 import type { Path } from './Models/Path';
 import type { RightsItem } from './Models/RightsItem';
+import { HubConnection } from './HubConnection';
 import { AxiosInstance } from 'axios';
 /**
  * intance of the connection to an server
@@ -57,12 +59,66 @@ export declare class FileSystem {
      */
     static readonly _userid: string | number;
     /**
+     * with auto_reconnect off, ms without an answer of the hub before giving up
      * @static
      * @type {number}
      * @default 30000
      * @memberof FileSystem
      */
     static _timeout_reconnect: number;
+    /**
+     * when the hub restarts or stops answering, keep the connection : retry, and
+     * open a new session when the hub forgot the previous one. When false, the
+     * connection gives up (see onConnectionError) like before.
+     * @static
+     * @type {boolean}
+     * @default true
+     * @memberof FileSystem
+     */
+    static auto_reconnect: boolean;
+    /**
+     * ms a long poll may stay unanswered before the hub is considered
+     * unreachable, the hub answers them every 30s
+     * @static
+     * @type {number}
+     * @default 120000
+     * @memberof FileSystem
+     */
+    static poll_timeout: number;
+    /**
+     * ms a request sending data may stay unanswered, 0 to wait forever
+     * @static
+     * @type {number}
+     * @default 600000
+     * @memberof FileSystem
+     */
+    static send_timeout: number;
+    /**
+     * longest wait, in ms, between two attempts to reach the hub
+     * @static
+     * @type {number}
+     * @default 10000
+     * @memberof FileSystem
+     */
+    static reconnect_max_delay: number;
+    /**
+     * number of models loaded back per request once a new session is open
+     * @static
+     * @type {number}
+     * @default 1000
+     * @memberof FileSystem
+     */
+    static resync_batch_size: number;
+    /**
+     * ms : the models a program changed during the last replay_window before the
+     * hub restarted are sent again, a restarting hub drops the changes it
+     * acknowledged during its last seconds. 0 disables it.
+     * @static
+     * @type {number}
+     * @default 10000
+     * @memberof FileSystem
+     */
+    static replay_window: number;
     /**
      * @static
      * @type {boolean}
@@ -153,13 +209,13 @@ export declare class FileSystem {
      * @type {string}
      * @memberof FileSystem
      */
-    private _url;
+    _url: string;
     /**
      * @private
      * @type {(string | number)}
      * @memberof FileSystem
      */
-    private _port;
+    _port: string | number;
     /**
      * @type {string}
      * @memberof FileSystem
@@ -170,7 +226,7 @@ export declare class FileSystem {
      * @type {string}
      * @memberof FileSystem
      */
-    private _accessToken;
+    _accessToken: string;
     /**
      * @static
      * @type {string}
@@ -196,6 +252,12 @@ export declare class FileSystem {
     _num_inst: number;
     static _in_mk_chan_eval: boolean;
     _axiosInst: AxiosInstance;
+    /**
+     * the connection to the hub : sending, long poll, reconnection
+     * @type {HubConnection}
+     * @memberof FileSystem
+     */
+    _hub: HubConnection;
     static _sending_data: boolean;
     static _XMLHttpRequest: any;
     /**
@@ -219,13 +281,6 @@ export declare class FileSystem {
      * @memberof FileSystem
      */
     static _callback_wait_timeout: number;
-    /**
-     * delay (ms) before retrying a batch that failed to reach the hub with a
-     * transient network error, to avoid a tight resend loop while it is down.
-     * @static
-     * @memberof FileSystem
-     */
-    static _send_retry_delay: number;
     /**
      * keep-alive agents (Node only) so the TCP connection to the hub is reused
      * across the debounced write POSTs and the long-poll GETs instead of paying
@@ -270,6 +325,17 @@ export declare class FileSystem {
      * @memberof FileSystem
      */
     private static _get_keep_alive_agents;
+    /**
+     * the state of the connection to the hub
+     * @return {*}  {IConnectionStatus}
+     * @memberof FileSystem
+     */
+    getConnectionStatus(): IConnectionStatus;
+    /**
+     * stops the connection : no request leaves anymore
+     * @memberof FileSystem
+     */
+    close(): void;
     /**
      * load object in $path and call $callback with the corresponding model ref
      * @param {string} path
@@ -342,7 +408,7 @@ export declare class FileSystem {
      * @param {string} data
      * @memberof FileSystem
      */
-    private send;
+    send(data: string): void;
     /**
      * debounced function to send data to the server
      * @private
@@ -358,8 +424,26 @@ export declare class FileSystem {
      * @memberof FileSystem
      */
     private _send_data_to_hub_instance;
-    private send_data_eval;
+    /**
+     * apply an answer of the hub to the models
+     * @param {string} responseText
+     * @param {() => void} [afterEval] called once the models are updated,
+     * before the load callbacks run
+     * @memberof FileSystem
+     */
+    send_data_eval(responseText: string, afterEval?: () => void): void;
     private make_channel_eval;
+    /**
+     * evaluate the javascript the hub answers with. A model the hub sends again,
+     * to a new session after it restarted, keeps its instance : the graph, the
+     * caches and the binds of the program reference it.
+     * @private
+     * @memberof FileSystem
+     */
+    private _eval_hub_answer;
+    private static _is_instance_of;
+    /** an error in a callback of the program must not stop the connection */
+    private static _safely;
     private make_channel_loop;
     private _send_make_channel;
     static _model_changed_func(): Promise<void>;
@@ -372,11 +456,25 @@ export declare class FileSystem {
      */
     private make_channel;
     /**
-     * to be refedifined to change the handleing for connections error
+     * to be redefined to change the handling of a connection that gave up :
+     * called only when the connection cannot be kept anymore (auto_reconnect off,
+     * or no credentials to open a new session), the default handler exits the
+     * process in Node. An outage the connection recovers from goes to
+     * onConnectionStateChange.
      * @static
      * @memberof FileSystem
      */
     static onConnectionError: (error_code: number) => void;
+    /**
+     * to be redefined to follow the connection to the hub : called on every
+     * change of state (connecting, connected, disconnected, reconnecting,
+     * resyncing, closed). The default handler shows the popup in a browser and
+     * does nothing in Node, the connection logs its events itself.
+     * @static
+     * @memberof FileSystem
+     */
+    static onConnectionStateChange: (status: IConnectionStatus, fs: FileSystem) => void;
+    private static _onConnectionStateChange;
     /**
      * default callback on make_channel error after the timeout disconnected reached
      * This method can be surcharged.
@@ -444,7 +542,7 @@ export declare class FileSystem {
      * @static
      * @memberof FileSystem
      */
-    private static _send_chan;
+    static _send_chan(): void;
     /**
      * get data of objects to send
      * @private
