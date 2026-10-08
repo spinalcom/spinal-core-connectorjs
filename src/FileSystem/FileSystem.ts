@@ -730,7 +730,10 @@ export class FileSystem {
    * @memberof FileSystem
    */
   send(data: string): void {
-    this._data_to_send += data;
+    // while the hub does not answer, what is asked waits behind the last state
+    // of the models changed meanwhile (see HubConnection.defer)
+    if (this._hub && this._hub.isDeferring()) this._hub.defer(data);
+    else this._data_to_send += data;
     FileSystem._send_data_to_hub_debounced();
   }
 
@@ -757,7 +760,7 @@ export class FileSystem {
       return FileSystem.onConnectionError(4);
     }
     FileSystem._sending_data = false;
-    if (FileSystem._objects_to_send.size !== 0) {
+    if (FileSystem._objects_to_send.size !== 0 && !FileSystem._hubs_deferring()) {
       this._send_chan();
     } else {
       SpinalEventEmitter.getInstance().emit(EventConnectorJS.SEND_RESPONSE_END);
@@ -1182,10 +1185,30 @@ export class FileSystem {
    * @memberof FileSystem
    */
   static _send_chan(): void {
+    // while the hub does not answer, the changed models stay in _objects_to_send :
+    // a model changed a thousand times meanwhile is sent once, with its last state
+    if (FileSystem._hubs_deferring()) return;
     const out = FileSystem._get_chan_data();
     for (const f in FileSystem._insts) {
       FileSystem._insts[f].send(out);
     }
+  }
+
+  /**
+   * true when the connection of every instance waits for the hub
+   * @private
+   * @static
+   * @return {*}  {boolean}
+   * @memberof FileSystem
+   */
+  private static _hubs_deferring(): boolean {
+    let instances = 0;
+    for (const k in FileSystem._insts) {
+      const hub = FileSystem._insts[k]._hub;
+      if (!hub || !hub.isDeferring()) return false;
+      instances++;
+    }
+    return instances > 0;
   }
 
   /**

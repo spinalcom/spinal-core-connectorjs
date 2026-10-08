@@ -101,6 +101,11 @@ export class HubConnection {
   // the loads of the resync : they end the next batch, after every change made
   // before it leaves, so that the state the hub answers with includes them
   private pendingLoads = '';
+  // while the hub does not answer, the changed models stay in
+  // FileSystem._objects_to_send (only their last state will be sent) and what
+  // the program asks waits here, to be sent after them
+  private deferring = false;
+  private deferred = '';
 
   /**
    * @param {FileSystem} fs
@@ -130,6 +135,20 @@ export class HubConnection {
       lastError: this.lastError,
       lastResync: this.lastResync,
     };
+  }
+
+  /** true while the hub does not answer : see defer */
+  isDeferring(): boolean {
+    return this.deferring;
+  }
+
+  /**
+   * Keeps a command issued while the hub does not answer. It is sent after the
+   * last state of the models changed meanwhile, so that a load answered by the
+   * hub has the local changes made before it.
+   */
+  defer(data: string): void {
+    this.deferred += data;
   }
 
   /** no request leaves anymore and the long poll never resolves */
@@ -323,7 +342,9 @@ export class HubConnection {
       if (!this.resyncing) this.lostAt = 0;
       this.setState(this.resyncing ? 'resyncing' : 'connected');
     }
-    // what was queued while the hub did not answer leaves now
+    // what was queued while the hub did not answer leaves now ; a new session
+    // sends it once opened (sessionOpened)
+    if (isOpenSession(this.fs._session_num)) this.undefer();
     if (this.fs._data_to_send.length > 0 || this.pendingLoads.length > 0) {
       FileSystem._send_data_to_hub_debounced();
     }
@@ -343,6 +364,7 @@ export class HubConnection {
     if (this.state === 'connected' || this.state === 'resyncing') this.disconnections++;
     this.lostAt = this.lostAt || Date.now();
     this.droppedSessionAnsweredAt = this.answeredAt;
+    this.deferring = true;
     // holds the requests until the new session is open, and drops the ones of
     // the old session that are still waiting : their data is sent again
     this.fs._session_num = OPENING_SESSION;
@@ -380,8 +402,9 @@ export class HubConnection {
     this.reopening = false;
     if (this.closed) return;
     console.log(`[hub] new session opened, ${seconds(Date.now() - this.lostAt)} after losing the hub`);
+    const changedMeanwhile = FileSystem._objects_to_send.size;
     this.replayRecentChanges();
-    this.sessionOpened();
+    this.sessionOpened(changedMeanwhile);
     await this.resync(generation);
   }
 
@@ -486,12 +509,29 @@ export class HubConnection {
     return new Promise((resolve) => this.sessionWaiters.push(resolve));
   }
 
-  private sessionOpened(): void {
+  private sessionOpened(changedMeanwhile?: number): void {
     this.sessionsOpened++;
     const waiters = this.sessionWaiters;
     this.sessionWaiters = [];
     waiters.forEach((resolve) => resolve());
     // what was queued while no session was open leaves with this one
+    this.undefer(changedMeanwhile);
+    FileSystem._send_data_to_hub_debounced();
+  }
+
+  /**
+   * The hub answers again : queues the last state of the models changed
+   * meanwhile, then what the program asked meanwhile.
+   */
+  private undefer(changed: number = FileSystem._objects_to_send.size): void {
+    if (!this.deferring) return;
+    this.deferring = false;
+    if (changed > 0) {
+      console.log(`[hub] sending the last state of ${changed} models changed while the hub did not answer`);
+    }
+    flushLocalChanges();
+    this.fs._data_to_send += this.deferred;
+    this.deferred = '';
     FileSystem._send_data_to_hub_debounced();
   }
 
@@ -537,6 +577,9 @@ export class HubConnection {
 
   /** records a failure, logs the first one of an outage then every LOG_INTERVAL */
   private noteFailure(error: any, what: string): void {
+    // the requests close() aborts are no failure
+    if (this.closed) return;
+    this.deferring = true;
     const now = Date.now();
     this.lastError = { at: now, message: `${what}: ${describe(error)}` };
     const first = this.failingSince === 0;
@@ -589,8 +632,12 @@ export class HubConnection {
 
 /** queues the local changes not sent yet, the connector waits 250ms otherwise */
 function flushLocalChanges(): void {
-  for (let i = 0; FileSystem._objects_to_send.size > 0 && i < 10000; i++) {
+  let left = FileSystem._objects_to_send.size;
+  while (left > 0) {
     FileSystem._send_chan();
+    // nothing queued : the hub does not answer, the changes wait
+    if (FileSystem._objects_to_send.size >= left) return;
+    left = FileSystem._objects_to_send.size;
   }
 }
 

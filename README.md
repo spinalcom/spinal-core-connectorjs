@@ -33,6 +33,11 @@ session of a program. The connection keeps going instead of giving up
 - **the hub is not up yet** : the connection waits for it.
 - **the hub does not answer** : the program keeps running with what it has in
   memory ; what could not be sent is kept, and sent once the hub answers again.
+  A model changed many times meanwhile is kept once and sent with its last
+  state, and what the program asked meanwhile (loads...) is sent after it, so
+  the memory used during an outage depends on the number of models changed,
+  not on the number of changes. It is only kept in memory : an outage the
+  program does not survive (crash, restart) loses it.
   A long poll left unanswered (a dead TCP connection) is sent again.
 - **the hub restarted** : the connection opens a new session with the
   credentials of `spinalCore.connect`, sends what changed meanwhile, then loads

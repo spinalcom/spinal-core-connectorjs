@@ -48,6 +48,8 @@ export declare class HubConnection {
     private readonly localChanges;
     private tick;
     private pendingLoads;
+    private deferring;
+    private deferred;
     /**
      * @param {FileSystem} fs
      * @param {(string | number)} [userid] with password, opens the new sessions
@@ -55,6 +57,14 @@ export declare class HubConnection {
      */
     constructor(fs: FileSystem, userid?: string | number, password?: string);
     getStatus(): IConnectionStatus;
+    /** true while the hub does not answer : see defer */
+    isDeferring(): boolean;
+    /**
+     * Keeps a command issued while the hub does not answer. It is sent after the
+     * last state of the models changed meanwhile, so that a load answered by the
+     * hub has the local changes made before it.
+     */
+    defer(data: string): void;
     /** no request leaves anymore and the long poll never resolves */
     close(): void;
     /**
@@ -98,6 +108,11 @@ export declare class HubConnection {
     private loadBack;
     private sessionOpen;
     private sessionOpened;
+    /**
+     * The hub answers again : queues the last state of the models changed
+     * meanwhile, then what the program asked meanwhile.
+     */
+    private undefer;
     /** with auto_reconnect off, the connection gives up after _timeout_reconnect */
     private waitedTooLong;
     /**

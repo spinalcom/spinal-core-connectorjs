@@ -544,6 +544,14 @@ export declare class FileSystem {
      */
     static _send_chan(): void;
     /**
+     * true when the connection of every instance waits for the hub
+     * @private
+     * @static
+     * @return {*}  {boolean}
+     * @memberof FileSystem
+     */
+    private static _hubs_deferring;
+    /**
      * get data of objects to send
      * @private
      * @static
