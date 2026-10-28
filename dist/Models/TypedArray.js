@@ -237,12 +237,14 @@ var TypedArray = /** @class */ (function (_super) {
      * @memberof TypedArray
      */
     TypedArray.prototype._get_state = function () {
+        // no space : the commands are separated by spaces (the hub refused ", " as malformed), and so are the
+        // fields of get_state
         var res = this._size.length.toString(10);
         for (var i = 0; i < this._size.length; i++) {
-            res += ", ".concat(this._size[i]);
+            res += ",".concat(this._size[i]);
         }
         for (var i = 0; i < this._data.length; i++) {
-            res += ", ".concat(this._data[i]);
+            res += ",".concat(this._data[i]);
         }
         return res;
     };

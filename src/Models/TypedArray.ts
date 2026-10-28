@@ -245,12 +245,14 @@ export abstract class TypedArray<
    * @memberof TypedArray
    */
   protected _get_state(): string {
+    // no space : the commands are separated by spaces (the hub refused ", " as malformed), and so are the
+    // fields of get_state
     let res = this._size.length.toString(10);
     for (let i = 0; i < this._size.length; i++) {
-      res += `, ${this._size[i]}`;
+      res += `,${this._size[i]}`;
     }
     for (let i = 0; i < this._data.length; i++) {
-      res += `, ${this._data[i]}`;
+      res += `,${this._data[i]}`;
     }
     return res;
   }

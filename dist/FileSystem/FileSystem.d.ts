@@ -272,7 +272,24 @@ export declare class FileSystem {
      * @memberof FileSystem
      */
     static _send_data_to_hub_debounced: import("lodash").DebouncedFunc<typeof FileSystem._send_data_to_hub_func>;
+    /**
+     * number of changed models a request sends at most ; the size (max_batch_size) usually comes first
+     * @static
+     * @default Infinity
+     * @memberof FileSystem
+     */
     static send_model_limit: number;
+    /**
+     * length (in characters, the commands are ascii) a request sending data aims at. Once reached, the
+     * changed models left wait for the next request, and so do the new models of a container : created first,
+     * the container is written once they all have their id. A bigger request takes longer to send, to run and
+     * to answer, and a proxy may refuse it (nginx accepts 1 MB by default) ; a single value or list bigger
+     * than that is sent whole.
+     * @static
+     * @default 1000000
+     * @memberof FileSystem
+     */
+    static max_batch_size: number;
     /**
      * max time (ms) send_data_eval waits for a referenced server_id to
      * materialise before giving up, so a never-arriving object can neither leak
@@ -420,6 +437,7 @@ export declare class FileSystem {
     /**
      * send the data to the server
      * @private
+     * @param {IFsData} [changes] the changed models written for this request
      * @return {*}
      * @memberof FileSystem
      */
@@ -505,6 +523,16 @@ export declare class FileSystem {
      */
     static set_server_id_if_necessary(out: IFsData, obj: Model): void;
     /**
+     * set_server_id_if_necessary, when the batch has room left for a new model (out.budget) : false otherwise,
+     * nothing is written and the container of obj waits for a next batch (out.later)
+     * @static
+     * @param {IFsData} out
+     * @param {Model} obj
+     * @return {*}  {boolean} obj has an id
+     * @memberof FileSystem
+     */
+    static _register(out: IFsData, obj: Model): boolean;
+    /**
      * send changes of m to instances.
      * @static
      * @param {Model} m
@@ -537,7 +565,9 @@ export declare class FileSystem {
      */
     private static _get_new_tmp_server_id;
     /**
-     * send changes
+     * send changes. They are written when the request leaves (_send_data_to_hub_func), the changed models
+     * stay in _objects_to_send until then : a model changed a thousand times meanwhile is sent once, with its
+     * last state
      * @private
      * @static
      * @memberof FileSystem
@@ -552,10 +582,11 @@ export declare class FileSystem {
      */
     private static _hubs_deferring;
     /**
-     * get data of objects to send
+     * writes the changed models, until the batch reaches budget
      * @private
      * @static
-     * @return {*}  {string}
+     * @param {number} budget
+     * @return {*}  {IFsData}
      * @memberof FileSystem
      */
     private static _get_chan_data;

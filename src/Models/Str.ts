@@ -128,7 +128,7 @@ export class Str extends Obj<string> {
    */
   public _get_fs_data(out: IFsData): void {
     FileSystem.set_server_id_if_necessary(out, this);
-    out.mod += `C ${this._server_id} ${encodeURI(this._data)} `;
+    out.mod += `C ${this._server_id} ${encodeValue(this._data)} `;
   }
 
   /**
@@ -158,5 +158,30 @@ export class Str extends Obj<string> {
 
   public _set_state(str: string, _map: unknown): boolean {
     return this.set(decodeURIComponent(str));
+  }
+}
+
+/**
+ * encodeURI, which throws on half of a surrogate pair (an emoji cut in two) : the half is sent as U+FFFD.
+ * A throw here stopped every change after it, for good
+ */
+function encodeValue(str: string): string {
+  try {
+    return encodeURI(str);
+  } catch (error) {
+    const chars: string[] = [];
+    for (let i = 0; i < str.length; i++) {
+      const c = str.charCodeAt(i);
+      if (c >= 0xd800 && c <= 0xdbff && i + 1 < str.length) {
+        const next = str.charCodeAt(i + 1);
+        if (next >= 0xdc00 && next <= 0xdfff) {
+          chars.push(str.charAt(i), str.charAt(i + 1));
+          i++;
+          continue;
+        }
+      }
+      chars.push(c >= 0xd800 && c <= 0xdfff ? '\ufffd' : str.charAt(i));
+    }
+    return encodeURI(chars.join(''));
   }
 }

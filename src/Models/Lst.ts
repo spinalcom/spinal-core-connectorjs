@@ -567,7 +567,11 @@ export class Lst<T extends Model = any> extends Model {
     const res = [];
     for (let i = 0; i < this.length; i++) {
       const obj = this[i];
-      FileSystem.set_server_id_if_necessary(out, obj);
+      if (!FileSystem._register(out, obj)) {
+        // the batch is full : the items that fit are created, the list is written in a next batch
+        out.later.push(this);
+        return;
+      }
       res.push(obj._server_id);
     }
     out.mod += `C ${this._server_id} ${res.join(',')} `;

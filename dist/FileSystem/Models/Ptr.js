@@ -97,7 +97,11 @@ var Ptr = /** @class */ (function (_super) {
     Ptr.prototype._get_fs_data = function (out) {
         FileSystem_1.FileSystem.set_server_id_if_necessary(out, this);
         if (this.data.model != null) {
-            FileSystem_1.FileSystem.set_server_id_if_necessary(out, this.data.model);
+            if (!FileSystem_1.FileSystem._register(out, this.data.model)) {
+                // the batch is full : the pointer is written in the next one
+                out.later.push(this);
+                return;
+            }
             out.mod += "C ".concat(this._server_id, " ").concat(this.data.model._server_id, " ");
             this.data.value = this.data.model._server_id;
             if (this.data.model._server_id & 3) {

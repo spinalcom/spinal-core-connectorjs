@@ -583,7 +583,11 @@ var Lst = /** @class */ (function (_super) {
         var res = [];
         for (var i = 0; i < this.length; i++) {
             var obj = this[i];
-            FileSystem_1.FileSystem.set_server_id_if_necessary(out, obj);
+            if (!FileSystem_1.FileSystem._register(out, obj)) {
+                // the batch is full : the items that fit are created, the list is written in a next batch
+                out.later.push(this);
+                return;
+            }
             res.push(obj._server_id);
         }
         out.mod += "C ".concat(this._server_id, " ").concat(res.join(','), " ");

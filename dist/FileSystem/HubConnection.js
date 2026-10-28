@@ -151,7 +151,10 @@ var HubConnection = /** @class */ (function () {
         // when the program lost the hub, 0 while it has it
         this.lostAt = 0;
         this.lastFailureLog = 0;
-        this.sendHttpErrors = 0;
+        this.unanswered = null;
+        // ms a request sending data waits for the answer, more than FileSystem.send_timeout once the hub answered
+        // later than that
+        this.sendTimeout = 0;
         this.sessionWaiters = [];
         // bumped by every new session, it stops the resync of an older one
         this.generation = 0;
@@ -197,6 +200,21 @@ var HubConnection = /** @class */ (function () {
     HubConnection.prototype.isDeferring = function () {
         return this.deferring;
     };
+    /** the models loaded back after a new session are answered with their state on the hub */
+    HubConnection.prototype.isResyncing = function () {
+        return this.resyncing;
+    };
+    /**
+     * the changed models can be written for the next request : it can leave now and nothing waits for an
+     * answer before them (FileSystem._send_data_to_hub_func)
+     */
+    HubConnection.prototype.acceptsChanges = function () {
+        return (!this.closed &&
+            !this.deferring &&
+            this.unanswered === null &&
+            isOpenSession(this.fs._session_num) &&
+            Date.now() >= this.retryAt);
+    };
     /**
      * Keeps a command issued while the hub does not answer. It is sent after the
      * last state of the models changed meanwhile, so that a load answered by the
@@ -216,66 +234,72 @@ var HubConnection = /** @class */ (function () {
         this.setState('closed');
     };
     /**
-     * Sends the queued commands, and keeps them when the hub does not take them.
+     * Sends the queued commands and the changes written for this request, and keeps them when the hub does
+     * not take them.
+     * @param {IFsData} [changes] the changed models, written by FileSystem._send_data_to_hub_func when
+     * acceptsChanges() allowed it
      * @return {*}  {Promise<void>}
      * @memberof HubConnection
      */
-    HubConnection.prototype.sendQueuedData = function () {
+    HubConnection.prototype.sendQueuedData = function (changes) {
         return __awaiter(this, void 0, void 0, function () {
-            var fs, protectFrom, batch, session, opening, loads, body, responseText, error_1;
+            var fs, written, protectFrom, session, opening, resent, alone, queued, batch, loads, body, attempt, responseText, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         fs = this.fs;
                         if (this.closed)
                             return [2 /*return*/];
-                        if (fs._data_to_send.length === 0 && this.pendingLoads.length === 0)
+                        written = changes ? changes.cre + changes.mod : '';
+                        if (!this.unanswered && written.length === 0 && fs._data_to_send.length === 0 && this.pendingLoads.length === 0) {
                             return [2 /*return*/];
+                        }
                         // a session is being opened, the data leaves with it
                         if (fs._session_num === OPENING_SESSION)
                             return [2 /*return*/];
                         // the hub did not answer the last attempt, the data waits for the next one
                         if (Date.now() < this.retryAt)
                             return [2 /*return*/, this.scheduleRetry()];
-                        // while resyncing, the hub answers the loads with the state of the models
-                        // at the end of the batch : the changes made before it leaves go in it,
-                        // the ones made after are protected when the answer is applied
-                        if (this.resyncing)
-                            flushLocalChanges();
                         protectFrom = this.resyncing ? this.tick : undefined;
                         FileSystem_1.FileSystem._sending_data = true;
-                        batch = fs._data_to_send;
-                        fs._data_to_send = '';
                         session = fs._session_num;
                         opening = session === NO_SESSION;
-                        loads = opening ? '' : this.pendingLoads;
-                        if (!opening)
+                        resent = this.unanswered;
+                        this.unanswered = null;
+                        alone = resent !== null && resent.tooLarge;
+                        queued = alone ? resent.batch : fs._data_to_send;
+                        fs._data_to_send = fs._data_to_send.slice(queued.length);
+                        batch = written + queued;
+                        loads = opening || alone ? '' : this.pendingLoads;
+                        if (!opening && !alone)
                             this.pendingLoads = '';
                         body = opening ? "".concat(batch, "E ") : "s ".concat(session, " ").concat(batch).concat(loads, "E ");
                         if (opening)
                             fs._session_num = OPENING_SESSION;
                         if (FileSystem_1.FileSystem._disp)
                             console.log('sent ->', body);
+                        attempt = {
+                            batch: batch,
+                            written: resent ? resent.written : written.length,
+                            registered: (resent ? resent.registered : []).concat(changes ? changes.registered : []),
+                            timeout: resent ? resent.timeout : FileSystem_1.FileSystem.send_timeout > 0 ? Math.max(FileSystem_1.FileSystem.send_timeout, this.sendTimeout) : 0,
+                            tooLarge: alone
+                        };
                         _a.label = 1;
                     case 1:
                         _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, this.request('post', '', body, FileSystem_1.FileSystem.send_timeout)];
+                        return [4 /*yield*/, this.request('post', '', body, attempt.timeout)];
                     case 2:
                         responseText = _a.sent();
                         return [3 /*break*/, 4];
                     case 3:
                         error_1 = _a.sent();
-                        // the hub did not process the batch, or there is no way to know : it is
-                        // sent again. A load is answered again and a write carries the whole
-                        // state of its model, so a batch processed twice does no harm.
-                        fs._data_to_send = batch + fs._data_to_send;
                         this.pendingLoads = loads + this.pendingLoads;
                         if (opening)
                             fs._session_num = NO_SESSION;
-                        this.onSendFailed(error_1, opening, session);
+                        this.onSendFailed(error_1, opening, session, attempt);
                         return [2 /*return*/];
                     case 4:
-                        this.sendHttpErrors = 0;
                         this.onHubAnswered();
                         this.applyResponse(responseText, protectFrom);
                         if (!opening)
@@ -330,7 +354,7 @@ var HubConnection = /** @class */ (function () {
                         if (session !== this.fs._session_num)
                             return [3 /*break*/, 1];
                         kind = classify(error_2);
-                        if (kind === 'rejected' || (kind === 'http' && ++httpErrors >= MAX_HTTP_ERRORS)) {
+                        if (kind === 'rejected' || (kind !== 'unreachable' && ++httpErrors >= MAX_HTTP_ERRORS)) {
                             httpErrors = 0;
                             this.onSessionRejected(session, error_2);
                             return [3 /*break*/, 1];
@@ -423,9 +447,11 @@ var HubConnection = /** @class */ (function () {
         }
         return changed;
     };
-    HubConnection.prototype.onSendFailed = function (error, opening, session) {
+    HubConnection.prototype.onSendFailed = function (error, opening, session, attempt) {
+        var fs = this.fs;
         var kind = classify(error);
         if (opening) {
+            fs._data_to_send = attempt.batch + fs._data_to_send;
             // typically the hub is not up yet
             this.noteFailure(error, kind === 'rejected'
                 ? "the hub refused the credentials of user ".concat(this.userid)
@@ -435,20 +461,86 @@ var HubConnection = /** @class */ (function () {
             this.backOff();
             return;
         }
-        if (session !== this.fs._session_num) {
+        if (session !== fs._session_num) {
             // the session of the batch was replaced, the batch leaves with the new one
+            this.keepUnanswered(attempt);
             FileSystem_1.FileSystem._send_data_to_hub_debounced();
             return;
         }
         if (kind !== 'unreachable' && !FileSystem_1.FileSystem.auto_reconnect)
             return this.giveUp(4);
-        if (kind === 'rejected' || (kind === 'http' && ++this.sendHttpErrors >= MAX_HTTP_ERRORS)) {
-            this.sendHttpErrors = 0;
+        if (kind === 'malformed' || kind === 'hub_error') {
+            // the hub answers but will never take this batch : sent again and again, it blocked every change after
+            // it, and opened a new session every 3 attempts
+            var what = kind === 'malformed' ? 'the hub refused a malformed request' : 'a command of a request failed on the hub';
+            if (attempt.written > 0 && attempt.written < attempt.batch.length) {
+                // the commands of the program (a load with a wrong id...) are dropped, the changes it made are sent again
+                // alone : they are refused too if the fault is theirs
+                this.dropCommands(attempt.batch.slice(attempt.written), error, what);
+                this.keepUnanswered(__assign(__assign({}, attempt), { batch: attempt.batch.slice(0, attempt.written) }));
+            }
+            else {
+                this.dropBatch(attempt, error, what);
+            }
+            this.onHubAnswered();
+            return;
+        }
+        this.keepUnanswered(attempt);
+        if (kind === 'rejected') {
             this.onSessionRejected(session, error);
             return;
         }
+        if (kind === 'too_large') {
+            // the hub did not get it : sent again alone, until the limit of the proxy is raised
+            attempt.tooLarge = true;
+            this.noteFailure(error, "a proxy refused a request of ".concat(kb(attempt.batch.length), " as too large (raise its limit, nginx client_max_body_size, or lower FileSystem.max_batch_size)"));
+            this.backOff();
+            return;
+        }
+        // no answer, a timeout, or an error of a proxy : the hub did not process the batch, or there is no way to
+        // know : it is sent again. A load is answered again and a write carries the whole state of its model, so a
+        // batch processed twice does no harm.
+        // after a timeout the hub may still be running it : the next attempt waits longer, a batch slower than the
+        // timeout was run again and again
+        if (isTimeout(error) && attempt.timeout > 0) {
+            attempt.timeout *= 2;
+            this.sendTimeout = Math.max(this.sendTimeout, attempt.timeout);
+        }
         this.onUnreachable(error);
         this.backOff();
+    };
+    /** the batch waits in front of what is queued */
+    HubConnection.prototype.keepUnanswered = function (attempt) {
+        this.fs._data_to_send = attempt.batch + this.fs._data_to_send;
+        this.unanswered = attempt;
+    };
+    /**
+     * The hub refused the batch, or a command of it failed : its changes are lost (sent again, it would be
+     * refused again), its loads fail, and its new models are created again the next time a change refers to
+     * them (their temporary id would mean nothing to the hub).
+     */
+    HubConnection.prototype.dropBatch = function (attempt, error, what) {
+        var e_4, _a;
+        console.error("[hub] ".concat(what, " (").concat(describe(error), ") : ").concat(kb(attempt.batch.length), " of commands dropped, the next ones are sent"));
+        failLoads(attempt.batch);
+        try {
+            for (var _b = __values(attempt.registered), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var model = _c.value;
+                forget(model);
+            }
+        }
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+            }
+            finally { if (e_4) throw e_4.error; }
+        }
+    };
+    /** dropBatch, for the commands of the program in a refused batch : the changes are sent again alone */
+    HubConnection.prototype.dropCommands = function (commands, error, what) {
+        console.error("[hub] ".concat(what, " (").concat(describe(error), ") : the commands of the program in it are dropped (").concat(kb(commands.length), "), its changes are sent again"));
+        failLoads(commands);
     };
     HubConnection.prototype.onUnreachable = function (error) {
         this.noteFailure(error, "cannot reach the hub at ".concat(this.hubUrl));
@@ -475,7 +567,10 @@ var HubConnection = /** @class */ (function () {
         // sends it once opened (sessionOpened)
         if (isOpenSession(this.fs._session_num))
             this.undefer();
-        if (this.fs._data_to_send.length > 0 || this.pendingLoads.length > 0) {
+        if (this.unanswered ||
+            this.fs._data_to_send.length > 0 ||
+            this.pendingLoads.length > 0 ||
+            FileSystem_1.FileSystem._objects_to_send.size > 0) {
             FileSystem_1.FileSystem._send_data_to_hub_debounced();
         }
     };
@@ -560,7 +655,7 @@ var HubConnection = /** @class */ (function () {
      * a state it got from the hub could undo a change made since the restart.
      */
     HubConnection.prototype.replayRecentChanges = function () {
-        var e_4, _a;
+        var e_5, _a;
         if (FileSystem_1.FileSystem.replay_window <= 0)
             return;
         // from the last answer of the dropped session, however long the outage was
@@ -575,12 +670,12 @@ var HubConnection = /** @class */ (function () {
                 replayed++;
             }
         }
-        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
             }
-            finally { if (e_4) throw e_4.error; }
+            finally { if (e_5) throw e_5.error; }
         }
         if (replayed > 0) {
             console.log("[hub] sending again ".concat(replayed, " models changed shortly before the hub restarted"));
@@ -595,7 +690,7 @@ var HubConnection = /** @class */ (function () {
     HubConnection.prototype.resync = function (generation) {
         return __awaiter(this, void 0, void 0, function () {
             var startedAt, roots, missing, loggedAt, _loop_1, this_1, i, state_1, types, _a, _b, _c, type, type, gone;
-            var e_5, _d;
+            var e_6, _d;
             return __generator(this, function (_e) {
                 switch (_e.label) {
                     case 0:
@@ -651,12 +746,12 @@ var HubConnection = /** @class */ (function () {
                                 types[type] = true;
                             }
                         }
-                        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+                        catch (e_6_1) { e_6 = { error: e_6_1 }; }
                         finally {
                             try {
                                 if (_b && !_b.done && (_d = _a["return"])) _d.call(_a);
                             }
-                            finally { if (e_5) throw e_5.error; }
+                            finally { if (e_6) throw e_6.error; }
                         }
                         for (type in types)
                             this.pendingLoads += "R 0 ".concat(type, " ");
@@ -729,7 +824,8 @@ var HubConnection = /** @class */ (function () {
         if (changed > 0) {
             console.log("[hub] sending the last state of ".concat(changed, " models changed while the hub did not answer"));
         }
-        flushLocalChanges();
+        // the changes are written when the request leaves, once the answer is applied : written here, before the
+        // answer to the batch that created a model, a change to it had its temporary id
         this.fs._data_to_send += this.deferred;
         this.deferred = '';
         FileSystem_1.FileSystem._send_data_to_hub_debounced();
@@ -838,20 +934,9 @@ var HubConnection = /** @class */ (function () {
     return HubConnection;
 }());
 exports.HubConnection = HubConnection;
-/** queues the local changes not sent yet, the connector waits 250ms otherwise */
-function flushLocalChanges() {
-    var left = FileSystem_1.FileSystem._objects_to_send.size;
-    while (left > 0) {
-        FileSystem_1.FileSystem._send_chan();
-        // nothing queued : the hub does not answer, the changes wait
-        if (FileSystem_1.FileSystem._objects_to_send.size >= left)
-            return;
-        left = FileSystem_1.FileSystem._objects_to_send.size;
-    }
-}
 /** the local state of a model, holding its sub models by reference */
 function snapshot(model) {
-    var e_6, _a;
+    var e_7, _a;
     // Val, Str, Bool and the typed arrays
     if ('_data' in model) {
         var value = model.get();
@@ -873,12 +958,12 @@ function snapshot(model) {
             attributes[name_1] = model[name_1];
         }
     }
-    catch (e_6_1) { e_6 = { error: e_6_1 }; }
+    catch (e_7_1) { e_7 = { error: e_7_1 }; }
     finally {
         try {
             if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
         }
-        finally { if (e_6) throw e_6.error; }
+        finally { if (e_7) throw e_7.error; }
     }
     return { kind: 'attributes', attributes: attributes };
 }
@@ -923,7 +1008,7 @@ function collectRoots() {
     return roots;
 }
 function hasParentOnHub(model) {
-    var e_7, _a;
+    var e_8, _a;
     var objects = FileSystem_1.FileSystem._objects;
     try {
         for (var _b = __values(model._parents || []), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -933,12 +1018,12 @@ function hasParentOnHub(model) {
             }
         }
     }
-    catch (e_7_1) { e_7 = { error: e_7_1 }; }
+    catch (e_8_1) { e_8 = { error: e_8_1 }; }
     finally {
         try {
             if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
         }
-        finally { if (e_7) throw e_7.error; }
+        finally { if (e_8) throw e_8.error; }
     }
     return false;
 }
@@ -948,27 +1033,102 @@ function isOpenSession(session) {
 /**
  * - unreachable : no answer (refused, reset, timeout...)
  * - rejected    : the hub does not know the session or the credentials
- * - http        : any other error status
+ * - malformed   : the hub refused the request as malformed (400), it ran none of it
+ * - too_large   : a proxy refused the request as too large (413)
+ * - hub_error   : a command of the request failed on the hub (500), the ones before it ran
+ * - http        : any other error status (a proxy that can't reach the hub...)
  */
 function classify(error) {
     var _a;
     var status = (_a = error === null || error === void 0 ? void 0 : error.response) === null || _a === void 0 ? void 0 : _a.status;
     if (!status)
         return 'unreachable';
+    var data = String(error.response.data);
     if (status === 401 || status === 403)
         return 'rejected';
     // the hub answers the long poll of an unknown session with a 500 wrapping a 401
-    if (/401 Unauthorized/.test(String(error.response.data)))
+    if (/401 Unauthorized/.test(data))
         return 'rejected';
+    if (status === 400)
+        return 'malformed';
+    if (status === 413)
+        return 'too_large';
+    // the answer of the hub : a proxy that can't reach it answers its own 500
+    if (status === 500 && /^An error occurred: 'internal error'/.test(data))
+        return 'hub_error';
     return 'http';
 }
 function describe(error) {
     var _a;
-    if ((_a = error === null || error === void 0 ? void 0 : error.response) === null || _a === void 0 ? void 0 : _a.status)
-        return "HTTP ".concat(error.response.status);
-    if ((error === null || error === void 0 ? void 0 : error.code) === 'ECONNABORTED')
+    var status = (_a = error === null || error === void 0 ? void 0 : error.response) === null || _a === void 0 ? void 0 : _a.status;
+    if (status) {
+        // the reason the hub gives for a malformed request, not the html page of a proxy
+        var data = String(error.response.data);
+        return status === 400 && data.length < 200 && !/</.test(data) ? "HTTP 400 ".concat(data) : "HTTP ".concat(status);
+    }
+    if (isTimeout(error))
         return 'timeout';
     return (error === null || error === void 0 ? void 0 : error.code) || (error === null || error === void 0 ? void 0 : error.message) || String(error);
+}
+function isTimeout(error) {
+    return !(error === null || error === void 0 ? void 0 : error.response) && ((error === null || error === void 0 ? void 0 : error.code) === 'ECONNABORTED' || (error === null || error === void 0 ? void 0 : error.code) === 'ETIMEDOUT');
+}
+function kb(length) {
+    return "".concat((length / 1000).toFixed(1), " KB");
+}
+// number of arguments of each command, in their order in the body
+var ARGUMENTS = {
+    C: 2, N: 2, L: 2, U: 2, R: 2, T: 2, l: 2, r: 2, h: 4, s: 1, S: 1, E: 0
+};
+/** the loads of a batch the hub refused fail */
+function failLoads(batch) {
+    var e_9, _a;
+    var _loop_2 = function (nb) {
+        var callback = FileSystem_1.FileSystem._callbacks[nb];
+        if (typeof callback === 'function')
+            safely(function () { return callback(undefined, true); }, 'a load callback');
+    };
+    try {
+        for (var _b = __values(loadCallbacks(batch)), _c = _b.next(); !_c.done; _c = _b.next()) {
+            var nb = _c.value;
+            _loop_2(nb);
+        }
+    }
+    catch (e_9_1) { e_9 = { error: e_9_1 }; }
+    finally {
+        try {
+            if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+        }
+        finally { if (e_9) throw e_9.error; }
+    }
+}
+/** the callbacks of the loads of a batch : L n path, l n id, r id n */
+function loadCallbacks(batch) {
+    var words = batch.split(' ');
+    var callbacks = [];
+    for (var i = 0; i < words.length;) {
+        var word = words[i];
+        if (!Object.prototype.hasOwnProperty.call(ARGUMENTS, word)) {
+            i++;
+            continue;
+        }
+        if (word === 'L' || word === 'l')
+            callbacks.push(Number(words[i + 1]));
+        else if (word === 'r')
+            callbacks.push(Number(words[i + 2]));
+        i += 1 + ARGUMENTS[word];
+    }
+    return callbacks;
+}
+/** a model whose creation the hub refused : it gets a new temporary id, and an N, when written next */
+function forget(model) {
+    var tmp = model._server_id;
+    if (tmp == null || !(tmp & 3) || FileSystem_1.FileSystem._tmp_objects[tmp] !== model)
+        return;
+    delete FileSystem_1.FileSystem._tmp_objects[tmp];
+    delete FileSystem_1.FileSystem._ptr_to_update[tmp];
+    delete FileSystem_1.FileSystem._files_to_upload[tmp];
+    model._server_id = undefined;
 }
 function safely(fn, what) {
     try {

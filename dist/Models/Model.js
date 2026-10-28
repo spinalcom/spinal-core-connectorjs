@@ -308,6 +308,7 @@ var Model = /** @class */ (function () {
                 if (this[name] != null) {
                     console.error("attribute ".concat(name, " already exists in ").concat(ModelProcessManager_1.ModelProcessManager.get_object_class(this)));
                 }
+                Model._check_attribute_name(name);
                 var model = ModelProcessManager_1.ModelProcessManager.conv(instanceOfModel);
                 if (model._parents.indexOf(this) < 0) {
                     model._parents.push(this);
@@ -335,6 +336,20 @@ var Model = /** @class */ (function () {
      * @param {boolean} [signal_change=true]
      * @memberof Model
      */
+    /**
+     * throws for a name the hub can't store : it is written as is in the commands (C id name:id,...) and in the
+     * answers of the hub ("name":FSo[id]). A space made the whole request malformed, a comma or a colon gave
+     * other attributes
+     * @private
+     * @static
+     * @param {string | number} name
+     * @memberof Model
+     */
+    Model._check_attribute_name = function (name) {
+        if (/[\s,:"\\]/.test(String(name))) {
+            throw new Error("attribute name ".concat(JSON.stringify(name), " can't be stored on the hub : no space, comma, colon, quote or backslash"));
+        }
+    };
     Model.prototype.rem_attr = function (name, signal_change) {
         if (signal_change === void 0) { signal_change = true; }
         var item = this[name];
@@ -553,16 +568,29 @@ var Model = /** @class */ (function () {
      * @memberof Model
      */
     Model.prototype._get_fs_data = function (out) {
-        var _this = this;
+        var e_8, _a;
         FileSystem_1.FileSystem.set_server_id_if_necessary(out, this);
-        var data = this._attribute_names
-            .map(function (attrName) {
-            var obj = _this[attrName];
-            FileSystem_1.FileSystem.set_server_id_if_necessary(out, obj);
-            return attrName + ':' + obj._server_id;
-        })
-            .join(',');
-        out.mod += "C ".concat(this._server_id, " ").concat(data, " ");
+        var data = [];
+        try {
+            for (var _b = __values(this._attribute_names), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var attrName = _c.value;
+                var obj = this[attrName];
+                if (!FileSystem_1.FileSystem._register(out, obj)) {
+                    // the batch is full : the attributes are written in the next one
+                    out.later.push(this);
+                    return;
+                }
+                data.push(attrName + ':' + obj._server_id);
+            }
+        }
+        catch (e_8_1) { e_8 = { error: e_8_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
+            }
+            finally { if (e_8) throw e_8.error; }
+        }
+        out.mod += "C ".concat(this._server_id, " ").concat(data.join(','), " ");
     };
     /**
      * may be redefined.
@@ -574,7 +602,7 @@ var Model = /** @class */ (function () {
      * @memberof Model
      */
     Model.prototype._set = function (value) {
-        var e_8, _a, e_9, _b;
+        var e_9, _a, e_10, _b;
         var change = 0;
         var used = {};
         try {
@@ -584,12 +612,12 @@ var Model = /** @class */ (function () {
                 used[attrName] = true;
             }
         }
-        catch (e_8_1) { e_8 = { error: e_8_1 }; }
+        catch (e_9_1) { e_9 = { error: e_9_1 }; }
         finally {
             try {
                 if (_d && !_d.done && (_a = _c["return"])) _a.call(_c);
             }
-            finally { if (e_8) throw e_8.error; }
+            finally { if (e_9) throw e_9.error; }
         }
         try {
             for (var _e = __values(this._attribute_names), _f = _e.next(); !_f.done; _f = _e.next()) {
@@ -600,12 +628,12 @@ var Model = /** @class */ (function () {
                 }
             }
         }
-        catch (e_9_1) { e_9 = { error: e_9_1 }; }
+        catch (e_10_1) { e_10 = { error: e_10_1 }; }
         finally {
             try {
                 if (_f && !_f.done && (_b = _e["return"])) _b.call(_e);
             }
-            finally { if (e_9) throw e_9.error; }
+            finally { if (e_10) throw e_10.error; }
         }
         // mod / add
         for (var key in value) {
@@ -638,7 +666,7 @@ var Model = /** @class */ (function () {
      * @memberof Model
      */
     Model.prototype._signal_change = function (change_level) {
-        var e_10, _a;
+        var e_11, _a;
         if (change_level === void 0) { change_level = 2; }
         if (change_level === 2 && this._server_id != null) {
             FileSystem_1.FileSystem.signal_change(this);
@@ -655,12 +683,12 @@ var Model = /** @class */ (function () {
                     parent_1._signal_change(1);
                 }
             }
-            catch (e_10_1) { e_10 = { error: e_10_1 }; }
+            catch (e_11_1) { e_11 = { error: e_11_1 }; }
             finally {
                 try {
                     if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
                 }
-                finally { if (e_10) throw e_10.error; }
+                finally { if (e_11) throw e_11.error; }
             }
         }
         // start if not done a timer
@@ -673,7 +701,7 @@ var Model = /** @class */ (function () {
      * @memberof Model
      */
     Model.prototype._set_state = function (str, map) {
-        var e_11, _a, e_12, _b;
+        var e_12, _a, e_13, _b;
         var used = {}; // used attributes. Permits to know what to destroy
         if (str.length) {
             try {
@@ -701,12 +729,12 @@ var Model = /** @class */ (function () {
                     }
                 }
             }
-            catch (e_11_1) { e_11 = { error: e_11_1 }; }
+            catch (e_12_1) { e_12 = { error: e_12_1 }; }
             finally {
                 try {
                     if (_d && !_d.done && (_a = _c["return"])) _a.call(_c);
                 }
-                finally { if (e_11) throw e_11.error; }
+                finally { if (e_12) throw e_12.error; }
             }
         }
         try {
@@ -716,12 +744,12 @@ var Model = /** @class */ (function () {
                     this.rem_attr(attrName);
             }
         }
-        catch (e_12_1) { e_12 = { error: e_12_1 }; }
+        catch (e_13_1) { e_13 = { error: e_13_1 }; }
         finally {
             try {
                 if (_g && !_g.done && (_b = _f["return"])) _b.call(_f);
             }
-            finally { if (e_12) throw e_12.error; }
+            finally { if (e_13) throw e_13.error; }
         }
     };
     /**
@@ -733,7 +761,7 @@ var Model = /** @class */ (function () {
      * @memberof Model
      */
     Model.prototype._get_parents_that_check_rec = function (res, visited, func_to_check) {
-        var e_13, _a;
+        var e_14, _a;
         if (visited[this.model_id] == null) {
             visited[this.model_id] = true;
             if (func_to_check(this)) {
@@ -746,12 +774,12 @@ var Model = /** @class */ (function () {
                         parent_2._get_parents_that_check_rec(res, visited, func_to_check);
                     }
                 }
-                catch (e_13_1) { e_13 = { error: e_13_1 }; }
+                catch (e_14_1) { e_14 = { error: e_14_1 }; }
                 finally {
                     try {
                         if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
                     }
-                    finally { if (e_13) throw e_13.error; }
+                    finally { if (e_14) throw e_14.error; }
                 }
             }
         }
@@ -783,7 +811,7 @@ var Model = /** @class */ (function () {
      * @memberof Model
      */
     Model.prototype._get_flat_model_map = function (map, date) {
-        var e_14, _a;
+        var e_15, _a;
         map[this.model_id] = this;
         try {
             for (var _b = __values(this._attribute_names), _c = _b.next(); !_c.done; _c = _b.next()) {
@@ -796,12 +824,12 @@ var Model = /** @class */ (function () {
                 }
             }
         }
-        catch (e_14_1) { e_14 = { error: e_14_1 }; }
+        catch (e_15_1) { e_15 = { error: e_15_1 }; }
         finally {
             try {
                 if (_c && !_c.done && (_a = _b["return"])) _a.call(_b);
             }
-            finally { if (e_14) throw e_14.error; }
+            finally { if (e_15) throw e_15.error; }
         }
         return map;
     };

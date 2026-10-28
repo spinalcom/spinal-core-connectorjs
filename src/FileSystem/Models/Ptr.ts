@@ -97,7 +97,11 @@ export class Ptr<T extends Model = any> extends Model {
   public _get_fs_data(out: IFsData): void {
     FileSystem.set_server_id_if_necessary(out, this);
     if (this.data.model != null) {
-      FileSystem.set_server_id_if_necessary(out, this.data.model);
+      if (!FileSystem._register(out, this.data.model)) {
+        // the batch is full : the pointer is written in the next one
+        out.later.push(this);
+        return;
+      }
       out.mod += `C ${this._server_id} ${this.data.model._server_id} `;
 
       this.data.value = this.data.model._server_id;

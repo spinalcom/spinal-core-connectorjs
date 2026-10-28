@@ -155,6 +155,16 @@ export declare class Model {
      * @param {boolean} [signal_change=true]
      * @memberof Model
      */
+    /**
+     * throws for a name the hub can't store : it is written as is in the commands (C id name:id,...) and in the
+     * answers of the hub ("name":FSo[id]). A space made the whole request malformed, a comma or a colon gave
+     * other attributes
+     * @private
+     * @static
+     * @param {string | number} name
+     * @memberof Model
+     */
+    private static _check_attribute_name;
     rem_attr(name: string, signal_change?: boolean): void;
     /**
      * change attribute named nname to instanceOfModel (use references for comparison)

@@ -306,6 +306,7 @@ export class Model {
             )}`
           );
         }
+        Model._check_attribute_name(name);
         const model: Model = ModelProcessManager.conv(instanceOfModel);
         if (model._parents.indexOf(this) < 0) {
           model._parents.push(this);
@@ -333,6 +334,23 @@ export class Model {
    * @param {boolean} [signal_change=true]
    * @memberof Model
    */
+  /**
+   * throws for a name the hub can't store : it is written as is in the commands (C id name:id,...) and in the
+   * answers of the hub ("name":FSo[id]). A space made the whole request malformed, a comma or a colon gave
+   * other attributes
+   * @private
+   * @static
+   * @param {string | number} name
+   * @memberof Model
+   */
+  private static _check_attribute_name(name: string | number): void {
+    if (/[\s,:"\\]/.test(String(name))) {
+      throw new Error(
+        `attribute name ${JSON.stringify(name)} can't be stored on the hub : no space, comma, colon, quote or backslash`
+      );
+    }
+  }
+
   public rem_attr(name: string, signal_change: boolean = true): void {
     const item = this[name];
     if (item instanceof Model) {
@@ -527,14 +545,17 @@ export class Model {
    */
   public _get_fs_data(out: IFsData): void {
     FileSystem.set_server_id_if_necessary(out, this);
-    const data = this._attribute_names
-      .map((attrName: string): string => {
-        const obj: Model = this[attrName];
-        FileSystem.set_server_id_if_necessary(out, obj);
-        return attrName + ':' + obj._server_id;
-      })
-      .join(',');
-    out.mod += `C ${this._server_id} ${data} `;
+    const data: string[] = [];
+    for (const attrName of this._attribute_names) {
+      const obj: Model = this[attrName];
+      if (!FileSystem._register(out, obj)) {
+        // the batch is full : the attributes are written in the next one
+        out.later.push(this);
+        return;
+      }
+      data.push(attrName + ':' + obj._server_id);
+    }
+    out.mod += `C ${this._server_id} ${data.join(',')} `;
   }
 
   /**

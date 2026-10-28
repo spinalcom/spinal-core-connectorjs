@@ -327,7 +327,24 @@ export class FileSystem {
     20,
     { leading: false }
   );
-  static send_model_limit = 250;
+  /**
+   * number of changed models a request sends at most ; the size (max_batch_size) usually comes first
+   * @static
+   * @default Infinity
+   * @memberof FileSystem
+   */
+  static send_model_limit = Infinity;
+  /**
+   * length (in characters, the commands are ascii) a request sending data aims at. Once reached, the
+   * changed models left wait for the next request, and so do the new models of a container : created first,
+   * the container is written once they all have their id. A bigger request takes longer to send, to run and
+   * to answer, and a proxy may refuse it (nginx accepts 1 MB by default) ; a single value or list bigger
+   * than that is sent whole.
+   * @static
+   * @default 1000000
+   * @memberof FileSystem
+   */
+  static max_batch_size = 1000000;
 
   /**
    * max time (ms) send_data_eval waits for a referenced server_id to
@@ -459,6 +476,9 @@ export class FileSystem {
         keepAliveMsecs: 30000,
         maxSockets: 64,
         maxFreeSockets: 16,
+        // an idle connection is closed before the hub closes it (after 3 minutes) : a request sent on it as
+        // the hub closes it gets no answer (socket hang up)
+        timeout: 60000,
       };
       const http = require('http');
       const https = require('https');
@@ -749,14 +769,34 @@ export class FileSystem {
       FileSystem._send_data_to_hub_debounced();
       return;
     }
+    // the changed models are written now, no request sending data is in flight : the models the previous one
+    // created have their real id. Written when they were queued, a change to such a model carried its
+    // temporary id, unknown to the hub outside the request that created it : the hub dropped it
+    const takers: FileSystem[] = [];
+    let resyncing = false;
+    for (const k in FileSystem._insts) {
+      const hub = FileSystem._insts[k]._hub;
+      if (hub && hub.acceptsChanges()) {
+        takers.push(FileSystem._insts[k]);
+        resyncing = resyncing || hub.isResyncing();
+      }
+    }
+    // while resyncing, the loads are answered with the state of the models : every change made before goes
+    // in the batch
+    const changes =
+      takers.length > 0 && FileSystem._objects_to_send.size > 0
+        ? FileSystem._get_chan_data(resyncing ? Infinity : FileSystem.max_batch_size)
+        : undefined;
     const map_prom = [];
     for (const k in FileSystem._insts) {
-      map_prom.push(FileSystem._insts[k]._send_data_to_hub_instance());
+      const inst = FileSystem._insts[k];
+      map_prom.push(inst._send_data_to_hub_instance(takers.indexOf(inst) >= 0 ? changes : undefined));
     }
     try {
       await Promise.all(map_prom);
     } catch (error) {
       console.log(error);
+      FileSystem._sending_data = false;
       return FileSystem.onConnectionError(4);
     }
     FileSystem._sending_data = false;
@@ -770,11 +810,12 @@ export class FileSystem {
   /**
    * send the data to the server
    * @private
+   * @param {IFsData} [changes] the changed models written for this request
    * @return {*}
    * @memberof FileSystem
    */
-  private _send_data_to_hub_instance(): Promise<void> {
-    return this._hub.sendQueuedData();
+  private _send_data_to_hub_instance(changes?: IFsData): Promise<void> {
+    return this._hub.sendQueuedData(changes);
   }
 
   /**
@@ -1057,6 +1098,7 @@ export class FileSystem {
       // registering
       obj._server_id = FileSystem._get_new_tmp_server_id();
       FileSystem._tmp_objects[obj._server_id] = obj;
+      if (out.registered) out.registered.push(obj);
       // new object
       let ncl = ModelProcessManager.get_object_class(obj);
       if (obj._underlying_fs_type != null) {
@@ -1067,6 +1109,22 @@ export class FileSystem {
       // data
       obj._get_fs_data(out);
     }
+  }
+
+  /**
+   * set_server_id_if_necessary, when the batch has room left for a new model (out.budget) : false otherwise,
+   * nothing is written and the container of obj waits for a next batch (out.later)
+   * @static
+   * @param {IFsData} out
+   * @param {Model} obj
+   * @return {*}  {boolean} obj has an id
+   * @memberof FileSystem
+   */
+  static _register(out: IFsData, obj: Model): boolean {
+    if (obj._server_id != null) return true;
+    if (out.budget !== undefined && out.cre.length + out.mod.length >= out.budget) return false;
+    FileSystem.set_server_id_if_necessary(out, obj);
+    return true;
   }
 
   /**
@@ -1179,19 +1237,15 @@ export class FileSystem {
   }
 
   /**
-   * send changes
+   * send changes. They are written when the request leaves (_send_data_to_hub_func), the changed models
+   * stay in _objects_to_send until then : a model changed a thousand times meanwhile is sent once, with its
+   * last state
    * @private
    * @static
    * @memberof FileSystem
    */
   static _send_chan(): void {
-    // while the hub does not answer, the changed models stay in _objects_to_send :
-    // a model changed a thousand times meanwhile is sent once, with its last state
-    if (FileSystem._hubs_deferring()) return;
-    const out = FileSystem._get_chan_data();
-    for (const f in FileSystem._insts) {
-      FileSystem._insts[f].send(out);
-    }
+    FileSystem._send_data_to_hub_debounced();
   }
 
   /**
@@ -1212,25 +1266,34 @@ export class FileSystem {
   }
 
   /**
-   * get data of objects to send
+   * writes the changed models, until the batch reaches budget
    * @private
    * @static
-   * @return {*}  {string}
+   * @param {number} budget
+   * @return {*}  {IFsData}
    * @memberof FileSystem
    */
-  private static _get_chan_data(): string {
-    const out = {
-      cre: '',
-      mod: '',
-    };
+  private static _get_chan_data(budget: number): IFsData {
+    const out: IFsData = { cre: '', mod: '', budget, later: [], taken: [], registered: [] };
     let nb_model = 0;
     for (const [id, model] of FileSystem._objects_to_send) {
+      if (nb_model >= FileSystem.send_model_limit || out.cre.length + out.mod.length >= budget) break;
       nb_model++;
-      if (nb_model > FileSystem.send_model_limit) break;
-      model._get_fs_data(out);
       FileSystem._objects_to_send.delete(id);
+      out.taken.push(model);
+      try {
+        model._get_fs_data(out);
+      } catch (error) {
+        // the others are sent : a model that can't be written stopped every change after it
+        console.error(
+          `[hub] a ${ModelProcessManager.get_object_class(model)} cannot be sent to the hub, its change is dropped`,
+          error
+        );
+      }
     }
-    return out.cre + out.mod;
+    // after the loop, which would take them again
+    for (const model of out.later) FileSystem._objects_to_send.set(model.model_id, model);
+    return out;
   }
 
   /**

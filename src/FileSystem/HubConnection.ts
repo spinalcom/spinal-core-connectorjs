@@ -27,6 +27,7 @@ import type {
   IConnectionStatus,
 } from '../interfaces/IConnectionStatus';
 import type { Model } from '../Models/Model';
+import type { IFsData } from '../interfaces/IFsData';
 import { getUrlPath } from '../Utils/getUrlPath';
 import { waitTimeout } from '../Utils/waitTimeout';
 import { FileSystem } from './FileSystem';
@@ -44,6 +45,22 @@ type LocalState =
   | { kind: 'items'; items: Model[] }
   | { kind: 'pointer'; value: number; model: Model | undefined }
   | { kind: 'attributes'; attributes: { [name: string]: Model } };
+
+// a batch the hub did not answer, sent again before anything else : it is the start of fs._data_to_send,
+// what waits for the hub
+interface Unanswered {
+  // its commands, without the session and the end
+  batch: string;
+  // the start of the batch the connector wrote (the changed models), before the commands of the program
+  // (send())
+  written: number;
+  // the models it gives a temporary id
+  registered: Model[];
+  // ms the next attempt waits for the answer
+  timeout: number;
+  // a proxy refused it as too large : sent alone
+  tooLarge: boolean;
+}
 
 /**
  * The life of the connection of a FileSystem to the hub : sending the queued
@@ -82,7 +99,10 @@ export class HubConnection {
   // when the program lost the hub, 0 while it has it
   private lostAt = 0;
   private lastFailureLog = 0;
-  private sendHttpErrors = 0;
+  private unanswered: Unanswered | null = null;
+  // ms a request sending data waits for the answer, more than FileSystem.send_timeout once the hub answered
+  // later than that
+  private sendTimeout = 0;
   private sessionWaiters: (() => void)[] = [];
   // bumped by every new session, it stops the resync of an older one
   private generation = 0;
@@ -142,6 +162,25 @@ export class HubConnection {
     return this.deferring;
   }
 
+  /** the models loaded back after a new session are answered with their state on the hub */
+  isResyncing(): boolean {
+    return this.resyncing;
+  }
+
+  /**
+   * the changed models can be written for the next request : it can leave now and nothing waits for an
+   * answer before them (FileSystem._send_data_to_hub_func)
+   */
+  acceptsChanges(): boolean {
+    return (
+      !this.closed &&
+      !this.deferring &&
+      this.unanswered === null &&
+      isOpenSession(this.fs._session_num) &&
+      Date.now() >= this.retryAt
+    );
+  }
+
   /**
    * Keeps a command issued while the hub does not answer. It is sent after the
    * last state of the models changed meanwhile, so that a load answered by the
@@ -161,51 +200,65 @@ export class HubConnection {
   }
 
   /**
-   * Sends the queued commands, and keeps them when the hub does not take them.
+   * Sends the queued commands and the changes written for this request, and keeps them when the hub does
+   * not take them.
+   * @param {IFsData} [changes] the changed models, written by FileSystem._send_data_to_hub_func when
+   * acceptsChanges() allowed it
    * @return {*}  {Promise<void>}
    * @memberof HubConnection
    */
-  async sendQueuedData(): Promise<void> {
+  async sendQueuedData(changes?: IFsData): Promise<void> {
     const fs = this.fs;
     if (this.closed) return;
-    if (fs._data_to_send.length === 0 && this.pendingLoads.length === 0) return;
+    const written = changes ? changes.cre + changes.mod : '';
+    if (!this.unanswered && written.length === 0 && fs._data_to_send.length === 0 && this.pendingLoads.length === 0) {
+      return;
+    }
     // a session is being opened, the data leaves with it
     if (fs._session_num === OPENING_SESSION) return;
     // the hub did not answer the last attempt, the data waits for the next one
     if (Date.now() < this.retryAt) return this.scheduleRetry();
 
     // while resyncing, the hub answers the loads with the state of the models
-    // at the end of the batch : the changes made before it leaves go in it,
+    // at the end of the batch : the changes made before it leaves are in it,
     // the ones made after are protected when the answer is applied
-    if (this.resyncing) flushLocalChanges();
     const protectFrom = this.resyncing ? this.tick : undefined;
     FileSystem._sending_data = true;
-    const batch = fs._data_to_send;
-    fs._data_to_send = '';
     const session = fs._session_num;
     // the first batch starts with the "U user password S n" opening the session
     const opening = session === NO_SESSION;
-    const loads = opening ? '' : this.pendingLoads;
-    if (!opening) this.pendingLoads = '';
+    // a batch the hub did not answer is the start of _data_to_send, alone if a proxy refused it as too large
+    // (no change is written meanwhile, acceptsChanges) ; the changes go before the commands queued with send(),
+    // a load sees the changes made before it
+    const resent = this.unanswered;
+    this.unanswered = null;
+    const alone = resent !== null && resent.tooLarge;
+    const queued = alone ? resent.batch : fs._data_to_send;
+    fs._data_to_send = fs._data_to_send.slice(queued.length);
+    const batch = written + queued;
+    const loads = opening || alone ? '' : this.pendingLoads;
+    if (!opening && !alone) this.pendingLoads = '';
     const body = opening ? `${batch}E ` : `s ${session} ${batch}${loads}E `;
     if (opening) fs._session_num = OPENING_SESSION;
     if (FileSystem._disp) console.log('sent ->', body);
+    const attempt: Unanswered = {
+      batch,
+      written: resent ? resent.written : written.length,
+      registered: (resent ? resent.registered : []).concat(changes ? changes.registered : []),
+      timeout: resent ? resent.timeout : FileSystem.send_timeout > 0 ? Math.max(FileSystem.send_timeout, this.sendTimeout) : 0,
+      tooLarge: alone,
+    };
 
     let responseText: string;
     try {
-      responseText = await this.request('post', '', body, FileSystem.send_timeout);
+      responseText = await this.request('post', '', body, attempt.timeout);
     } catch (error) {
-      // the hub did not process the batch, or there is no way to know : it is
-      // sent again. A load is answered again and a write carries the whole
-      // state of its model, so a batch processed twice does no harm.
-      fs._data_to_send = batch + fs._data_to_send;
       this.pendingLoads = loads + this.pendingLoads;
       if (opening) fs._session_num = NO_SESSION;
-      this.onSendFailed(error, opening, session);
+      this.onSendFailed(error, opening, session, attempt);
       return;
     }
 
-    this.sendHttpErrors = 0;
     this.onHubAnswered();
     this.applyResponse(responseText, protectFrom);
     if (!opening) return;
@@ -241,7 +294,7 @@ export class HubConnection {
         // the session was replaced while waiting, poll with the new one
         if (session !== this.fs._session_num) continue;
         const kind = classify(error);
-        if (kind === 'rejected' || (kind === 'http' && ++httpErrors >= MAX_HTTP_ERRORS)) {
+        if (kind === 'rejected' || (kind !== 'unreachable' && ++httpErrors >= MAX_HTTP_ERRORS)) {
           httpErrors = 0;
           this.onSessionRejected(session, error);
           continue;
@@ -293,9 +346,11 @@ export class HubConnection {
     return changed;
   }
 
-  private onSendFailed(error: any, opening: boolean, session: unknown): void {
+  private onSendFailed(error: any, opening: boolean, session: unknown, attempt: Unanswered): void {
+    const fs = this.fs;
     const kind = classify(error);
     if (opening) {
+      fs._data_to_send = attempt.batch + fs._data_to_send;
       // typically the hub is not up yet
       this.noteFailure(
         error,
@@ -307,19 +362,81 @@ export class HubConnection {
       this.backOff();
       return;
     }
-    if (session !== this.fs._session_num) {
+    if (session !== fs._session_num) {
       // the session of the batch was replaced, the batch leaves with the new one
+      this.keepUnanswered(attempt);
       FileSystem._send_data_to_hub_debounced();
       return;
     }
     if (kind !== 'unreachable' && !FileSystem.auto_reconnect) return this.giveUp(4);
-    if (kind === 'rejected' || (kind === 'http' && ++this.sendHttpErrors >= MAX_HTTP_ERRORS)) {
-      this.sendHttpErrors = 0;
+    if (kind === 'malformed' || kind === 'hub_error') {
+      // the hub answers but will never take this batch : sent again and again, it blocked every change after
+      // it, and opened a new session every 3 attempts
+      const what = kind === 'malformed' ? 'the hub refused a malformed request' : 'a command of a request failed on the hub';
+      if (attempt.written > 0 && attempt.written < attempt.batch.length) {
+        // the commands of the program (a load with a wrong id...) are dropped, the changes it made are sent again
+        // alone : they are refused too if the fault is theirs
+        this.dropCommands(attempt.batch.slice(attempt.written), error, what);
+        this.keepUnanswered({ ...attempt, batch: attempt.batch.slice(0, attempt.written) });
+      } else {
+        this.dropBatch(attempt, error, what);
+      }
+      this.onHubAnswered();
+      return;
+    }
+    this.keepUnanswered(attempt);
+    if (kind === 'rejected') {
       this.onSessionRejected(session, error);
       return;
     }
+    if (kind === 'too_large') {
+      // the hub did not get it : sent again alone, until the limit of the proxy is raised
+      attempt.tooLarge = true;
+      this.noteFailure(
+        error,
+        `a proxy refused a request of ${kb(attempt.batch.length)} as too large (raise its limit, nginx client_max_body_size, or lower FileSystem.max_batch_size)`
+      );
+      this.backOff();
+      return;
+    }
+    // no answer, a timeout, or an error of a proxy : the hub did not process the batch, or there is no way to
+    // know : it is sent again. A load is answered again and a write carries the whole state of its model, so a
+    // batch processed twice does no harm.
+    // after a timeout the hub may still be running it : the next attempt waits longer, a batch slower than the
+    // timeout was run again and again
+    if (isTimeout(error) && attempt.timeout > 0) {
+      attempt.timeout *= 2;
+      this.sendTimeout = Math.max(this.sendTimeout, attempt.timeout);
+    }
     this.onUnreachable(error);
     this.backOff();
+  }
+
+  /** the batch waits in front of what is queued */
+  private keepUnanswered(attempt: Unanswered): void {
+    this.fs._data_to_send = attempt.batch + this.fs._data_to_send;
+    this.unanswered = attempt;
+  }
+
+  /**
+   * The hub refused the batch, or a command of it failed : its changes are lost (sent again, it would be
+   * refused again), its loads fail, and its new models are created again the next time a change refers to
+   * them (their temporary id would mean nothing to the hub).
+   */
+  private dropBatch(attempt: Unanswered, error: any, what: string): void {
+    console.error(
+      `[hub] ${what} (${describe(error)}) : ${kb(attempt.batch.length)} of commands dropped, the next ones are sent`
+    );
+    failLoads(attempt.batch);
+    for (const model of attempt.registered) forget(model);
+  }
+
+  /** dropBatch, for the commands of the program in a refused batch : the changes are sent again alone */
+  private dropCommands(commands: string, error: any, what: string): void {
+    console.error(
+      `[hub] ${what} (${describe(error)}) : the commands of the program in it are dropped (${kb(commands.length)}), its changes are sent again`
+    );
+    failLoads(commands);
   }
 
   private onUnreachable(error: any): void {
@@ -345,7 +462,12 @@ export class HubConnection {
     // what was queued while the hub did not answer leaves now ; a new session
     // sends it once opened (sessionOpened)
     if (isOpenSession(this.fs._session_num)) this.undefer();
-    if (this.fs._data_to_send.length > 0 || this.pendingLoads.length > 0) {
+    if (
+      this.unanswered ||
+      this.fs._data_to_send.length > 0 ||
+      this.pendingLoads.length > 0 ||
+      FileSystem._objects_to_send.size > 0
+    ) {
       FileSystem._send_data_to_hub_debounced();
     }
   }
@@ -529,7 +651,8 @@ export class HubConnection {
     if (changed > 0) {
       console.log(`[hub] sending the last state of ${changed} models changed while the hub did not answer`);
     }
-    flushLocalChanges();
+    // the changes are written when the request leaves, once the answer is applied : written here, before the
+    // answer to the batch that created a model, a change to it had its temporary id
     this.fs._data_to_send += this.deferred;
     this.deferred = '';
     FileSystem._send_data_to_hub_debounced();
@@ -630,17 +753,6 @@ export class HubConnection {
   }
 }
 
-/** queues the local changes not sent yet, the connector waits 250ms otherwise */
-function flushLocalChanges(): void {
-  let left = FileSystem._objects_to_send.size;
-  while (left > 0) {
-    FileSystem._send_chan();
-    // nothing queued : the hub does not answer, the changes wait
-    if (FileSystem._objects_to_send.size >= left) return;
-    left = FileSystem._objects_to_send.size;
-  }
-}
-
 /** the local state of a model, holding its sub models by reference */
 function snapshot(model: any): LocalState {
   // Val, Str, Bool and the typed arrays
@@ -717,21 +829,82 @@ function isOpenSession(session: unknown): boolean {
 /**
  * - unreachable : no answer (refused, reset, timeout...)
  * - rejected    : the hub does not know the session or the credentials
- * - http        : any other error status
+ * - malformed   : the hub refused the request as malformed (400), it ran none of it
+ * - too_large   : a proxy refused the request as too large (413)
+ * - hub_error   : a command of the request failed on the hub (500), the ones before it ran
+ * - http        : any other error status (a proxy that can't reach the hub...)
  */
-function classify(error: any): 'unreachable' | 'rejected' | 'http' {
+function classify(error: any): 'unreachable' | 'rejected' | 'malformed' | 'too_large' | 'hub_error' | 'http' {
   const status = error?.response?.status;
   if (!status) return 'unreachable';
+  const data = String(error.response.data);
   if (status === 401 || status === 403) return 'rejected';
   // the hub answers the long poll of an unknown session with a 500 wrapping a 401
-  if (/401 Unauthorized/.test(String(error.response.data))) return 'rejected';
+  if (/401 Unauthorized/.test(data)) return 'rejected';
+  if (status === 400) return 'malformed';
+  if (status === 413) return 'too_large';
+  // the answer of the hub : a proxy that can't reach it answers its own 500
+  if (status === 500 && /^An error occurred: 'internal error'/.test(data)) return 'hub_error';
   return 'http';
 }
 
 function describe(error: any): string {
-  if (error?.response?.status) return `HTTP ${error.response.status}`;
-  if (error?.code === 'ECONNABORTED') return 'timeout';
+  const status = error?.response?.status;
+  if (status) {
+    // the reason the hub gives for a malformed request, not the html page of a proxy
+    const data = String(error.response.data);
+    return status === 400 && data.length < 200 && !/</.test(data) ? `HTTP 400 ${data}` : `HTTP ${status}`;
+  }
+  if (isTimeout(error)) return 'timeout';
   return error?.code || error?.message || String(error);
+}
+
+function isTimeout(error: any): boolean {
+  return !error?.response && (error?.code === 'ECONNABORTED' || error?.code === 'ETIMEDOUT');
+}
+
+function kb(length: number): string {
+  return `${(length / 1000).toFixed(1)} KB`;
+}
+
+// number of arguments of each command, in their order in the body
+const ARGUMENTS: { [command: string]: number } = {
+  C: 2, N: 2, L: 2, U: 2, R: 2, T: 2, l: 2, r: 2, h: 4, s: 1, S: 1, E: 0,
+};
+
+/** the loads of a batch the hub refused fail */
+function failLoads(batch: string): void {
+  for (const nb of loadCallbacks(batch)) {
+    const callback = FileSystem._callbacks[nb];
+    if (typeof callback === 'function') safely(() => callback(undefined, true), 'a load callback');
+  }
+}
+
+/** the callbacks of the loads of a batch : L n path, l n id, r id n */
+function loadCallbacks(batch: string): number[] {
+  const words = batch.split(' ');
+  const callbacks: number[] = [];
+  for (let i = 0; i < words.length; ) {
+    const word = words[i];
+    if (!Object.prototype.hasOwnProperty.call(ARGUMENTS, word)) {
+      i++;
+      continue;
+    }
+    if (word === 'L' || word === 'l') callbacks.push(Number(words[i + 1]));
+    else if (word === 'r') callbacks.push(Number(words[i + 2]));
+    i += 1 + ARGUMENTS[word];
+  }
+  return callbacks;
+}
+
+/** a model whose creation the hub refused : it gets a new temporary id, and an N, when written next */
+function forget(model: Model): void {
+  const tmp = model._server_id;
+  if (tmp == null || !(tmp & 3) || FileSystem._tmp_objects[tmp] !== model) return;
+  delete FileSystem._tmp_objects[tmp];
+  delete FileSystem._ptr_to_update[tmp];
+  delete FileSystem._files_to_upload[tmp];
+  model._server_id = undefined;
 }
 
 function safely(fn: () => void, what: string): void {

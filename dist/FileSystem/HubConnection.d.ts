@@ -1,5 +1,6 @@
 import type { IConnectionStatus } from '../interfaces/IConnectionStatus';
 import type { Model } from '../Models/Model';
+import type { IFsData } from '../interfaces/IFsData';
 import { FileSystem } from './FileSystem';
 /**
  * The life of the connection of a FileSystem to the hub : sending the queued
@@ -35,7 +36,8 @@ export declare class HubConnection {
     private failingSince;
     private lostAt;
     private lastFailureLog;
-    private sendHttpErrors;
+    private unanswered;
+    private sendTimeout;
     private sessionWaiters;
     private generation;
     private reopening;
@@ -59,6 +61,13 @@ export declare class HubConnection {
     getStatus(): IConnectionStatus;
     /** true while the hub does not answer : see defer */
     isDeferring(): boolean;
+    /** the models loaded back after a new session are answered with their state on the hub */
+    isResyncing(): boolean;
+    /**
+     * the changed models can be written for the next request : it can leave now and nothing waits for an
+     * answer before them (FileSystem._send_data_to_hub_func)
+     */
+    acceptsChanges(): boolean;
     /**
      * Keeps a command issued while the hub does not answer. It is sent after the
      * last state of the models changed meanwhile, so that a load answered by the
@@ -68,11 +77,14 @@ export declare class HubConnection {
     /** no request leaves anymore and the long poll never resolves */
     close(): void;
     /**
-     * Sends the queued commands, and keeps them when the hub does not take them.
+     * Sends the queued commands and the changes written for this request, and keeps them when the hub does
+     * not take them.
+     * @param {IFsData} [changes] the changed models, written by FileSystem._send_data_to_hub_func when
+     * acceptsChanges() allowed it
      * @return {*}  {Promise<void>}
      * @memberof HubConnection
      */
-    sendQueuedData(): Promise<void>;
+    sendQueuedData(changes?: IFsData): Promise<void>;
     /**
      * Resolves with the next push of the hub, retrying for as long as needed.
      * @return {*}  {Promise<string>}
@@ -84,6 +96,16 @@ export declare class HubConnection {
     private applyResponse;
     private changedSince;
     private onSendFailed;
+    /** the batch waits in front of what is queued */
+    private keepUnanswered;
+    /**
+     * The hub refused the batch, or a command of it failed : its changes are lost (sent again, it would be
+     * refused again), its loads fail, and its new models are created again the next time a change refers to
+     * them (their temporary id would mean nothing to the hub).
+     */
+    private dropBatch;
+    /** dropBatch, for the commands of the program in a refused batch : the changes are sent again alone */
+    private dropCommands;
     private onUnreachable;
     private onHubAnswered;
     private onSessionRejected;

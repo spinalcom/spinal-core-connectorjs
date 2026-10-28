@@ -1,6 +1,6 @@
 {
   "name": "spinal-core-connectorjs",
-  "version": "2.5.24",
+  "version": "2.5.25",
   "description": "Fog middleware that enables data virtualization and interoperability for the Internet of Things",
   "source": "src/index.ts",
   "types": "dist/index.d.ts",
@@ -10,7 +10,7 @@
     "watch": "parcel watch --no-optimize",
     "clean": "rm -rf dist declarations .parcel-cache .env",
     "build": "npm run clean && tsc",
-    "test": "node --test test/hubConnection.test.js",
+    "test": "node --test test/hubConnection.test.js test/batches.test.js",
     "docs": "rm -rf docs && typedoc --readme README.md src"
   },
   "author": "SpinalCom",

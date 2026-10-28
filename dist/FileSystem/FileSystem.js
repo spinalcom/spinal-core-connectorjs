@@ -188,7 +188,10 @@ var FileSystem = /** @class */ (function () {
                 keepAlive: true,
                 keepAliveMsecs: 30000,
                 maxSockets: 64,
-                maxFreeSockets: 16
+                maxFreeSockets: 16,
+                // an idle connection is closed before the hub closes it (after 3 minutes) : a request sent on it as
+                // the hub closes it gets no answer (socket hang up)
+                timeout: 60000
             };
             var http = require('http');
             var https = require('https');
@@ -410,7 +413,7 @@ var FileSystem = /** @class */ (function () {
      */
     FileSystem._send_data_to_hub_func = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var map_prom, k, error_3;
+            var takers, resyncing, k, hub, changes, map_prom, k, inst, error_3;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -418,9 +421,22 @@ var FileSystem = /** @class */ (function () {
                             FileSystem._send_data_to_hub_debounced();
                             return [2 /*return*/];
                         }
+                        takers = [];
+                        resyncing = false;
+                        for (k in FileSystem._insts) {
+                            hub = FileSystem._insts[k]._hub;
+                            if (hub && hub.acceptsChanges()) {
+                                takers.push(FileSystem._insts[k]);
+                                resyncing = resyncing || hub.isResyncing();
+                            }
+                        }
+                        changes = takers.length > 0 && FileSystem._objects_to_send.size > 0
+                            ? FileSystem._get_chan_data(resyncing ? Infinity : FileSystem.max_batch_size)
+                            : undefined;
                         map_prom = [];
                         for (k in FileSystem._insts) {
-                            map_prom.push(FileSystem._insts[k]._send_data_to_hub_instance());
+                            inst = FileSystem._insts[k];
+                            map_prom.push(inst._send_data_to_hub_instance(takers.indexOf(inst) >= 0 ? changes : undefined));
                         }
                         _a.label = 1;
                     case 1:
@@ -432,6 +448,7 @@ var FileSystem = /** @class */ (function () {
                     case 3:
                         error_3 = _a.sent();
                         console.log(error_3);
+                        FileSystem._sending_data = false;
                         return [2 /*return*/, FileSystem.onConnectionError(4)];
                     case 4:
                         FileSystem._sending_data = false;
@@ -449,11 +466,12 @@ var FileSystem = /** @class */ (function () {
     /**
      * send the data to the server
      * @private
+     * @param {IFsData} [changes] the changed models written for this request
      * @return {*}
      * @memberof FileSystem
      */
-    FileSystem.prototype._send_data_to_hub_instance = function () {
-        return this._hub.sendQueuedData();
+    FileSystem.prototype._send_data_to_hub_instance = function (changes) {
+        return this._hub.sendQueuedData(changes);
     };
     /**
      * apply an answer of the hub to the models
@@ -777,6 +795,8 @@ var FileSystem = /** @class */ (function () {
             // registering
             obj._server_id = FileSystem._get_new_tmp_server_id();
             FileSystem._tmp_objects[obj._server_id] = obj;
+            if (out.registered)
+                out.registered.push(obj);
             // new object
             var ncl = ModelProcessManager_1.ModelProcessManager.get_object_class(obj);
             if (obj._underlying_fs_type != null) {
@@ -787,6 +807,23 @@ var FileSystem = /** @class */ (function () {
             // data
             obj._get_fs_data(out);
         }
+    };
+    /**
+     * set_server_id_if_necessary, when the batch has room left for a new model (out.budget) : false otherwise,
+     * nothing is written and the container of obj waits for a next batch (out.later)
+     * @static
+     * @param {IFsData} out
+     * @param {Model} obj
+     * @return {*}  {boolean} obj has an id
+     * @memberof FileSystem
+     */
+    FileSystem._register = function (out, obj) {
+        if (obj._server_id != null)
+            return true;
+        if (out.budget !== undefined && out.cre.length + out.mod.length >= out.budget)
+            return false;
+        FileSystem.set_server_id_if_necessary(out, obj);
+        return true;
     };
     /**
      * send changes of m to instances.
@@ -899,20 +936,15 @@ var FileSystem = /** @class */ (function () {
         return FileSystem._cur_tmp_server_id;
     };
     /**
-     * send changes
+     * send changes. They are written when the request leaves (_send_data_to_hub_func), the changed models
+     * stay in _objects_to_send until then : a model changed a thousand times meanwhile is sent once, with its
+     * last state
      * @private
      * @static
      * @memberof FileSystem
      */
     FileSystem._send_chan = function () {
-        // while the hub does not answer, the changed models stay in _objects_to_send :
-        // a model changed a thousand times meanwhile is sent once, with its last state
-        if (FileSystem._hubs_deferring())
-            return;
-        var out = FileSystem._get_chan_data();
-        for (var f in FileSystem._insts) {
-            FileSystem._insts[f].send(out);
-        }
+        FileSystem._send_data_to_hub_debounced();
     };
     /**
      * true when the connection of every instance waits for the hub
@@ -932,37 +964,56 @@ var FileSystem = /** @class */ (function () {
         return instances > 0;
     };
     /**
-     * get data of objects to send
+     * writes the changed models, until the batch reaches budget
      * @private
      * @static
-     * @return {*}  {string}
+     * @param {number} budget
+     * @return {*}  {IFsData}
      * @memberof FileSystem
      */
-    FileSystem._get_chan_data = function () {
-        var e_4, _a;
-        var out = {
-            cre: '',
-            mod: ''
-        };
+    FileSystem._get_chan_data = function (budget) {
+        var e_4, _a, e_5, _b;
+        var out = { cre: '', mod: '', budget: budget, later: [], taken: [], registered: [] };
         var nb_model = 0;
         try {
-            for (var _b = __values(FileSystem._objects_to_send), _d = _b.next(); !_d.done; _d = _b.next()) {
-                var _e = __read(_d.value, 2), id = _e[0], model = _e[1];
-                nb_model++;
-                if (nb_model > FileSystem.send_model_limit)
+            for (var _d = __values(FileSystem._objects_to_send), _e = _d.next(); !_e.done; _e = _d.next()) {
+                var _f = __read(_e.value, 2), id = _f[0], model = _f[1];
+                if (nb_model >= FileSystem.send_model_limit || out.cre.length + out.mod.length >= budget)
                     break;
-                model._get_fs_data(out);
+                nb_model++;
                 FileSystem._objects_to_send["delete"](id);
+                out.taken.push(model);
+                try {
+                    model._get_fs_data(out);
+                }
+                catch (error) {
+                    // the others are sent : a model that can't be written stopped every change after it
+                    console.error("[hub] a ".concat(ModelProcessManager_1.ModelProcessManager.get_object_class(model), " cannot be sent to the hub, its change is dropped"), error);
+                }
             }
         }
         catch (e_4_1) { e_4 = { error: e_4_1 }; }
         finally {
             try {
-                if (_d && !_d.done && (_a = _b["return"])) _a.call(_b);
+                if (_e && !_e.done && (_a = _d["return"])) _a.call(_d);
             }
             finally { if (e_4) throw e_4.error; }
         }
-        return out.cre + out.mod;
+        try {
+            // after the loop, which would take them again
+            for (var _g = __values(out.later), _h = _g.next(); !_h.done; _h = _g.next()) {
+                var model = _h.value;
+                FileSystem._objects_to_send.set(model.model_id, model);
+            }
+        }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        finally {
+            try {
+                if (_h && !_h.done && (_b = _g["return"])) _b.call(_g);
+            }
+            finally { if (e_5) throw e_5.error; }
+        }
+        return out;
     };
     /**
      * @private
@@ -1215,7 +1266,24 @@ var FileSystem = /** @class */ (function () {
      * @memberof FileSystem
      */
     FileSystem._send_data_to_hub_debounced = debounce(FileSystem._send_data_to_hub_func, 20, { leading: false });
-    FileSystem.send_model_limit = 250;
+    /**
+     * number of changed models a request sends at most ; the size (max_batch_size) usually comes first
+     * @static
+     * @default Infinity
+     * @memberof FileSystem
+     */
+    FileSystem.send_model_limit = Infinity;
+    /**
+     * length (in characters, the commands are ascii) a request sending data aims at. Once reached, the
+     * changed models left wait for the next request, and so do the new models of a container : created first,
+     * the container is written once they all have their id. A bigger request takes longer to send, to run and
+     * to answer, and a proxy may refuse it (nginx accepts 1 MB by default) ; a single value or list bigger
+     * than that is sent whole.
+     * @static
+     * @default 1000000
+     * @memberof FileSystem
+     */
+    FileSystem.max_batch_size = 1000000;
     /**
      * max time (ms) send_data_eval waits for a referenced server_id to
      * materialise before giving up, so a never-arriving object can neither leak
