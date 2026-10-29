@@ -139,6 +139,8 @@ var FileSystem = /** @class */ (function () {
         this._accessToken = null;
         // default values
         this._data_to_send = '';
+        // share_model of models without an id yet : written with the batch that creates them (_write_waiting_shares)
+        this._waiting_shares = [];
         this._session_num = -2;
         this._protocol = protocol ? protocol : 'http:';
         this._url = url;
@@ -170,6 +172,16 @@ var FileSystem = /** @class */ (function () {
         this._hub = new HubConnection_1.HubConnection(this, userid, password);
         this.make_channel_loop();
     }
+    /**
+     * the page is not on the origin of the hub (a cordova app, an absolute url_com) : a header would need a CORS
+     * preflight, which the hubs before 4.2.14 refuse, the connector goes in the URL
+     * @static
+     * @return {*}  {boolean}
+     * @memberof FileSystem
+     */
+    FileSystem._connector_in_url = function () {
+        return FileSystem.CONNECTOR_TYPE === 'Browser' && (FileSystem.is_cordova || !/^\/(?!\/)/.test(FileSystem.url_com));
+    };
     /**
      * Build (once) the Node http/https keep-alive agents. In the browser axios
      * ignores these, so we return nothing there.
@@ -386,8 +398,47 @@ var FileSystem = /** @class */ (function () {
      * @memberof FileSystem
      */
     FileSystem.prototype.share_model = function (ptr, file_name, share_type, targetName) {
+        // the changes are written when the request leaves : a model just attached has no id yet
+        if (typeof ptr !== 'number' && ptr._server_id == null) {
+            this._waiting_shares.push({ model: ptr, share_type: share_type, targetName: targetName, file_name: file_name });
+            FileSystem._send_data_to_hub_debounced();
+            return;
+        }
         FileSystem._send_chan();
-        this.send("h ".concat(typeof ptr === 'number' ? ptr : ptr._server_id, " ").concat(share_type, " ").concat(encodeURI(targetName), " ").concat(encodeURI(file_name), " "));
+        this.send(share_command(typeof ptr === 'number' ? ptr : ptr._server_id, share_type, targetName, file_name));
+    };
+    /**
+     * the shares of models that had no id : the batch creates them (if its changes didn't), the h commands go
+     * after it, with the commands queued
+     * @private
+     * @param {IFsData} [changes] the changes written for the batch
+     * @return {*}  {(IFsData | undefined)} the changes, with the models created for the shares
+     * @memberof FileSystem
+     */
+    FileSystem.prototype._has_waiting_shares = function () {
+        return this._waiting_shares.length > 0;
+    };
+    FileSystem.prototype._write_waiting_shares = function (changes) {
+        var e_1, _a;
+        if (this._waiting_shares.length === 0)
+            return changes;
+        var out = changes || { cre: '', mod: '', later: [], taken: [], registered: [] };
+        try {
+            for (var _b = __values(this._waiting_shares), _d = _b.next(); !_d.done; _d = _b.next()) {
+                var share = _d.value;
+                FileSystem.set_server_id_if_necessary(out, share.model);
+                this._data_to_send += share_command(share.model._server_id, share.share_type, share.targetName, share.file_name);
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (_d && !_d.done && (_a = _b["return"])) _a.call(_b);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        this._waiting_shares = [];
+        return out;
     };
     /**
      * explicitly send a command
@@ -413,9 +464,10 @@ var FileSystem = /** @class */ (function () {
      */
     FileSystem._send_data_to_hub_func = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var takers, resyncing, k, hub, changes, map_prom, k, inst, error_3;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
+            var takers, resyncing, k, hub, changes, takers_1, takers_1_1, inst, map_prom, k, inst, error_3;
+            var e_2, _a;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         if (FileSystem._sending_data === true) {
                             FileSystem._send_data_to_hub_debounced();
@@ -433,20 +485,33 @@ var FileSystem = /** @class */ (function () {
                         changes = takers.length > 0 && FileSystem._objects_to_send.size > 0
                             ? FileSystem._get_chan_data(resyncing ? Infinity : FileSystem.max_batch_size)
                             : undefined;
+                        try {
+                            for (takers_1 = __values(takers), takers_1_1 = takers_1.next(); !takers_1_1.done; takers_1_1 = takers_1.next()) {
+                                inst = takers_1_1.value;
+                                changes = inst._write_waiting_shares(changes);
+                            }
+                        }
+                        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+                        finally {
+                            try {
+                                if (takers_1_1 && !takers_1_1.done && (_a = takers_1["return"])) _a.call(takers_1);
+                            }
+                            finally { if (e_2) throw e_2.error; }
+                        }
                         map_prom = [];
                         for (k in FileSystem._insts) {
                             inst = FileSystem._insts[k];
                             map_prom.push(inst._send_data_to_hub_instance(takers.indexOf(inst) >= 0 ? changes : undefined));
                         }
-                        _a.label = 1;
+                        _b.label = 1;
                     case 1:
-                        _a.trys.push([1, 3, , 4]);
+                        _b.trys.push([1, 3, , 4]);
                         return [4 /*yield*/, Promise.all(map_prom)];
                     case 2:
-                        _a.sent();
+                        _b.sent();
                         return [3 /*break*/, 4];
                     case 3:
-                        error_3 = _a.sent();
+                        error_3 = _b.sent();
                         console.log(error_3);
                         FileSystem._sending_data = false;
                         return [2 /*return*/, FileSystem.onConnectionError(4)];
@@ -498,13 +563,13 @@ var FileSystem = /** @class */ (function () {
      * @memberof FileSystem
      */
     FileSystem.prototype._eval_hub_answer = function (responseText, withCallbacks, afterEval) {
-        var e_1, _a, e_2, _b;
+        var e_3, _a, e_4, _b;
         if (!responseText)
             return;
         var _c = []; // callbacks
         var created = [];
         var _w = function (sid, className) {
-            var e_3, _a;
+            var e_5, _a;
             var known = FileSystem._objects[sid];
             if (known !== undefined && FileSystem._is_instance_of(known, className)) {
                 return;
@@ -522,12 +587,12 @@ var FileSystem = /** @class */ (function () {
                         }
                     }
                 }
-                catch (e_3_1) { e_3 = { error: e_3_1 }; }
+                catch (e_5_1) { e_5 = { error: e_5_1 }; }
                 finally {
                     try {
                         if (_d && !_d.done && (_a = _b["return"])) _a.call(_b);
                     }
-                    finally { if (e_3) throw e_3.error; }
+                    finally { if (e_5) throw e_5.error; }
                 }
             }
         };
@@ -553,12 +618,12 @@ var FileSystem = /** @class */ (function () {
                 _loop_1(cb, _obj);
             }
         }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
         finally {
             try {
                 if (created_1_1 && !created_1_1.done && (_a = created_1["return"])) _a.call(created_1);
             }
-            finally { if (e_1) throw e_1.error; }
+            finally { if (e_3) throw e_3.error; }
         }
         if (!withCallbacks)
             return;
@@ -591,12 +656,12 @@ var FileSystem = /** @class */ (function () {
                 _loop_2(nbCb, servId, error);
             }
         }
-        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
         finally {
             try {
                 if (_c_1_1 && !_c_1_1.done && (_b = _c_1["return"])) _b.call(_c_1);
             }
-            finally { if (e_2) throw e_2.error; }
+            finally { if (e_4) throw e_4.error; }
         }
     };
     FileSystem._is_instance_of = function (model, className) {
@@ -972,7 +1037,7 @@ var FileSystem = /** @class */ (function () {
      * @memberof FileSystem
      */
     FileSystem._get_chan_data = function (budget) {
-        var e_4, _a, e_5, _b;
+        var e_6, _a, e_7, _b;
         var out = { cre: '', mod: '', budget: budget, later: [], taken: [], registered: [] };
         var nb_model = 0;
         try {
@@ -992,12 +1057,12 @@ var FileSystem = /** @class */ (function () {
                 }
             }
         }
-        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        catch (e_6_1) { e_6 = { error: e_6_1 }; }
         finally {
             try {
                 if (_e && !_e.done && (_a = _d["return"])) _a.call(_d);
             }
-            finally { if (e_4) throw e_4.error; }
+            finally { if (e_6) throw e_6.error; }
         }
         try {
             // after the loop, which would take them again
@@ -1006,12 +1071,12 @@ var FileSystem = /** @class */ (function () {
                 FileSystem._objects_to_send.set(model.model_id, model);
             }
         }
-        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        catch (e_7_1) { e_7 = { error: e_7_1 }; }
         finally {
             try {
                 if (_h && !_h.done && (_b = _g["return"])) _b.call(_g);
             }
-            finally { if (e_5) throw e_5.error; }
+            finally { if (e_7) throw e_7.error; }
         }
         return out;
     };
@@ -1285,6 +1350,14 @@ var FileSystem = /** @class */ (function () {
      */
     FileSystem.max_batch_size = 1000000;
     /**
+     * the connector, given to the hub with each request sending data : the hub (4.2.14 and later) logs the ones
+     * older than it expects. In the X-Spinal-Connector header, or in the URL (connector parameter) when the hub is
+     * on another origin than the page (see _connector_in_url)
+     * @static
+     * @memberof FileSystem
+     */
+    FileSystem.CONNECTOR = "spinal-core-connectorjs/".concat(connectorVersion());
+    /**
      * max time (ms) send_data_eval waits for a referenced server_id to
      * materialise before giving up, so a never-arriving object can neither leak
      * its polling timer nor hang the awaiting callback forever.
@@ -1314,4 +1387,16 @@ var FileSystem = /** @class */ (function () {
     return FileSystem;
 }());
 exports.FileSystem = FileSystem;
+/** the version in the package.json of the connector */
+function connectorVersion() {
+    try {
+        return require('../../package.json').version;
+    }
+    catch (error) {
+        return 'unknown';
+    }
+}
+function share_command(server_id, share_type, targetName, file_name) {
+    return "h ".concat(server_id, " ").concat(share_type, " ").concat(encodeURI(targetName), " ").concat(encodeURI(file_name), " ");
+}
 //# sourceMappingURL=FileSystem.js.map

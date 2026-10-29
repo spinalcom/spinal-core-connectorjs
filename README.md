@@ -101,6 +101,18 @@ change : an attribute, a list item or a pointer lost, or the new value).
   backslash : the hub can't store it.
 - A string with half of a surrogate pair (an emoji cut in two) is sent with
   U+FFFD in its place.
+- `share_model` of a model without an id yet (just attached, or attached
+  nowhere) waits for the request that creates it (2.5.25 sent it without an
+  id, and the hub refused the request).
+
+Each request sending data tells the hub which connector sends it
+(`FileSystem.CONNECTOR`, `spinal-core-connectorjs/2.5.26`), in the
+`X-Spinal-Connector` header : hub 4.2.14 and later log the connectors older
+than they expect, once per session, with the user and the address. When the
+page is not on the origin of the hub (a cordova app, an absolute
+`FileSystem.url_com`), it goes in the `connector` parameter of the URL
+instead : a header would need a CORS preflight, which the hubs before 4.2.14
+refuse.
 
 What the program cannot make up for, the hub has to : a restarting hub also
 drops some of the models created during its last 5 to 15 seconds, and a crashed

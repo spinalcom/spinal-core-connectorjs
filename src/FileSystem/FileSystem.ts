@@ -295,6 +295,8 @@ export class FileSystem {
   _protocol: string; // 'http:' | 'https:';
   // default values
   public _data_to_send: string = '';
+  // share_model of models without an id yet : written with the batch that creates them (_write_waiting_shares)
+  private _waiting_shares: { model: Model; share_type: number; targetName: string; file_name: string }[] = [];
   public _session_num: number = -2;
   public _num_inst: number;
   static _in_mk_chan_eval = false;
@@ -345,6 +347,26 @@ export class FileSystem {
    * @memberof FileSystem
    */
   static max_batch_size = 1000000;
+
+  /**
+   * the connector, given to the hub with each request sending data : the hub (4.2.14 and later) logs the ones
+   * older than it expects. In the X-Spinal-Connector header, or in the URL (connector parameter) when the hub is
+   * on another origin than the page (see _connector_in_url)
+   * @static
+   * @memberof FileSystem
+   */
+  static readonly CONNECTOR: string = `spinal-core-connectorjs/${connectorVersion()}`;
+
+  /**
+   * the page is not on the origin of the hub (a cordova app, an absolute url_com) : a header would need a CORS
+   * preflight, which the hubs before 4.2.14 refuse, the connector goes in the URL
+   * @static
+   * @return {*}  {boolean}
+   * @memberof FileSystem
+   */
+  static _connector_in_url(): boolean {
+    return FileSystem.CONNECTOR_TYPE === 'Browser' && (FileSystem.is_cordova || !/^\/(?!\/)/.test(FileSystem.url_com));
+  }
 
   /**
    * max time (ms) send_data_eval waits for a referenced server_id to
@@ -735,12 +757,37 @@ export class FileSystem {
     share_type: number,
     targetName: string
   ): void {
+    // the changes are written when the request leaves : a model just attached has no id yet
+    if (typeof ptr !== 'number' && ptr._server_id == null) {
+      this._waiting_shares.push({ model: ptr, share_type, targetName, file_name });
+      FileSystem._send_data_to_hub_debounced();
+      return;
+    }
     FileSystem._send_chan();
-    this.send(
-      `h ${
-        typeof ptr === 'number' ? ptr : ptr._server_id
-      } ${share_type} ${encodeURI(targetName)} ${encodeURI(file_name)} `
-    );
+    this.send(share_command(typeof ptr === 'number' ? ptr : ptr._server_id, share_type, targetName, file_name));
+  }
+
+  /**
+   * the shares of models that had no id : the batch creates them (if its changes didn't), the h commands go
+   * after it, with the commands queued
+   * @private
+   * @param {IFsData} [changes] the changes written for the batch
+   * @return {*}  {(IFsData | undefined)} the changes, with the models created for the shares
+   * @memberof FileSystem
+   */
+  _has_waiting_shares(): boolean {
+    return this._waiting_shares.length > 0;
+  }
+
+  private _write_waiting_shares(changes?: IFsData): IFsData | undefined {
+    if (this._waiting_shares.length === 0) return changes;
+    const out = changes || { cre: '', mod: '', later: [], taken: [], registered: [] };
+    for (const share of this._waiting_shares) {
+      FileSystem.set_server_id_if_necessary(out, share.model);
+      this._data_to_send += share_command(share.model._server_id, share.share_type, share.targetName, share.file_name);
+    }
+    this._waiting_shares = [];
+    return out;
   }
 
   /**
@@ -783,10 +830,11 @@ export class FileSystem {
     }
     // while resyncing, the loads are answered with the state of the models : every change made before goes
     // in the batch
-    const changes =
+    let changes =
       takers.length > 0 && FileSystem._objects_to_send.size > 0
         ? FileSystem._get_chan_data(resyncing ? Infinity : FileSystem.max_batch_size)
         : undefined;
+    for (const inst of takers) changes = inst._write_waiting_shares(changes);
     const map_prom = [];
     for (const k in FileSystem._insts) {
       const inst = FileSystem._insts[k];
@@ -1331,4 +1379,17 @@ export class FileSystem {
       console.error('you must define CONNECTOR_TYPE');
     }
   }
+}
+
+/** the version in the package.json of the connector */
+function connectorVersion(): string {
+  try {
+    return require('../../package.json').version;
+  } catch (error) {
+    return 'unknown';
+  }
+}
+
+function share_command(server_id: number, share_type: number, targetName: string, file_name: string): string {
+  return `h ${server_id} ${share_type} ${encodeURI(targetName)} ${encodeURI(file_name)} `;
 }

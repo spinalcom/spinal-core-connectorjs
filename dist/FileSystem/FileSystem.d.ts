@@ -248,6 +248,7 @@ export declare class FileSystem {
     static CONNECTOR_TYPE: 'Node' | 'Browser';
     _protocol: string;
     _data_to_send: string;
+    private _waiting_shares;
     _session_num: number;
     _num_inst: number;
     static _in_mk_chan_eval: boolean;
@@ -290,6 +291,22 @@ export declare class FileSystem {
      * @memberof FileSystem
      */
     static max_batch_size: number;
+    /**
+     * the connector, given to the hub with each request sending data : the hub (4.2.14 and later) logs the ones
+     * older than it expects. In the X-Spinal-Connector header, or in the URL (connector parameter) when the hub is
+     * on another origin than the page (see _connector_in_url)
+     * @static
+     * @memberof FileSystem
+     */
+    static readonly CONNECTOR: string;
+    /**
+     * the page is not on the origin of the hub (a cordova app, an absolute url_com) : a header would need a CORS
+     * preflight, which the hubs before 4.2.14 refuse, the connector goes in the URL
+     * @static
+     * @return {*}  {boolean}
+     * @memberof FileSystem
+     */
+    static _connector_in_url(): boolean;
     /**
      * max time (ms) send_data_eval waits for a referenced server_id to
      * materialise before giving up, so a never-arriving object can neither leak
@@ -419,6 +436,16 @@ export declare class FileSystem {
      * @memberof FileSystem
      */
     share_model(ptr: Model | number, file_name: string, share_type: number, targetName: string): void;
+    /**
+     * the shares of models that had no id : the batch creates them (if its changes didn't), the h commands go
+     * after it, with the commands queued
+     * @private
+     * @param {IFsData} [changes] the changes written for the batch
+     * @return {*}  {(IFsData | undefined)} the changes, with the models created for the shares
+     * @memberof FileSystem
+     */
+    _has_waiting_shares(): boolean;
+    private _write_waiting_shares;
     /**
      * explicitly send a command
      * @private

@@ -466,7 +466,8 @@ export class HubConnection {
       this.unanswered ||
       this.fs._data_to_send.length > 0 ||
       this.pendingLoads.length > 0 ||
-      FileSystem._objects_to_send.size > 0
+      FileSystem._objects_to_send.size > 0 ||
+      this.fs._has_waiting_shares()
     ) {
       FileSystem._send_data_to_hub_debounced();
     }
@@ -732,7 +733,14 @@ export class HubConnection {
     const controller = typeof AbortController !== 'undefined' ? new AbortController() : undefined;
     if (controller) this.inFlight.add(controller);
     try {
-      const url = getUrlPath(fs._protocol, fs._url, fs._port, query);
+      // the hub logs the old connectors (FileSystem.CONNECTOR)
+      const inUrl = method === 'post' && FileSystem._connector_in_url();
+      const url = getUrlPath(
+        fs._protocol,
+        fs._url,
+        fs._port,
+        inUrl ? `${query}${query ? '&' : '?'}connector=${encodeURIComponent(FileSystem.CONNECTOR)}` : query
+      );
       const config = {
         timeout,
         signal: controller?.signal,
@@ -743,7 +751,11 @@ export class HubConnection {
         method === 'post'
           ? await fs._axiosInst.post<string>(url, body, {
               ...config,
-              headers: { 'Content-Type': 'text/plain', authorization: fs._accessToken },
+              headers: {
+                'Content-Type': 'text/plain',
+                authorization: fs._accessToken,
+                ...(inUrl ? {} : { 'X-Spinal-Connector': FileSystem.CONNECTOR }),
+              },
             })
           : await fs._axiosInst.get<string>(url, config);
       return typeof response.data === 'string' ? response.data : '';

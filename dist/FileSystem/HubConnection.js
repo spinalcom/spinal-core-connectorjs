@@ -570,7 +570,8 @@ var HubConnection = /** @class */ (function () {
         if (this.unanswered ||
             this.fs._data_to_send.length > 0 ||
             this.pendingLoads.length > 0 ||
-            FileSystem_1.FileSystem._objects_to_send.size > 0) {
+            FileSystem_1.FileSystem._objects_to_send.size > 0 ||
+            this.fs._has_waiting_shares()) {
             FileSystem_1.FileSystem._send_data_to_hub_debounced();
         }
     };
@@ -892,7 +893,7 @@ var HubConnection = /** @class */ (function () {
     };
     HubConnection.prototype.request = function (method, query, body, timeout) {
         return __awaiter(this, void 0, void 0, function () {
-            var fs, controller, url, config, response, _a;
+            var fs, controller, inUrl, url, config, response, _a;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -903,7 +904,8 @@ var HubConnection = /** @class */ (function () {
                         _b.label = 1;
                     case 1:
                         _b.trys.push([1, , 6, 7]);
-                        url = (0, getUrlPath_1.getUrlPath)(fs._protocol, fs._url, fs._port, query);
+                        inUrl = method === 'post' && FileSystem_1.FileSystem._connector_in_url();
+                        url = (0, getUrlPath_1.getUrlPath)(fs._protocol, fs._url, fs._port, inUrl ? "".concat(query).concat(query ? '&' : '?', "connector=").concat(encodeURIComponent(FileSystem_1.FileSystem.CONNECTOR)) : query);
                         config = {
                             timeout: timeout,
                             signal: controller === null || controller === void 0 ? void 0 : controller.signal,
@@ -911,7 +913,7 @@ var HubConnection = /** @class */ (function () {
                             responseType: 'text'
                         };
                         if (!(method === 'post')) return [3 /*break*/, 3];
-                        return [4 /*yield*/, fs._axiosInst.post(url, body, __assign(__assign({}, config), { headers: { 'Content-Type': 'text/plain', authorization: fs._accessToken } }))];
+                        return [4 /*yield*/, fs._axiosInst.post(url, body, __assign(__assign({}, config), { headers: __assign({ 'Content-Type': 'text/plain', authorization: fs._accessToken }, (inUrl ? {} : { 'X-Spinal-Connector': FileSystem_1.FileSystem.CONNECTOR })) }))];
                     case 2:
                         _a = _b.sent();
                         return [3 /*break*/, 5];

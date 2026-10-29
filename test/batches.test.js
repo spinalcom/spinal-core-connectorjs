@@ -62,9 +62,9 @@ function freePort() {
   });
 }
 
-/** between the connector and the hub : records the bodies of the POSTs, delays or refuses them */
+/** between the connector and the hub : records the bodies of the POSTs (and the connectors given), delays or refuses them */
 function startProxy(hubPort) {
-  const proxy = { posts: [], delayMs: 0, maxBody: Infinity };
+  const proxy = { posts: [], connectors: new Set(), delayMs: 0, maxBody: Infinity };
   proxy.server = http.createServer((req, res) => {
     const chunks = [];
     req.on('data', (c) => chunks.push(c));
@@ -72,6 +72,7 @@ function startProxy(hubPort) {
       const body = Buffer.concat(chunks);
       const post = req.method === 'POST' ? { body: body.toString(), status: null } : null;
       if (post) proxy.posts.push(post);
+      if (post) proxy.connectors.add(`${req.headers['x-spinal-connector']} ${req.url}`);
       if (post && body.length > proxy.maxBody) {
         post.status = 413;
         res.writeHead(413, { 'Content-Type': 'text/html' });
@@ -109,7 +110,9 @@ class Reader {
   post(body) {
     return new Promise((resolve, reject) => {
       const req = http.request(
-        { host: '127.0.0.1', port: this.port, method: 'POST', path: '/sceen/_', agent: false },
+        // another program : the hub doesn't take it for an old connector
+        { host: '127.0.0.1', port: this.port, method: 'POST', path: '/sceen/_', agent: false,
+          headers: { 'X-Spinal-Connector': 'batches-test-reader/1' } },
         (res) => {
           let data = '';
           res.on('data', (chunk) => (data += chunk));
@@ -126,6 +129,12 @@ class Reader {
     const answer = await this.post(`U 168 ${PASSWORD} S 0 E `);
     const session = answer.match(/_session_num = '([^']+)'/)[1];
     return this.post(`s ${session} l 0 ${id} E `);
+  }
+
+  async loadPath(path) {
+    const answer = await this.post(`U 168 ${PASSWORD} S 0 E `);
+    const session = answer.match(/_session_num = '([^']+)'/)[1];
+    return this.post(`s ${session} L 0 ${encodeURI(path)} E `);
   }
 
   async str(id) {
@@ -171,12 +180,14 @@ describe('batches of changes', { skip, timeout: 180000 }, () => {
     fs.mkdirSync(path.join(dir, 'memory'));
     fs.mkdirSync(path.join(dir, 'html'));
     const port = await freePort();
+    const log = fs.openSync(path.join(dir, 'hub.log'), 'w');
     hub = spawn(
       hubBinary,
       ['-b', 'html', '-p', String(port), '-q', String(await freePort()), '-t', '2', '-x', PASSWORD,
         '-d', '0 0 0 1 1 *', '-g', '0 0 0 1 1 *'],
-      { cwd: dir, stdio: 'ignore' }
+      { cwd: dir, stdio: ['ignore', log, log] }
     );
+    fs.closeSync(log);
     while (!(await new Promise((resolve) => {
       const s = net.connect(port, '127.0.0.1');
       s.once('connect', () => { s.destroy(); resolve(true); });
@@ -313,6 +324,51 @@ describe('batches of changes', { skip, timeout: 180000 }, () => {
       assert.throws(() => new Model({ [name]: 1 }), /can't be stored on the hub/, name);
     }
     assert.doesNotThrow(() => new Model({ name: 1, 'with-dash_and.dot': 2, 123: 3 }));
+  });
+
+  it('shares a model it has just attached, and one attached nowhere, once they have an id', async () => {
+    proxy.posts.length = 0;
+    const attached = new TracedModel({ tag: 'attached' });
+    root.add_attr('shared', attached);
+    conn.share_model(attached, 'shared_attached', 1, 'admin');
+    conn.share_model(new TracedModel({ tag: 'alone' }), 'shared_alone', 1, 'admin');
+    assert.ok(await settled(), 'not sent');
+    const body = proxy.posts.map((p) => p.body).join('');
+    assert.doesNotMatch(body, /h undefined/);
+    for (const name of ['shared_attached', 'shared_alone']) {
+      const tmp = body.match(new RegExp(`h (\\d+) 1 admin ${name} `))[1];
+      assert.match(body, new RegExp(`N ${tmp} TracedModel .* h ${tmp} 1 admin ${name} `), `${name}: the share is not after the creation`);
+    }
+    assert.deepEqual(proxy.posts.map((p) => p.status), proxy.posts.map(() => 200));
+    const sharedWithMe = await reader.loadPath('/__users__/admin/shared_with_me');
+    assert.match(sharedWithMe, /shared_attached/);
+    assert.match(sharedWithMe, /shared_alone/);
+  });
+
+  it('tells the hub which connector it is, the hub has no old connector to log', async () => {
+    const version = require('../package.json').version;
+    assert.equal(FileSystem.CONNECTOR, `spinal-core-connectorjs/${version}`);
+    assert.deepEqual([...proxy.connectors], [`spinal-core-connectorjs/${version} /sceen/_`]);
+    await sleep(200);
+    assert.doesNotMatch(fs.readFileSync(path.join(dir, 'hub.log'), 'utf8'), /Old connector/);
+  });
+
+  it('puts the connector in the URL when the hub is on another origin than the page', () => {
+    const saved = [FileSystem.CONNECTOR_TYPE, FileSystem.is_cordova, FileSystem.url_com];
+    try {
+      assert.equal(FileSystem._connector_in_url(), false, 'node');
+      FileSystem.CONNECTOR_TYPE = 'Browser';
+      assert.equal(FileSystem._connector_in_url(), false, 'a page of the hub');
+      FileSystem.url_com = 'https://hub.example:7777/sceen/_';
+      assert.equal(FileSystem._connector_in_url(), true, 'an absolute url_com');
+      FileSystem.url_com = '//hub.example/sceen/_';
+      assert.equal(FileSystem._connector_in_url(), true, 'a url_com without protocol');
+      FileSystem.url_com = '/sceen/_';
+      FileSystem.is_cordova = true;
+      assert.equal(FileSystem._connector_in_url(), true, 'cordova');
+    } finally {
+      [FileSystem.CONNECTOR_TYPE, FileSystem.is_cordova, FileSystem.url_com] = saved;
+    }
   });
 
   it('never gave up', () => {
